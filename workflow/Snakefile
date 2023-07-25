@@ -2,3 +2,8 @@
 # Please follow the best practices: 
 # https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
 # in particular regarding the standardized folder structure mentioned there. 
+
+
+rule hello_world:
+  shell:
+    'echo "Hello World!"'
