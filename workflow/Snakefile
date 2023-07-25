@@ -5,5 +5,8 @@
 
 
 rule hello_world:
+  conda:
+      "base"
+  log: "logs/hello_world.log"
   shell:
     'echo "Hello World!"'
