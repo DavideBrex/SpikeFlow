@@ -4,6 +4,13 @@
 # in particular regarding the standardized folder structure mentioned there. 
 
 
+from snakemake.utils import min_version
+
+min_version("7.30.0")
+
+
+container: "docker://continuumio/miniconda3"
+
 rule hello_world:
   conda:
       "base"
