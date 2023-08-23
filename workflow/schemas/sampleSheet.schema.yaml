@@ -1,4 +1,4 @@
-$schema: "https://json-schema.org/draft-06/schema#"
+$schema: "http://json-schema.org/draft-06/schema#"
 
 description: an entry in the sample sheet
 
@@ -8,9 +8,9 @@ properties:
     description: sample name/identifier
 
   replicate:
-    type: int
-    description: replicate number
-    exclusiveMinimum: 0
+    type: number
+    description: replicate number of sample
+    minimum: 0
 
   antibody:
     type: string
@@ -21,25 +21,28 @@ properties:
     description: control sample name (needed for peak calling)
     
   control_replicate:
-    type: int
+    type: number
     description: replicate number of the control sample
-    exclusiveMinimum: 0
+    minimum: 0
 
   spike:
     type: boolean
     default: true
     description: boolean that indicates if sample has spike-in
-    
+
   peak_type:
-    type:
+    type: string
+    enum: 
+        - narrow
+        - broad
+        - very-broad
+  
+  fastq_1:
+    type: string  
+  fastq_2:
+    type: string  
 
 required:
   - sample
   - replicate
-  - antibody
-  - control
-  - control_replicate
-  - spike
-  - peak_type
   - fastq_1
-  - fastq_2
