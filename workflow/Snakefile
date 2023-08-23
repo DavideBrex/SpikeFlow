@@ -6,14 +6,25 @@
 
 from snakemake.utils import min_version
 
-min_version("7.30.0")
+min_version("6.3.0")
 
 
+
+configfile: "config/config.yaml"
+
+# this container defines the underlying OS for each job when using the workflow
+# with --use-conda --use-singularity
 container: "docker://continuumio/miniconda3"
 
-rule hello_world:
-  conda:
-      "base"
-  log: "logs/hello_world.log"
-  shell:
-    'echo "Hello World!"'
+
+
+
+include: "rules/common.smk"
+
+
+# rule hello_world:
+#   conda:
+#       "base"
+#   log: "logs/hello_world.log"
+#   shell:
+#     'echo "Hello World!"'
