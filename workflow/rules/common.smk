@@ -8,4 +8,4 @@ import pandas as pd
 
 samples = pd.read_csv(config["samples_sheet"], sep=",", dtype = str).set_index(["sample","replicate"], drop=False)
 
-validate(samples, schema="../schemas/samples.schema.yaml")
+validate(samples, schema="../schemas/sampleSheet.schema.yaml")

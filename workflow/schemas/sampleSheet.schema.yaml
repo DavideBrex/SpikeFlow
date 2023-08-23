@@ -6,22 +6,30 @@ properties:
   sample:
     type: string
     description: sample name/identifier
+
   replicate:
     type: int
     description: replicate number
+    exclusiveMinimum: 0
+
   antibody:
     type: string
     description: sample antibody
+
   control:
     type: string
     description: control sample name (needed for peak calling)
+    
   control_replicate:
     type: int
     description: replicate number of the control sample
+    exclusiveMinimum: 0
+
   spike:
     type: boolean
     default: true
     description: boolean that indicates if sample has spike-in
+    
   peak_type:
     type:
 
