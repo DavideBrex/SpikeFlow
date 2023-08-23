@@ -1,0 +1,15 @@
+sample,replicate,antibody,control,control_replicate,spike,peak_type,fastq_1,fastq_2
+H3K4me3_untreated,1,H3K4me3,Input_untreated,1,True,narrow,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR10612152_GSM4211265_A1014C03_H3K4me3_untreated-1_Homo_sapiens_ChIP-Seq.fastq.gz,
+H3K4me3_untreated,2,H3K4me3,Input_untreated,2,True,narrow,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR10612153_GSM4211266_A1014C11_H3K4me3_untreated-2_Homo_sapiens_ChIP-Seq.fastq.gz,
+H3K4me3_EGF,1,H3K4me3,Input_EGF,1,True,narrow,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR10612154_GSM4211267_A1014C04_H3K4me3_EGF-1_Homo_sapiens_ChIP-Seq.fastq.gz,
+H3K4me3_EGF,2,H3K4me3,Input_EGF,2,True,narrow,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR10612155_GSM4211268_A1014C12_H3K4me3_EGF-2_Homo_sapiens_ChIP-Seq.fastq.gz,
+H3K9me2_untreated,1,H3K9me2,Input_untreated,1,True,very-broad, /media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR8096005_GSM3443099_A1014C05_H3K9me2_untreated-1_Homo_sapiens_ChIP-Seq.fastq.gz,
+H3K9me2_untreated,2,H3K9me2,Input_untreated,2,True,very-broad,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR8096006_GSM3443100_A1023C13_H3K9me2_untreated-2_Homo_sapiens_ChIP-Seq.fastq.gz
+H3K9me2_untreated,3,H3K9me2,Input_untreated,2,True,very-broad,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR8096007_GSM3443101_A1023C23_H3K9me2_untreated-3_Homo_sapiens_ChIP-Seq.fastq.gz
+H3K9me2_EGF,1,H3K9me2,Input_EGF,1,True,very-broad,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR8096008_GSM3443102_A1014C06_H3K9me2_EGF-1_Homo_sapiens_ChIP-Seq.fastq.gz,
+H3K9me2_EGF,2,H3K9me2,Input_EGF,2,True,very-broad,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR8096009_GSM3443103_A1023C14_H3K9me2_EGF-2_Homo_sapiens_ChIP-Seq.fastq.gz,
+H3K9me2_EGF,3,H3K9me2,Input_EGF,2,True,very-broad,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR8096010_GSM3443104_A1023C24_H3K9me2_EGF-3_Homo_sapiens_ChIP-Seq.fastq.gz,
+Input_untreated,1,,,,,,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR8096011_GSM3443105_A1014C01_Input-untreated-1_Homo_sapiens_ChIP-Seq.fastq.gz,
+Input_untreated,2,,,,,,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR8096012_GSM3443106_A1023C19_Input-untreated-2_Homo_sapiens_ChIP-Seq.fastq.gz,
+Input_EGF,1,,,,,,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR8096013_GSM3443107_A1014C10_Input-EGF-1_Homo_sapiens_ChIP-Seq.fastq.gz,
+Input_EGF,2,,,,,,/media/davidebrex/data_storage/fastq_files/PRJNA498059/SRR8096014_GSM3443108_A1023C20_Input-EGF-2_Homo_sapiens_ChIP-Seq.fastq.gz,
