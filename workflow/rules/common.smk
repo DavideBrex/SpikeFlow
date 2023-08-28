@@ -109,7 +109,9 @@ def input_toget():
 
         wanted_inputs += [f"{sample}-{replicate}"]
 
-    return wanted_inputs
+
+    return  expand("results/trimmed/{id}.fastq.gz", id=wanted_inputs)
+
 
 #-------------------- Other useuful functions ---------------#
 
@@ -125,8 +127,8 @@ def is_single_end(id):
     return pd.isnull(samples_sheet.loc[(samp, rep), "fastq_2"])
 
 
-#perform trimming
 def get_fastq(wildcards):
+    #perform trimming
     if config["trimming"]:
         samp, rep = retrieve_index(**wildcards)
 

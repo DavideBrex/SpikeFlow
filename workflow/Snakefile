@@ -25,5 +25,5 @@ include: "rules/trim.smk"
 
 
 rule all:
-    input: expand("results/trimmed/{id}.fastq.gz", id=input_toget())
+    input: input_toget()
 
