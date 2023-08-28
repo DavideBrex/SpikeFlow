@@ -2,6 +2,7 @@
 import os
 from snakemake.utils import validate
 import pandas as pd
+import numpy as np
 
 #we start by checking the input files (samples_sheet and config.yaml) to ensure that their format is correct
 
@@ -10,7 +11,7 @@ samples_sheet = pd.read_csv(config["samples_sheet"], dtype={
     "control_replicate": "Int64",
     'spike': "boolean"}, sep=",").set_index(["sample","replicate"], drop=False)
 
-print(samples_sheet)
+print(samples_sheet.index)
 
 validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
@@ -54,7 +55,7 @@ def perform_checks(input_df):
 
     #3. check whether replicates from the same samples are all single-end or both paired-end
     #   also other runs of the same samples  must have same data type (single-end or paired -end)
-    pa
+    
     for sample in input_df.index.get_level_values('sample').unique():
         #print(input_df.loc[[sample]])
         if all(input_df.loc[[sample]].fastq_2.notna()):
@@ -77,15 +78,63 @@ def perform_checks(input_df):
             print("ERROR: The indicated control is missing in the samples column for these samples: {}".format(samplesNoControl))
             sys.exit(1)
 
-
+#-------------------- Sample sheet Sanity checks ---------------#
 
 perform_checks(samples_sheet)
 
+#-------------------- Define input files for rule all ---------------#
+
+# def input_toget():
+
+#     wanted_inputs=[]
+#     for (sample, replicate) in samples_sheet.index:
+
+#         wanted_inputs.extend(
+#             expand(
+#                 [
+#                     "results/trimmed/{sample}.{replicate}.fastq.gz"
+#                 ],
+#                 sample = sample,
+#                 replicate = replicate
+#             )
+#         )
 
 
+#     return wanted_inputs
+
+def input_toget():
+
+    wanted_inputs=[]
+    for (sample, replicate) in samples_sheet.index:
+
+        wanted_inputs += [f"{sample}-{replicate}"]
+
+    return wanted_inputs
+
+#-------------------- Other useuful functions ---------------#
+
+def retrieve_index(id):
+    samp, rep = id.split("-")
+    return (samp, int(rep))
 
 
+def is_single_end(id):
+    samp, rep = retrieve_index(id)
+    #print(samp, rep)
+    print(pd.isnull(samples_sheet.loc[(samp, rep), "fastq_2"]))
+    return pd.isnull(samples_sheet.loc[(samp, rep), "fastq_2"])
 
 
+#perform trimming
+def get_fastq(wildcards):
+    if config["trimming"]:
+        samp, rep = retrieve_index(**wildcards)
 
-
+        if is_single_end(**wildcards):
+            return samples_sheet.loc[(samp, rep), "fastq_1" ]
+        else:
+            print("oi")
+            u = samples_sheet.loc[ (samp, rep), ["fastq_1", "fastq_2"] ].dropna()
+            return [ f"{u.fastq_1}", f"{u.fastq_2}" ]
+    
+    

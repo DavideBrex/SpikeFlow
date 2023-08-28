@@ -21,11 +21,9 @@ container: "docker://continuumio/miniconda3"
 
 
 include: "rules/common.smk"
+include: "rules/trim.smk"
 
 
-# rule hello_world:
-#   conda:
-#       "base"
-#   log: "logs/hello_world.log"
-#   shell:
-#     'echo "Hello World!"'
+rule all:
+    input: expand("results/trimmed/{id}.fastq.gz", id=input_toget())
+

@@ -1,4 +1,37 @@
 # path (from the repository root) to sample sheet (csv format, columns: sample, condition, ...)
 samples_sheet: config/samples_sheet.csv
 
+# perform trimming: false or true
+# if true go to params (at the end)
+# to set desired trimming parameters
+trimming: true
 
+
+resources:
+  ref:
+    # Ensembl species name
+    species: homo_sapiens
+    # Ensembl release
+    release: 101
+    # Genome build
+    build: GRCh38
+  ref_spike:
+    # Ensembl species name
+    species: drosophila_melanogaster 
+    # Ensembl release
+    release: 110
+    # Genome build
+    build: dm6
+
+
+params:
+  fastp-pe: ""
+  fastp-se: ""
+
+
+threads:
+  fastp:
+    10
+  bowtie_2: 
+    10
+  
