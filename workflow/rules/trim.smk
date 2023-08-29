@@ -19,14 +19,15 @@ rule merge_lanes_pe:
     input:
         unpack(get_fastq)
     output:
-        temp(["results/fastq/{id}_1.fastq.gz", "results/fastq/{id}_2.fastq.gz"])
+        fw=temp("results/fastq/{id}_1.fastq.gz"),
+        rv=temp("results/fastq/{id}_2.fastq.gz")
     log:
         "results/logs/pipe-fastqs/{id}.log",
     threads: 1
     shell:
         """
-        cat {input.fw} > output[0]
-        cat {input.rv} > output[1]
+        cat {input.fw} >  {output.fw}
+        cat {input.rv} > {output.rv}
         """ 
 
 
