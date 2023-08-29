@@ -181,7 +181,6 @@ def get_reads(wildcards):
     """  Rule called by aligners. """
 
     samp, rep = retrieve_index(**wildcards)
-    print(wildcards.id)
     #if trimming is performed, the trimmed fastqs are all in 
     if config["trimming"]:
         if is_single_end(**wildcards):
