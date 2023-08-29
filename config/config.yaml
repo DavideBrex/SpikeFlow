@@ -10,7 +10,6 @@ aligner: bowtie
 
 resources:
   ref:
-    index: "index_bowtie"
     # Ensembl species name
     species: homo_sapiens
     # Ensembl release

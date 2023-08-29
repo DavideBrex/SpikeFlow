@@ -4,13 +4,12 @@ samples_sheet: config/samples_sheet.csv
 # perform trimming: false or true
 # if true go to params (at the end)
 # to set desired trimming parameters
-trimming: false
+trimming: true
 
 aligner: bowtie
 
 resources:
   ref:
-    index: "index_bowtie"
     # Ensembl species name
     species: homo_sapiens
     # Ensembl release

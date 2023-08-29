@@ -19,11 +19,10 @@ container: "docker://continuumio/miniconda3"
 
 
 
-
+include: "rules/references.smk"
 include: "rules/common.smk"
 include: "rules/trim.smk"
 include: "rules/align.smk"
-
 
 rule all:
     input: input_toget()
