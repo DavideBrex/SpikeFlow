@@ -19,7 +19,7 @@ samples_sheet = pd.read_csv(config["samples_sheet"], dtype={
 
 validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
-
+print(samples_sheet)
 #let's get the samples that need to be merged due to presence of multiple lanes
 duplicated_indices = samples_sheet.index[samples_sheet.index.duplicated(keep=False)].unique()
 multiLanes_samp = [f"{a}-rep{b}" for a, b in duplicated_indices] 
