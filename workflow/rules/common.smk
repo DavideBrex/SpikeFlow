@@ -3,6 +3,11 @@ import os
 from snakemake.utils import validate
 import pandas as pd
 import numpy as np
+#TO DO: 
+#  - add validation schema for config file 
+#  - add check that all lanes have same settings
+#
+#
 
 #we start by checking the input files (samples_sheet and config.yaml) to ensure that their format is correct
 
@@ -11,9 +16,14 @@ samples_sheet = pd.read_csv(config["samples_sheet"], dtype={
     "control_replicate": "Int64",
     'spike': "boolean"}, sep=",").set_index(["sample","replicate"], drop=False).sort_index()
 
-#print(samples_sheet.index)
+print(samples_sheet.index)
 
 validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
+
+
+#let's get the samples that need to be merged due to presence of multiple lanes
+duplicated_indices = samples_sheet.index[samples_sheet.index.duplicated(keep=False)].unique()
+multiLanes_samp = [f"{a}-rep{b}" for a, b in duplicated_indices] 
 
 
 ##### wildcard constraints #####
@@ -21,6 +31,8 @@ validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 wildcard_constraints:
     id = "|".join(set(['-rep'.join(map(str, idx)) for idx in samples_sheet.index])),
     group = "1|2"
+
+
 
 #-------------------- Sample sheet Sanity checks    function ---------------#
 def perform_checks(input_df):
@@ -135,24 +147,43 @@ def is_single_end(id):
         return check[0]
     return check
 
+# get input files -- helper functions
 
 def get_fastq(wildcards):
-
+    """  Rule called by merged lanes. It is executed when a sample has multiple lanes only """
     samp, rep = retrieve_index(**wildcards)
 
     if is_single_end(**wildcards):
-        return samples_sheet.loc[(samp, rep), "fastq_1"]
+        return samples_sheet.loc[(samp, rep), "fastq_1"] if wildcards.id in multiLanes_samp else  []
     else:
-        #print("paired-end")
         u = samples_sheet.loc[ (samp, rep), ["fastq_1", "fastq_2"] ].dropna()
-        if isinstance(u, pd.DataFrame):
-            return  {"fw": u.fastq_1.tolist(), "rv": u.fastq_2.tolist()}
+        return  {"fw": u.fastq_1.tolist(), "rv": u.fastq_2.tolist()} if wildcards.id in multiLanes_samp else  []
         
-        return [ f"{u.fastq_1}", f"{u.fastq_2}" ]
 
-    
+def get_fastq_trimming(wildcards):
+    """  Rule called by fastp_pe or se. Only called when trimming is activated """
+    samp, rep = retrieve_index(**wildcards)
+
+    if is_single_end(**wildcards):
+        # to run merge only on samples that have multiple lanes
+        if wildcards.id in multiLanes_samp: 
+            return "results/fastq/{id}.fastq.gz".format(**wildcards)
+        else:
+            return samples_sheet.loc[(samp, rep), "fastq_1"]
+    else:
+        if wildcards.id in multiLanes_samp: 
+            return expand("results/fastq/{id}_{group}.fastq.gz", group=[1, 2], **wildcards)
+        else:
+            u = samples_sheet.loc[ (samp, rep), ["fastq_1", "fastq_2"] ].dropna()
+            return [ u.fastq_1.tolist()[0], u.fastq_2.tolist()[0] ]
+
+
 def get_reads(wildcards):
+    """  Rule called by aligners. """
 
+    samp, rep = retrieve_index(**wildcards)
+    print(wildcards.id)
+    #if trimming is performed, the trimmed fastqs are all in 
     if config["trimming"]:
         if is_single_end(**wildcards):
             return "results/trimmed/{id}.fastq.gz".format(**wildcards)
@@ -161,6 +192,16 @@ def get_reads(wildcards):
 
     else:
         if is_single_end(**wildcards):
-            return "results/fastq/{id}.fastq.gz".format(**wildcards)
+            # to run merge only on samples that have multiple lanes
+            if wildcards.id in multiLanes_samp: 
+                return "results/fastq/{id}.fastq.gz".format(**wildcards)
+            else:
+                return samples_sheet.loc[(samp, rep), "fastq_1"]
         else:
-            return expand("results/fastq/{id}_{group}.fastq.gz", group=[1, 2], **wildcards)
+            if wildcards.id in multiLanes_samp: 
+                return expand("results/fastq/{id}_{group}.fastq.gz", group=[1, 2], **wildcards)
+            else:
+                u = samples_sheet.loc[ (samp, rep), ["fastq_1", "fastq_2"] ].dropna()
+                return [ u.fastq_1.tolist()[0], u.fastq_2.tolist()[0] ]
+
+

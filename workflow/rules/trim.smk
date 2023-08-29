@@ -36,11 +36,11 @@ if config["trimming"]:
 
     rule fastp_se:
         input:
-            "results/fastq/{id}.fastq.gz"
+            get_fastq_trimming
         output:
             trimmed="results/trimmed/{id}.fastq.gz",
-            # html="report/trimmed/{id}.html",
-            # json="report/trimmed/{id}.json"
+            html="report/trimmed/{id}.html",
+            json="report/trimmed/{id}.json"
         log:
             "results/logs/fastp/{id}.log"
         params:
@@ -54,11 +54,11 @@ if config["trimming"]:
 
     rule fastp_pe:
         input:
-            ["results/fastq/{id}_1.fastq.gz", "results/fastq/{id}_2.fastq.gz"]
+            unpack(get_fastq_trimming)
         output:
             trimmed=["results/trimmed/{id}_1.fastq.gz", "results/trimmed/{id}_2.fastq.gz"],
-            # html="report/trimmed/{id}.html",
-            # json="report/trimmed/{id}.json"
+            html="report/trimmed/{id}.html",
+            json="report/trimmed/{id}.json"
         log:
             "results/logs/fastp/{id}.log"
         params:
