@@ -5,7 +5,7 @@ rule get_reference_genome:
     output:
         "resources/genome.fasta"
     log:
-        "logs/ref/get_reference_genome.log"
+        "results/logs/ref/get_reference_genome.log"
     params:
         species=config["resources"]["ref"]["species"],
         datatype="dna",
@@ -30,13 +30,14 @@ rule create_bowtie_index:
             ".rev.2.ebwt",
         ),
     log:
-        "logs/ref/indexing_reference.log"
+        "results/logs/ref/indexing_reference.log"
     message:
         "Creating bowtie index"
     conda:
         "../envs/bowtie.yaml"
     threads: 10
-    priority:2
+    priority:0 
+    cache: True
     shell:
         """
         bowtie-build --threads {threads} {input} genome
@@ -48,7 +49,7 @@ rule get_spike_genome:
     output:
         "resources/ref/genome_spike.fasta"
     log:
-        "logs/ref/get_spike_genome.log"
+        "results/logs/ref/get_spike_genome.log"
     params:
         species=config["resources"]["ref_spike"]["species"],
         datatype="dna",

@@ -37,7 +37,7 @@ if config["trimming"]:
 
     rule fastp_se:
         input:
-            get_fastq_trimming
+            sample=get_fastq_trimming
         output:
             trimmed="results/trimmed/{id}.fastq.gz",
             html="report/trimmed/{id}.html",
@@ -55,7 +55,7 @@ if config["trimming"]:
 
     rule fastp_pe:
         input:
-            unpack(get_fastq_trimming)
+            sample=get_fastq_trimming
         output:
             trimmed=["results/trimmed/{id}_1.fastq.gz", "results/trimmed/{id}_2.fastq.gz"],
             html="report/trimmed/{id}.html",
