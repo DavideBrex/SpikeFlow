@@ -16,7 +16,6 @@ samples_sheet = pd.read_csv(config["samples_sheet"], dtype={
     "control_replicate": "Int64",
     'spike': "boolean"}, sep=",").set_index(["sample","replicate"], drop=False).sort_index()
 
-print(samples_sheet.index)
 
 validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
