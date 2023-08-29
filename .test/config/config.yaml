@@ -9,6 +9,7 @@ trimming: true
 
 resources:
   ref:
+    index: " sd"
     # Ensembl species name
     species: homo_sapiens
     # Ensembl release
@@ -27,11 +28,18 @@ resources:
 params:
   fastp-pe: ""
   fastp-se: ""
+  bowtie: 
+    global: "--chunkmbs 1024 -m 1 --best -S --no-unal -q"
+    pe: "-I 10 -X 1000"
 
+  samtools:
+    # Memory used by every core of samtools (GB). Be careful that 
+    # memory x threads is not bigger than the amount of memory assigned to align rule
+    memory: 2
 
 threads:
   fastp:
     10
-  bowtie_2: 
+  bowtie: 
     10
   

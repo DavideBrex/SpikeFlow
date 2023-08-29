@@ -9,13 +9,20 @@ import numpy as np
 samples_sheet = pd.read_csv(config["samples_sheet"], dtype={
     "replicate": "Int64",
     "control_replicate": "Int64",
-    'spike': "boolean"}, sep=",").set_index(["sample","replicate"], drop=False)
+    'spike': "boolean"}, sep=",").set_index(["sample","replicate"], drop=False).sort_index()
 
-print(samples_sheet.index)
+#print(samples_sheet.index)
 
 validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
-#-------------------- Sample sheet Sanity checks ---------------#
+
+##### wildcard constraints #####
+
+wildcard_constraints:
+    id = "|".join(set(['-rep'.join(map(str, idx)) for idx in samples_sheet.index])),
+    group = "1|2"
+
+#-------------------- Sample sheet Sanity checks    function ---------------#
 def perform_checks(input_df):
     
 
@@ -59,7 +66,7 @@ def perform_checks(input_df):
     for sample in input_df.index.get_level_values('sample').unique():
         #print(input_df.loc[[sample]])
         if all(input_df.loc[[sample]].fastq_2.notna()):
-            print("paired end")
+            continue
         elif any(input_df.loc[[sample]].fastq_2.notna()):
             print("ERROR: for sample {}, all replicates and runs should be either single or paired end".format(sample))
             sys.exit(1)
@@ -105,38 +112,55 @@ perform_checks(samples_sheet)
 def input_toget():
 
     wanted_inputs=[]
-    for (sample, replicate) in samples_sheet.index:
+    for (sample, replicate) in samples_sheet.index.unique():
 
-        wanted_inputs += [f"{sample}-{replicate}"]
-
-
-    return  expand("results/trimmed/{id}.fastq.gz", id=wanted_inputs)
+        wanted_inputs += [f"{sample}-rep{replicate}"]
 
 
-#-------------------- Other useuful functions ---------------#
+    return  expand("results/bam/{id}.bam", id=wanted_inputs)
+
+
+#-------------------- Other useful functions ---------------#
 
 def retrieve_index(id):
-    samp, rep = id.split("-")
+    samp, rep = id.split("-rep")
     return (samp, int(rep))
 
 
 def is_single_end(id):
     samp, rep = retrieve_index(id)
-    #print(samp, rep)
-    print(pd.isnull(samples_sheet.loc[(samp, rep), "fastq_2"]))
-    return pd.isnull(samples_sheet.loc[(samp, rep), "fastq_2"])
+    check = pd.isnull(samples_sheet.loc[(samp, rep), "fastq_2"])
+    #in case a sample has multiple lanes, we get a series instead of str
+    if isinstance(check, pd.Series):
+        return check[0]
+    return check
 
 
 def get_fastq(wildcards):
-    #perform trimming
-    if config["trimming"]:
-        samp, rep = retrieve_index(**wildcards)
 
+    samp, rep = retrieve_index(**wildcards)
+
+    if is_single_end(**wildcards):
+        return samples_sheet.loc[(samp, rep), "fastq_1"]
+    else:
+        #print("paired-end")
+        u = samples_sheet.loc[ (samp, rep), ["fastq_1", "fastq_2"] ].dropna()
+        if isinstance(u, pd.DataFrame):
+            return  {"fw": u.fastq_1.tolist(), "rv": u.fastq_2.tolist()}
+        
+        return [ f"{u.fastq_1}", f"{u.fastq_2}" ]
+
+    
+def get_reads(wildcards):
+
+    if config["trimming"]:
         if is_single_end(**wildcards):
-            return samples_sheet.loc[(samp, rep), "fastq_1" ]
+            return "results/trimmed/{id}.fastq.gz".format(**wildcards)
         else:
-            print("oi")
-            u = samples_sheet.loc[ (samp, rep), ["fastq_1", "fastq_2"] ].dropna()
-            return [ f"{u.fastq_1}", f"{u.fastq_2}" ]
-    
-    
+            return expand("results/trimmed/{id}_{group}.fastq.gz", group=[1, 2], **wildcards)
+
+    else:
+        if is_single_end(**wildcards):
+            return "results/fastq/{id}.fastq.gz".format(**wildcards)
+        else:
+            return expand("results/fastq/{id}_{group}.fastq.gz", group=[1, 2], **wildcards)
