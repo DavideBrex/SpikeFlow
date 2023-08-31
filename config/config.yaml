@@ -4,18 +4,21 @@ samples_sheet: config/samples_sheet.csv
 # perform trimming: false or true
 # if true go to params (at the end)
 # to set desired trimming parameters
-trimming: false
+trimming: true
 
 aligner: bowtie
 
 resources:
-  ref:
+  ref: 
+    #if bowtie index is not avialable leave only "" , it will be created
+    #otherwise proved the path to the folder containing bowtie index
+    index: "/shares/CIBIO-Storage/CIBIO/sharedLC/mouse_genome/bowtie_genome_mm10/GRCm38.p6.genome"
     # Ensembl species name
     species: homo_sapiens
     # Ensembl release
     release: 101
     # Genome build
-    build: GRCh38
+    build: GRCh38 
   ref_spike:
     # Ensembl species name
     species: drosophila_melanogaster 

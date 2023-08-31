@@ -3,3 +3,7 @@ resources/**
 logs/**
 .snakemake
 .snakemake/**
+.condarc 
+.cache
+.conda
+report/**

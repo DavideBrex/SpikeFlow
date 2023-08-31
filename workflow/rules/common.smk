@@ -150,6 +150,7 @@ def is_single_end(id):
 
 def get_fastq(wildcards):
     """  Rule called by merged lanes. It is executed when a sample has multiple lanes only """
+
     samp, rep = retrieve_index(**wildcards)
 
     if is_single_end(**wildcards):
@@ -161,12 +162,13 @@ def get_fastq(wildcards):
 
 def get_fastq_trimming(wildcards):
     """  Rule called by fastp_pe or se. Only called when trimming is activated """
+
     samp, rep = retrieve_index(**wildcards)
 
     if is_single_end(**wildcards):
         # to run merge only on samples that have multiple lanes
         if wildcards.id in multiLanes_samp: 
-            return "results/fastq/{id}.fastq.gz".format(**wildcards)
+            return expand("results/fastq/{id}.fastq.gz".format(**wildcards))
         else:
             return samples_sheet.loc[(samp, rep), "fastq_1"]
     else:
@@ -192,7 +194,7 @@ def get_reads(wildcards):
         if is_single_end(**wildcards):
             # to run merge only on samples that have multiple lanes
             if wildcards.id in multiLanes_samp: 
-                return "results/fastq/{id}.fastq.gz".format(**wildcards)
+                return expand("results/fastq/{id}.fastq.gz".format(**wildcards))
             else:
                 return samples_sheet.loc[(samp, rep), "fastq_1"]
         else:

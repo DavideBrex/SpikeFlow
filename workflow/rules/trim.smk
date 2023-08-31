@@ -5,19 +5,19 @@ ruleorder: merge_lanes_pe > merge_lanes_se
 
 rule merge_lanes_se:
     input:
-        get_fastq
+        sample=get_fastq
     output:
         temp("results/fastq/{id}.fastq.gz"),
     log:
         "results/logs/pipe-fastqs/{id}.log",
     threads: 1
     shell:
-        "cat {input} > {output} 2> {log}"
+        "cat {input.sample} > {output} 2> {log}"
 
 
 rule merge_lanes_pe:
     input:
-        unpack(get_fastq)
+        samples=get_fastq
     output:
         fw=temp("results/fastq/{id}_1.fastq.gz"),
         rv=temp("results/fastq/{id}_2.fastq.gz")
@@ -26,8 +26,8 @@ rule merge_lanes_pe:
     threads: 1
     shell:
         """
-        cat {input.fw} >  {output.fw}
-        cat {input.rv} > {output.rv}
+        cat {input.samples.fw} >  {output.fw}
+        cat {input.samples.rv} > {output.rv}
         """ 
 
 
@@ -37,7 +37,7 @@ if config["trimming"]:
 
     rule fastp_se:
         input:
-            get_fastq_trimming
+            sample=get_fastq_trimming
         output:
             trimmed="results/trimmed/{id}.fastq.gz",
             html="report/trimmed/{id}.html",
@@ -55,7 +55,7 @@ if config["trimming"]:
 
     rule fastp_pe:
         input:
-            unpack(get_fastq_trimming)
+            sample=get_fastq_trimming
         output:
             trimmed=["results/trimmed/{id}_1.fastq.gz", "results/trimmed/{id}_2.fastq.gz"],
             html="report/trimmed/{id}.html",
