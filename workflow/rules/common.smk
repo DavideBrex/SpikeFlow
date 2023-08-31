@@ -17,24 +17,26 @@ samples_sheet = pd.read_csv(config["samples_sheet"], dtype={
     'spike': "boolean"}, sep=",").set_index(["sample","replicate"], drop=False).sort_index()
 
 
+#-------------------- validation of config and sample sheet --------------------#
+
 validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
-#print(samples_sheet)
-#let's get the samples that need to be merged due to presence of multiple lanes
+validate(config, schema="../schemas/config.schema.yaml")
 
+#print(samples_sheet)
+
+#let's get the samples that need to be merged due to presence of multiple lanes
 duplicated_indices = samples_sheet.index[samples_sheet.index.duplicated(keep=False)].unique()
 multiLanes_samp = [f"{a}-rep{b}" for a, b in duplicated_indices] 
 
-
-##### wildcard constraints #####
+#-------------------- wildcard constraints --------------------#
 
 wildcard_constraints:
     id = "|".join(set(['-rep'.join(map(str, idx)) for idx in samples_sheet.index])),
     group = "1|2"
 
 
-
-#-------------------- Sample sheet Sanity checks    function ---------------#
+#-------------------- Sample sheet Sanity checks function ---------------#
 def perform_checks(input_df):
     
 
@@ -94,8 +96,14 @@ def perform_checks(input_df):
 
     samplesNoControl=noControl[noControl == True].index.unique().tolist()
     if len(samplesNoControl) > 0:
-            print("ERROR: The indicated control is missing in the samples column for these samples: {}".format(samplesNoControl))
+        print("ERROR: The indicated control is missing in the samples column for these samples: {}".format(samplesNoControl))
+        sys.exit(1)
+    #5. in case an index is provided for the ref genome (different than ""), check whether it actually exists
+    if config["resources"]["ref"]["index"] != "":
+        if not os.path.exists(config["resources"]["ref"]["index"]):
+            print("ERROR: The provided path to the reference genome index does not exist. \nPlease check that the folder is present and contains the indexing files")
             sys.exit(1)
+
 
 #-------------------- Sample sheet Sanity checks ---------------#
 
@@ -120,7 +128,6 @@ perform_checks(samples_sheet)
 
 
 #     return wanted_inputs
-
 def input_toget():
 
     wanted_inputs=[]
@@ -132,7 +139,7 @@ def input_toget():
     return  expand("results/bam/{id}.bam", id=wanted_inputs)
 
 
-#-------------------- Other useful functions ---------------#
+#-------------------- Other helpers functions ---------------#
 
 def retrieve_index(id):
     samp, rep = id.split("-rep")
@@ -147,10 +154,11 @@ def is_single_end(id):
         return check[0]
     return check
 
-# get input files -- helper functions
+#--------------------  Rules Input Functions ---------------#
+
 
 def get_fastq(wildcards):
-    """  Rule called by merged lanes. It is executed only when a sample has multiple lanes only """
+    """  Function called by merged lanes. It is executed only when a sample has multiple lanes only """
     samp, rep = retrieve_index(**wildcards)
 
     if is_single_end(**wildcards):
@@ -161,7 +169,7 @@ def get_fastq(wildcards):
         
 
 def get_fastq_trimming(wildcards):
-    """  Rule called by fastp_pe or se. Only called when trimming is activated """
+    """  Function called by fastp_pe or se. Only called when trimming is activated """
 
     samp, rep = retrieve_index(**wildcards)
 
@@ -180,7 +188,7 @@ def get_fastq_trimming(wildcards):
 
 
 def get_reads(wildcards):
-    """  Rule called by aligners. """
+    """  Function called by aligners. """
 
     samp, rep = retrieve_index(**wildcards)
     #if trimming is performed, the trimmed fastqs are all in 

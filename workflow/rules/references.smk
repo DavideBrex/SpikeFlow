@@ -47,6 +47,7 @@ rule create_bowtie_index:
     threads: 10
     params:
         genome_path=config["resources"]["ref"]["index"]
+    cache: True
     shell: 
         """
         # Add a condition in the shell script to determine if commands should run
