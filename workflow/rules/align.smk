@@ -11,8 +11,8 @@ if config["aligner"] == "bowtie":
             idx= directory("resources/reference_genome/genome/")
             
         output:
-            bam   = temp("results/bam/{id}.bam"),
-            index = temp("results/bam/{id}.bam.bai")
+            bam   = "results/bam/{id}.bam",
+            index = "results/bam/{id}.bam.bai"
         threads:
             8
         params:

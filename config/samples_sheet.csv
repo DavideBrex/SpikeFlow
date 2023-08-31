@@ -1,8 +1,8 @@
 sample,replicate,antibody,control,control_replicate,spike,peak_type,fastq_1,fastq_2
-H3K4me3_untreated,1,H3K4me3,Input_untreated,1,True,narrow,.test/data/SRR10612152_GSM4211265_A1014C03_H3K4me3_untreated-1_Homo_sapiens_ChIP-Seq.L1.sub.fastq.gz,.test/data/SRR10612152_GSM4211265_A1014C03_H3K4me3_untreated-1_Homo_sapiens_ChIP-Seq.L1.sub.fastq.gz
-H3K4me3_untreated,1,H3K4me3,Input_untreated,1,True,narrow,.test/data/SRR10612152_GSM4211265_A1014C03_H3K4me3_untreated-1_Homo_sapiens_ChIP-Seq.L2.sub.fastq.gz,.test/data/SRR10612152_GSM4211265_A1014C03_H3K4me3_untreated-1_Homo_sapiens_ChIP-Seq.L2.sub.fastq.gz
-H3K4me3_untreated,2,H3K4me3,Input_untreated,1,True,narrow,.test/data/SRR10612153_GSM4211266_A1014C11_H3K4me3_untreated-2_Homo_sapiens_ChIP-Seq.L1.sub.fastq.gz,.test/data/SRR10612153_GSM4211266_A1014C11_H3K4me3_untreated-2_Homo_sapiens_ChIP-Seq.L1.sub.fastq.gz
-H3K4me3_untreated,2,H3K4me3,Input_untreated,1,True,narrow,.test/data/SRR10612153_GSM4211266_A1014C11_H3K4me3_untreated-2_Homo_sapiens_ChIP-Seq.L2.sub.fastq.gz,.test/data/SRR10612153_GSM4211266_A1014C11_H3K4me3_untreated-2_Homo_sapiens_ChIP-Seq.L2.sub.fastq.gz
+H3K4me3_untreated,1,H3K4me3,Input_untreated,1,True,narrow,.test/data/SRR10612152_GSM4211265_A1014C03_H3K4me3_untreated-1_Homo_sapiens_ChIP-Seq.L1.sub.fastq.gz,
+H3K4me3_untreated,1,H3K4me3,Input_untreated,1,True,narrow,.test/data/SRR10612152_GSM4211265_A1014C03_H3K4me3_untreated-1_Homo_sapiens_ChIP-Seq.L2.sub.fastq.gz,
+H3K4me3_untreated,2,H3K4me3,Input_untreated,1,True,narrow,.test/data/SRR10612153_GSM4211266_A1014C11_H3K4me3_untreated-2_Homo_sapiens_ChIP-Seq.L1.sub.fastq.gz,
+H3K4me3_untreated,2,H3K4me3,Input_untreated,1,True,narrow,.test/data/SRR10612153_GSM4211266_A1014C11_H3K4me3_untreated-2_Homo_sapiens_ChIP-Seq.L2.sub.fastq.gz,
 H3K4me3_EGF,1,H3K4me3,Input_EGF,1,True,narrow,.test/data/SRR10612154_GSM4211267_A1014C04_H3K4me3_EGF-1_Homo_sapiens_ChIP-Seq.L1.sub.fastq.gz,
 H3K9me2_untreated,1,H3K9me2,Input_untreated,1,True,very-broad,.test/data/SRR8096005_GSM3443099_A1014C05_H3K9me2_untreated-1_Homo_sapiens_ChIP-Seq.L1.sub.fastq.gz,
 H3K9me2_EGF,1,H3K9me2,Input_EGF,1,True,very-broad,.test/data/SRR8096008_GSM3443102_A1014C06_H3K9me2_EGF-1_Homo_sapiens_ChIP-Seq.L1.sub.fastq.gz,

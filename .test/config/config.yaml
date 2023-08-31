@@ -9,13 +9,16 @@ trimming: true
 aligner: bowtie
 
 resources:
-  ref:
+  ref: 
+    #if bowtie index is not avialable leave only "" , it will be created
+    #otherwise proved the path to the folder containing bowtie index
+    index: "/shares/CIBIO-Storage/CIBIO/sharedLC/mouse_genome/bowtie_genome_mm10/GRCm38.p6.genome"
     # Ensembl species name
     species: homo_sapiens
     # Ensembl release
     release: 101
     # Genome build
-    build: GRCh38
+    build: GRCh38 
   ref_spike:
     # Ensembl species name
     species: drosophila_melanogaster 
@@ -33,8 +36,8 @@ params:
     pe: "-I 10 -X 1000"
 
   samtools:
-  # Memory used by every core of samtools (GB). Be careful that 
-  # memory x threads is not bigger than the amount of memory assigned to align rule
+    # Memory used by every core of samtools (GB). Be careful that 
+    # memory x threads is not bigger than the amount of memory assigned to align rule
     memory: 2
 
 threads:

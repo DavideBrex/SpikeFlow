@@ -17,7 +17,7 @@ rule merge_lanes_se:
 
 rule merge_lanes_pe:
     input:
-        samples=get_fastq
+        unpack(get_fastq)
     output:
         fw=temp("results/fastq/{id}_1.fastq.gz"),
         rv=temp("results/fastq/{id}_2.fastq.gz")
@@ -26,8 +26,8 @@ rule merge_lanes_pe:
     threads: 1
     shell:
         """
-        cat {input.samples.fw} >  {output.fw}
-        cat {input.samples.rv} > {output.rv}
+        cat {input.fw} >  {output.fw}
+        cat {input.rv} >  {output.rv}
         """ 
 
 
@@ -39,9 +39,9 @@ if config["trimming"]:
         input:
             sample=get_fastq_trimming
         output:
-            trimmed="results/trimmed/{id}.fastq.gz",
-            html="report/trimmed/{id}.html",
-            json="report/trimmed/{id}.json"
+            trimmed ="results/trimmed/{id}.fastq.gz",
+            html    ="report/trimmed/{id}.html",
+            json    ="report/trimmed/{id}.json"
         log:
             "results/logs/fastp/{id}.log"
         params:
@@ -57,14 +57,14 @@ if config["trimming"]:
         input:
             sample=get_fastq_trimming
         output:
-            trimmed=["results/trimmed/{id}_1.fastq.gz", "results/trimmed/{id}_2.fastq.gz"],
-            html="report/trimmed/{id}.html",
-            json="report/trimmed/{id}.json"
+            trimmed =["results/trimmed/{id}_1.fastq.gz", "results/trimmed/{id}_2.fastq.gz"],
+            html    ="report/trimmed/{id}.html",
+            json    ="report/trimmed/{id}.json"
         log:
             "results/logs/fastp/{id}.log"
         params:
             adapters=config["params"]["fastp-pe"],
-            extra=""
+            extra   =""
         threads: 3
         wrapper:
             "v2.6.0/bio/fastp"

@@ -21,6 +21,7 @@ validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
 #print(samples_sheet)
 #let's get the samples that need to be merged due to presence of multiple lanes
+
 duplicated_indices = samples_sheet.index[samples_sheet.index.duplicated(keep=False)].unique()
 multiLanes_samp = [f"{a}-rep{b}" for a, b in duplicated_indices] 
 
@@ -149,15 +150,14 @@ def is_single_end(id):
 # get input files -- helper functions
 
 def get_fastq(wildcards):
-    """  Rule called by merged lanes. It is executed when a sample has multiple lanes only """
-
+    """  Rule called by merged lanes. It is executed only when a sample has multiple lanes only """
     samp, rep = retrieve_index(**wildcards)
 
     if is_single_end(**wildcards):
         return samples_sheet.loc[(samp, rep), "fastq_1"] if wildcards.id in multiLanes_samp else  []
     else:
         u = samples_sheet.loc[ (samp, rep), ["fastq_1", "fastq_2"] ].dropna()
-        return  {"fw": u.fastq_1.tolist(), "rv": u.fastq_2.tolist()} if wildcards.id in multiLanes_samp else  []
+        return  {"fw": u.fastq_1.tolist(), "rv": u.fastq_2.tolist()}  if wildcards.id in multiLanes_samp else {"fw": "", "rv": ""} 
         
 
 def get_fastq_trimming(wildcards):
