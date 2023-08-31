@@ -5,6 +5,8 @@
 rule return_genome_path:
     output:
         genome = directory("resources/reference_genome/genome/")
+    log:
+        "results/logs/ref/return_genome_path.log"
     params:
         genome_path=config["resources"]["ref"]["index"]
     shell:
@@ -56,7 +58,6 @@ rule create_bowtie_index:
         fi
         """
         
-
 # Rule priority
 if config["resources"]["ref"]["index"]:
     ruleorder: return_genome_path > create_bowtie_index

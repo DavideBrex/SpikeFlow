@@ -100,7 +100,7 @@ def perform_checks(input_df):
         sys.exit(1)
     #5. in case an index is provided for the ref genome (different than ""), check whether it actually exists
     if config["resources"]["ref"]["index"] != "":
-        if not os.path.exists(config["resources"]["ref"]["index"]):
+        if not os.path.exists(os.path.dirname(config["resources"]["ref"]["index"])):
             print("ERROR: The provided path to the reference genome index does not exist. \nPlease check that the folder is present and contains the indexing files")
             sys.exit(1)
 
