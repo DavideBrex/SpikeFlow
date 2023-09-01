@@ -3,6 +3,7 @@
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
 [![GitHub actions status](https://github.com/DavideBrex/ChIP-Rx-snakemake/workflows/Tests/badge.svg?branch=main)](https://github.com/DavideBrex/ChIP-Rx-snakemake/actions?query=branch%3Amain+workflow%3ATests)
 
+**Under development**
 
 A Snakemake workflow for the anlysis of ChIP-Rx data, i.e ChIP-Seq with reference exogenous genome spike-in normalization
 
