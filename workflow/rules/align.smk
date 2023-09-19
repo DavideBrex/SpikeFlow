@@ -97,13 +97,14 @@ rule clean_spike:
     output:
         sample_ref   = temp("results/bam/{id}.bam.clean"),
         sample_spike = temp("results/bam_spike/{id}_spike.bam.clean")
+    conda:
+        "../envs/pysam.yaml"
     log:
         "results/logs/alignments/{id}.removeSpikeDups"
     shell:
         """
         python workflow/scripts/remove_spikeDups.py {input} &> {log}      
         mv {input.sample_ref}.temporary {output.sample_ref}; mv {input.sample_spike}.temporary {output.sample_spike}
-        samtools index {output.sample_spike}
         """
 
 # Dummy rule to change the name of the bam files to be able to 
@@ -112,7 +113,9 @@ rule update_bam:
     input:
         get_bam
     output:
-        outBam = "results/bam/{id}.bam",
+        outBam = "results/bam/{id}.bam"
+    conda:
+        "../envs/bowtie.yaml"
     log:
         "results/logs/alignments/{id}.update_bam"
     shell:
