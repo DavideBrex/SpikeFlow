@@ -1,6 +1,6 @@
 sample,replicate,antibody,control,control_replicate,spike,peak_type,fastq_1,fastq_2
 H3K4me3_untreated,1,H3K4me3,Input_untreated,1,True,narrow,.test/data/fastq/H3K4me3_untreated-1_Homo_sapiens_L1.fastq.gz,
-H3K4me3_untreated,1,H3K4me3,Input_untreated,1,True,narrow,.test/data/fastq/H3K4me3_untreated-1_Homo_sapiens_L2.fastq.gz,
+H3K4me3_untreated,1,H3K4me3,Input_untreated,1,False,narrow,.test/data/fastq/H3K4me3_untreated-1_Homo_sapiens_L2.fastq.gz,
 H3K4me3_untreated,2,H3K4me3,Input_untreated,1,True,narrow,.test/data/fastq/H3K4me3_untreated-2_Homo_sapiens_L1.fastq.gz,
 H3K4me3_untreated,2,H3K4me3,Input_untreated,1,True,narrow,.test/data/fastq/H3K4me3_untreated-2_Homo_sapiens_L2.fastq.gz,
 H3K4me3_EGF,1,H3K4me3,Input_EGF,1,True,narrow,.test/data/fastq/H3K4me3_EGF-1_Homo_sapiens.fastq.gz,
