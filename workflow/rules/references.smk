@@ -76,7 +76,7 @@ rule return_spike_path:
     shell:
         """
         if [ -n "{params.genome_path}" ]; then
-            mkdir resources/reference_genome/genome/
+            mkdir resources/spike_genome/genome/
             prefix=$(basename {params.genome_path})
             directory=$(dirname {params.genome_path})
             ln -s $directory/*  {output.genome}

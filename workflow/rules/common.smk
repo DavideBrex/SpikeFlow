@@ -64,7 +64,6 @@ def perform_checks(input_df):
     #   -and also that spike column has the same values for all the reps of a sample
     
     for sample in input_df.index.get_level_values('sample').unique():
-        print(sample)
 
         if all(input_df.loc[[sample]].fastq_2.notna()):
             pass
@@ -138,7 +137,6 @@ def is_single_end(id):
 def is_spike(id):
     samp, rep = retrieve_index(id)
     check = samples_sheet.loc[(samp, rep), "spike"]
-    #in case a sample has multiple lanes, we get a series instead of str
     if isinstance(check, pd.Series):
         return check[0]
     return check
@@ -202,7 +200,7 @@ def get_reads(wildcards):
 
 
 def get_reads_spike(wildcards):
-    """  Function called by aligners. """
+    """  Function called by aligners spike """
 
     samp, rep = retrieve_index(**wildcards)
     if (is_spike(**wildcards)):
@@ -227,3 +225,8 @@ def get_reads_spike(wildcards):
                     u = samples_sheet.loc[ (samp, rep), ["fastq_1", "fastq_2"] ].dropna()
                     return [ u.fastq_1.tolist()[0], u.fastq_2.tolist()[0] ]
 
+def get_bam(wildcards):
+    """  Function called to handle bam cleaned from spike and those with no spike. """
+    if not is_spike(**wildcards):
+        return "results/bam/{id}.tmp.bam".format(**wildcards)
+    return "results/bam/{id}.bam.clean".format(**wildcards)
