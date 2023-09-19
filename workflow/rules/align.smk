@@ -8,11 +8,11 @@ if config["aligner"] == "bowtie":
     rule align_bowtie:
         input:
             reads=get_reads,
-            idx= "resources/reference_genome/genome/genome"
+            idx= "resources/reference_genome/genome/"
             
         output:
-            bam   = temp("results/bam/{id}.bam"),
-            index = temp("results/bam/{id}.bam.bai")
+            bam   = temp("results/bam/{id}.tmp.bam"),
+            index = temp("results/bam/{id}.tmp.bam.bai")
         threads:
             8
         params:
@@ -49,7 +49,7 @@ if config["aligner"] == "bowtie":
     rule align_bowtie_spike:
         input:
             reads=get_reads_spike,
-            idx= "resources/spike_genome/genome/genome"
+            idx= "resources/spike_genome/genome/"
             
         output:
             bam   = temp("results/bam_spike/{id}_spike.bam"),
@@ -90,18 +90,33 @@ if config["aligner"] == "bowtie":
 
 rule clean_spike:
     input:
-        sample_ref         = "results/bam/{sample}.bam",
-        sample_spike       = "results/bam_spike/{sample}_spike.bam",
-        sample_ref_index   = "results/bam/{sample}.bam.bai",
-        sample_spike_index = "results/bam_spike/{sample}_spike.bam.bai"
+        sample_ref         = "results/bam/{id}.tmp.bam",
+        sample_spike       = "results/bam_spike/{id}_spike.bam",
+        sample_ref_index   = "results/bam/{id}.tmp.bam.bai",
+        sample_spike_index = "results/bam_spike/{id}_spike.bam.bai"
     output:
-        sample_ref   = temp("results/bam/{sample}.bam.tmp.clean"),
-        sample_spike = temp("results/bam_spike/{sample}_spike.bam.clean")
+        sample_ref   = temp("results/bam/{id}.bam.clean"),
+        sample_spike = temp("results/bam_spike/{id}_spike.bam.clean")
     log:
-        "results/logs/alignments/{sample}.removeSpikeDups"
+        "results/logs/alignments/{id}.removeSpikeDups"
     shell:
         """
         python workflow/scripts/remove_spikeDups.py {input} &> {log}      
         mv {input.sample_ref}.temporary {output.sample_ref}; mv {input.sample_spike}.temporary {output.sample_spike}
         samtools index {output.sample_spike}
+        """
+
+# Dummy rule to change the name of the bam files to be able to 
+# have the same name structure in spike-in and non-spiked samples
+rule update_bam:
+    input:
+        get_bam
+    output:
+        outBam = "results/bam/{id}.bam",
+    log:
+        "results/logs/alignments/{id}.update_bam"
+    shell:
+        """
+        mv {input} {output.outBam}
+        samtools index {output.outBam} 2>> {log}
         """
