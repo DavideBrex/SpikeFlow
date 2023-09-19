@@ -8,7 +8,7 @@ if config["aligner"] == "bowtie":
     rule align_bowtie:
         input:
             reads=get_reads,
-            idx= directory("resources/reference_genome/genome/")
+            idx= "resources/reference_genome/genome/genome"
             
         output:
             bam   = temp("results/bam/{id}.bam"),
@@ -49,7 +49,7 @@ if config["aligner"] == "bowtie":
     rule align_bowtie_spike:
         input:
             reads=get_reads_spike,
-            idx= directory("resources/spike_genome/genome/")
+            idx= "resources/spike_genome/genome/genome"
             
         output:
             bam   = temp("results/bam_spike/{id}_spike.bam"),

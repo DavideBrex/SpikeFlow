@@ -64,16 +64,20 @@ def perform_checks(input_df):
     #   -and also that spike column has the same values for all the reps of a sample
     
     for sample in input_df.index.get_level_values('sample').unique():
+        print(sample)
+
         if all(input_df.loc[[sample]].fastq_2.notna()):
-            if all(input_df.loc[[sample]].spike == True) or all(input_df.loc[[sample]].spike == False):
-                pass
-            else:
-                raise ValueError("For sample {}, all replicates should have the same value for spike column".format(sample))
-            pass 
+            pass
         elif any(input_df.loc[[sample]].fastq_2.notna()):
             raise Exception("For sample {}, all replicates and runs should be either single or paired end".format(sample))
 
-
+        if pd.isnull(input_df.loc[[sample]].spike[0]):
+            pass
+        elif all(input_df.loc[[sample]].spike == True) or all(input_df.loc[[sample]].spike == False):
+            pass
+        else:
+            raise ValueError("For sample {}, all replicates should have the same value for spike column".format(sample)) 
+            
     #4. Control identifier and replicate has to match a provided sample identifier and replicate
     input_df_controls = input_df['antibody'].isna() #control sames (those with antibody to null)
 
@@ -85,7 +89,7 @@ def perform_checks(input_df):
 
     samplesNoControl=noControl[noControl == True].index.unique().tolist()
     if len(samplesNoControl) > 0:
-        raise Exception("ERROR: The indicated control is missing in the samples column for these samples: {}".format(samplesNoControl))
+        raise Exception("The indicated control is missing in the samples column for these samples: {}".format(samplesNoControl))
     
     #5. in case an index is provided for the ref genome (different than ""), check whether it actually exists
     if config["resources"]["ref"]["index"] != "":
