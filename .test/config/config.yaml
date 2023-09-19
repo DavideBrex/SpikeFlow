@@ -20,13 +20,15 @@ resources:
     # Genome build
     build: GRCh38 
   ref_spike:
+    #if bowtie index is not avialable leave only "" , it will be created
+    #otherwise proved the path to the folder containing bowtie index
+    index_spike: "data/dm6_index/bowtie1_dm6_index"
     # Ensembl species name
     species: drosophila_melanogaster 
     # Ensembl release
     release: 110
     # Genome build
     build: dm6
-
 
 params:
   fastp-pe: ""
