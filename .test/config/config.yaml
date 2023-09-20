@@ -40,7 +40,7 @@ params:
   samtools:
     # Memory used by every core of samtools (GB). Be careful that 
     # memory x threads is not bigger than the amount of memory assigned to align rule
-    memory: 2
+    memory: 1
 
 threads:
   fastp:
