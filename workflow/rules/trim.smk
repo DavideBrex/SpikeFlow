@@ -5,7 +5,7 @@ ruleorder: merge_lanes_pe > merge_lanes_se
 
 rule merge_lanes_se:
     input:
-        sample=get_fastq
+        sample=get_fastq,
     output:
         temp("results/fastq/{id}.fastq.gz"),
     log:
@@ -17,10 +17,10 @@ rule merge_lanes_se:
 
 rule merge_lanes_pe:
     input:
-        unpack(get_fastq)
+        unpack(get_fastq),
     output:
         fw=temp("results/fastq/{id}_1.fastq.gz"),
-        rv=temp("results/fastq/{id}_2.fastq.gz")
+        rv=temp("results/fastq/{id}_2.fastq.gz"),
     log:
         "results/logs/pipe-fastqs/{id}.log",
     threads: 1
@@ -28,7 +28,7 @@ rule merge_lanes_pe:
         """
         cat {input.fw} >  {output.fw}
         cat {input.rv} >  {output.rv}
-        """ 
+        """
 
 
 if config["trimming"]:
@@ -37,35 +37,35 @@ if config["trimming"]:
 
     rule fastp_se:
         input:
-            sample=get_fastq_trimming
+            sample=get_fastq_trimming,
         output:
-            trimmed ="results/trimmed/{id}.fastq.gz",
-            html    ="report/trimmed/{id}.html",
-            json    ="report/trimmed/{id}.json"
+            trimmed="results/trimmed/{id}.fastq.gz",
+            html="report/trimmed/{id}.html",
+            json="report/trimmed/{id}.json",
         log:
-            "results/logs/fastp/{id}.log"
+            "results/logs/fastp/{id}.log",
         params:
             adapters=config["params"]["fastp-se"],
-            extra=""
+            extra="",
         threads: 3
         wrapper:
             "v2.6.0/bio/fastp"
-
-
 
     rule fastp_pe:
         input:
-            sample=get_fastq_trimming
+            sample=get_fastq_trimming,
         output:
-            trimmed =["results/trimmed/{id}_1.fastq.gz", "results/trimmed/{id}_2.fastq.gz"],
-            html    ="report/trimmed/{id}.html",
-            json    ="report/trimmed/{id}.json"
+            trimmed=[
+                "results/trimmed/{id}_1.fastq.gz",
+                "results/trimmed/{id}_2.fastq.gz",
+            ],
+            html="report/trimmed/{id}.html",
+            json="report/trimmed/{id}.json",
         log:
-            "results/logs/fastp/{id}.log"
+            "results/logs/fastp/{id}.log",
         params:
             adapters=config["params"]["fastp-pe"],
-            extra   =""
+            extra="",
         threads: 3
         wrapper:
             "v2.6.0/bio/fastp"
-        

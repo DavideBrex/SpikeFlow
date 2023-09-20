@@ -1,7 +1,7 @@
-# Main entrypoint of the workflow. 
-# Please follow the best practices: 
+# Main entrypoint of the workflow.
+# Please follow the best practices:
 # https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html,
-# in particular regarding the standardized folder structure mentioned there. 
+# in particular regarding the standardized folder structure mentioned there.
 
 
 from snakemake.utils import min_version
@@ -9,15 +9,14 @@ from snakemake.utils import min_version
 min_version("6.3.0")
 
 
-
 configfile: "config/config.yaml"
 
 
 # this container defines the underlying OS for each job when using the workflow
-# with --use-conda --use-singularity 
+# with --use-conda --use-singularity
+
 
 container: "docker://continuumio/miniconda3"
-
 
 
 include: "rules/references.smk"
@@ -25,6 +24,7 @@ include: "rules/common.smk"
 include: "rules/trim.smk"
 include: "rules/align.smk"
 
-rule all:
-    input: input_toget()
 
+rule all:
+    input:
+        input_toget(),
