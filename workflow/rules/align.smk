@@ -64,8 +64,8 @@ if config["aligner"] == "bowtie":
         conda:
             "../envs/bowtie.yaml"
         log:
-            align="results/logs/alignments/{id}_spike.log",
-            rm_dups="results/logs/alignments/rm_dup/{id}_spike.log",
+            align="results/logs/alignments/spike/{id}_spike.log",
+            rm_dups="results/logs/alignments/spike/rm_dup/{id}_spike.log",
         benchmark:
             "results/.benchmarks/{id}.align.benchmark.txt"
         shell:
@@ -90,12 +90,9 @@ rule clean_spike:
     conda:
         "../envs/pysam.yaml"
     log:
-        "results/logs/alignments/{id}.removeSpikeDups",
-    shell:
-        """
-        python workflow/scripts/remove_spikeDups.py {input} &> {log}
-        mv {input.sample_ref}.temporary {output.sample_ref}; mv {input.sample_spike}.temporary {output.sample_spike}
-        """
+        "results/logs/alignments/spike/{id}.removeSpikeDups",
+    script:
+        "../scripts/remove_spikeDups.py"
 
 
 # Dummy rule to change the name of the bam files to be able to have the same name structure in spike-in and non-spiked samples
@@ -107,7 +104,7 @@ rule update_bam:
     conda:
         "../envs/bowtie.yaml"
     log:
-        "results/logs/alignments/{id}.update_bam",
+        "results/logs/alignments/spike/{id}.update_bam",
     shell:
         """
         mv {input} {output.outBam}
