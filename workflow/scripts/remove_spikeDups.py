@@ -3,7 +3,7 @@ import sys
 
 def collect_read_names(bamfile):
     """Collects the names of all reads in a BAM file."""
-    return {read.query_name for read in bamfile}
+    return {read.query_name for read in bamfile.fetch()}
 
 
 def write_unique_reads(bamfile1, bamfile2):
@@ -22,21 +22,22 @@ def write_unique_reads(bamfile1, bamfile2):
 
     # Print the bam lines that are not shared by sample and spike to new bam files
     counter = 0
-    for read in bam1_open:
+    for read in bam1_open.fetch():
+        print("test")
         if read.query_name not in common_reads:
             bam1_outfile.write(read)
     
     bam1_open.close()
     bam1_outfile.close()
 
-    for read in bam2_open:
+    for read in bam2_open.fetch():
         if read.query_name not in common_reads:
             bam2_outfile.write(read)
         else:
             counter += 1
+            
     bam2_open.close()
     bam2_outfile.close()
-
     print("Removed %s reads" % (counter))
 
 if __name__ == "__main__":
