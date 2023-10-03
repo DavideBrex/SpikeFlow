@@ -19,6 +19,9 @@ resources:
     release: 101
     # Genome build
     build: GRCh38 
+    #blacklist regions
+    blacklist: ""
+
   ref_spike:
     #if bowtie index is not avialable leave only "" , it will be created
     #otherwise proved the path to the folder containing bowtie index
@@ -29,6 +32,7 @@ resources:
     release: 110
     # Genome build
     build: dm6
+
 
 params:
   fastp-pe: ""
