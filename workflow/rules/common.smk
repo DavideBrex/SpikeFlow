@@ -35,6 +35,7 @@ multiLanes_samp = [f"{a}-rep{b}" for a, b in duplicated_indices]
 wildcard_constraints:
     id="|".join(set(["-rep".join(map(str, idx)) for idx in samples_sheet.index])),
     group="1|2",
+    control="|".join(set(["-rep".join(map(str, idx)) for idx in samples_sheet[pd.isna(samples_sheet.antibody)].index])),
 
 
 # -------------------- Sample sheet Sanity checks function ---------------#
