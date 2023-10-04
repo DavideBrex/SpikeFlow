@@ -8,7 +8,7 @@ import numpy as np
 samples_sheet = (
     pd.read_csv(
         config["samples_sheet"],
-        dtype={"replicate": "Int64", "control_replicate": "Int64", "spike": "boolean"},
+        dtype={"replicate": "Int64", "control_replicate": "Int64"},
         sep=",",
     )
     .set_index(["sample", "replicate"], drop=False)
@@ -46,7 +46,6 @@ def perform_checks(input_df):
         "antibody",
         "control",
         "control_replicate",
-        "spike",
         "peak_type",
         "fastq_1",
         "fastq_2",
@@ -82,7 +81,6 @@ def perform_checks(input_df):
 
     # 3. -check whether replicates from the same samples are all single-end or both paired-end
     #   -check if runs of the same sample   have same data type (single-end or paired -end)
-    #   -and also that spike column has the same values for all the reps of a sample
 
     for sample in input_df.index.get_level_values("sample").unique():
         if all(input_df.loc[[sample]].fastq_2.notna()):
@@ -90,19 +88,6 @@ def perform_checks(input_df):
         elif any(input_df.loc[[sample]].fastq_2.notna()):
             raise Exception(
                 "For sample {}, all replicates and runs should be either single or paired end".format(
-                    sample
-                )
-            )
-
-        if pd.isnull(input_df.loc[[sample]].spike[0]):
-            pass
-        elif all(input_df.loc[[sample]].spike == True) or all(
-            input_df.loc[[sample]].spike == False
-        ):
-            pass
-        else:
-            raise ValueError(
-                "For sample {}, all replicates should have the same value for spike column".format(
                     sample
                 )
             )
@@ -155,7 +140,7 @@ def input_toget():
     for sample, replicate in samples_sheet.index.unique():
         wanted_inputs += [f"{sample}-rep{replicate}"]
 
-    return expand("results/bam/{id}.bam", id=wanted_inputs)
+    return expand("results/bam/{id}.clean.bam", id=wanted_inputs)
 
 
 # -------------------- Other helpers functions ---------------#
@@ -175,12 +160,12 @@ def is_single_end(id):
     return check
 
 
-def is_spike(id):
-    samp, rep = retrieve_index(id)
-    check = samples_sheet.loc[(samp, rep), "spike"]
-    if isinstance(check, pd.Series):
-        return check[0]
-    return check
+# def is_spike(id):
+#     samp, rep = retrieve_index(id)
+#     check = samples_sheet.loc[(samp, rep), "spike"]
+#     if isinstance(check, pd.Series):
+#         return check[0]
+#     return check
 
 
 # --------------------  Rules Input Functions ---------------#
@@ -256,39 +241,34 @@ def get_reads(wildcards):
                 return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
 
 
-def get_reads_spike(wildcards):
-    """Function called by aligners spike"""
+# def get_reads_spike(wildcards):
+#     """Function called by aligners spike"""
 
-    samp, rep = retrieve_index(**wildcards)
-    if is_spike(**wildcards):
-        # if trimming is performed, the trimmed fastqs are all in
-        if config["trimming"]:
-            if is_single_end(**wildcards):
-                return expand("results/trimmed/{id}.fastq.gz".format(**wildcards))
-            else:
-                return expand(
-                    "results/trimmed/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
-                )
+#     samp, rep = retrieve_index(**wildcards)
+#     if is_spike(**wildcards):
+#         # if trimming is performed, the trimmed fastqs are all in
+#         if config["trimming"]:
+#             if is_single_end(**wildcards):
+#                 return expand("results/trimmed/{id}.fastq.gz".format(**wildcards))
+#             else:
+#                 return expand(
+#                     "results/trimmed/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
+#                 )
 
-        else:
-            if is_single_end(**wildcards):
-                # to run merge only on samples that have multiple lanes
-                if wildcards.id in multiLanes_samp:
-                    return expand("results/fastq/{id}.fastq.gz".format(**wildcards))
-                else:
-                    return samples_sheet.loc[(samp, rep), "fastq_1"]
-            else:
-                if wildcards.id in multiLanes_samp:
-                    return expand(
-                        "results/fastq/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
-                    )
-                else:
-                    u = samples_sheet.loc[(samp, rep), ["fastq_1", "fastq_2"]].dropna()
-                    return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
+#         else:
+#             if is_single_end(**wildcards):
+#                 # to run merge only on samples that have multiple lanes
+#                 if wildcards.id in multiLanes_samp:
+#                     return expand("results/fastq/{id}.fastq.gz".format(**wildcards))
+#                 else:
+#                     return samples_sheet.loc[(samp, rep), "fastq_1"]
+#             else:
+#                 if wildcards.id in multiLanes_samp:
+#                     return expand(
+#                         "results/fastq/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
+#                     )
+#                 else:
+#                     u = samples_sheet.loc[(samp, rep), ["fastq_1", "fastq_2"]].dropna()
+#                     return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
 
 
-def get_bam(wildcards):
-    """Function called to handle bam cleaned from spike and those with no spike."""
-    if not is_spike(**wildcards):
-        return "results/bam/{id}.tmp.bam".format(**wildcards)
-    return "results/bam/{id}.bam.clean".format(**wildcards)

@@ -25,11 +25,6 @@ properties:
     description: replicate number of the control sample
     minimum: 0
 
-  spike:
-    type: boolean
-    default: true
-    description: boolean that indicates if sample has spike-in
-
   peak_type:
     type: string
     enum: 
