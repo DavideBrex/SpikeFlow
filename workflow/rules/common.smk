@@ -30,10 +30,13 @@ duplicated_indices = samples_sheet.index[
 multiLanes_samp = [f"{a}-rep{b}" for a, b in duplicated_indices]
 
 # create a dictionary of sample-input match
-idSamples = samples_sheet["sample"] + "-rep" + samples_sheet["replicate"].astype(str)
-inputSamples = (
-    samples_sheet["control"] + "-rep" + samples_sheet["control_replicate"].astype(str)
+idSamples = samples_sheet["sample"].str.cat(
+    samples_sheet["replicate"].astype(str), sep="-rep"
 )
+inputSamples = samples_sheet["control"].str.cat(
+    samples_sheet["control_replicate"].astype(str), sep="-rep"
+)
+
 sample_to_input = dict(zip(idSamples, inputSamples))
 # -------------------- wildcard constraints --------------------#
 
@@ -148,8 +151,7 @@ def input_toget():
     bamFile = expand("results/bam/{id}.clean.bam", id=wanted_inputs)
     bigWigs = expand("results/bigWigs/{id}.bw", id=wanted_inputs)
 
-    return bamFile + bigWigs
-
+    return bamFile.extend(bigWigs)
 
 # -------------------- Other helpers functions ---------------#
 
@@ -166,7 +168,7 @@ def is_single_end(id):
     if isinstance(check, pd.Series):
         return check[0]
     return check
-    
+
 
 # --------------------  Rules Input Functions ---------------#
 
@@ -241,7 +243,6 @@ def get_reads(wildcards):
                 return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
 
 
-
 def normalization_factor(wildcards):
     """
     Read the log message from the cleaning of bam files and compute normalization factor
@@ -281,7 +282,6 @@ def normalization_factor(wildcards):
     else:
         return "--scaleFactor " + str(round(alpha, 4)) + " --extendReads"
     # TO DO: add log file with the norm factors stored
-
 # def get_reads_spike(wildcards):
 #     """Function called by aligners spike"""
 #     samp, rep = retrieve_index(**wildcards)
