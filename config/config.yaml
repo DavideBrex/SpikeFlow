@@ -10,8 +10,8 @@ aligner: bowtie
 
 resources:
   ref: 
-    #if bowtie index is not avialable leave only "" , it will be created
-    #otherwise proved the path to the folder containing bowtie index
+    #if bowtie index is not available leave only "" , it will be created
+    #otherwise proved the path to the folder containing bowtie index (and add the name of the index after the path)
     index: "/shares/CIBIO-Storage/CIBIO/sharedLC/human_genome/human_bowtie1_index/GRCh38"
     # Ensembl species name
     species: homo_sapiens
@@ -20,7 +20,7 @@ resources:
     # Genome build
     build: GRCh38 
     #blacklist regions
-    blacklist: ""
+    blacklist: ".test/data/hg38-blacklist.v2.bed"
 
   ref_spike:
     #if bowtie index is not avialable leave only "" , it will be created
@@ -45,6 +45,11 @@ params:
     # Memory used by every core of samtools (GB). Be careful that 
     # memory x threads is not bigger than the amount of memory assigned to align rule
     memory: 2
+  deeptools:
+    #change this according to: https://deeptools.readthedocs.io/en/latest/content/feature/effectiveGenomeSize.html
+    effective_genome_length: 2701495761
+    #read extension, only for SE
+    read_extension: 75
 
 threads:
   fastp:

@@ -21,7 +21,7 @@ validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
 validate(config, schema="../schemas/config.schema.yaml")
 
-# print(samples_sheet)
+#print(samples_sheet)
 
 # let's get the samples that need to be merged due to presence of multiple lanes
 duplicated_indices = samples_sheet.index[
@@ -29,6 +29,10 @@ duplicated_indices = samples_sheet.index[
 ].unique()
 multiLanes_samp = [f"{a}-rep{b}" for a, b in duplicated_indices]
 
+# create a dictionary of sample-input match
+idSamples=samples_sheet['sample'] + '-rep' +samples_sheet['replicate'].astype(str)
+inputSamples=samples_sheet['control'] + '-rep' +samples_sheet['control_replicate'].astype(str)
+sample_to_input = dict(zip(idSamples,inputSamples))
 # -------------------- wildcard constraints --------------------#
 
 
@@ -95,7 +99,7 @@ def perform_checks(input_df):
     # 4. Control identifier and replicate has to match a provided sample identifier and replicate
     input_df_controls = input_df[
         "antibody"
-    ].isna()  # control sames (those with antibody to null)
+    ].isna()  # control samples (those with antibody to null)
 
     pairs_to_check = input_df[["control", "control_replicate"]]
     pairs_to_compare = input_df[["sample", "replicate"]].apply(tuple, axis=1)
@@ -140,8 +144,10 @@ def input_toget():
     for sample, replicate in samples_sheet.index.unique():
         wanted_inputs += [f"{sample}-rep{replicate}"]
 
-    return expand("results/bam/{id}.clean.bam", id=wanted_inputs)
+    bamFile=expand("results/bam/{id}.clean.bam", id=wanted_inputs)
+    bigWigs=expand("results/bigWigs/{id}.bw", id=wanted_inputs)
 
+    return bamFile+bigWigs
 
 # -------------------- Other helpers functions ---------------#
 
@@ -158,14 +164,6 @@ def is_single_end(id):
     if isinstance(check, pd.Series):
         return check[0]
     return check
-
-
-# def is_spike(id):
-#     samp, rep = retrieve_index(id)
-#     check = samples_sheet.loc[(samp, rep), "spike"]
-#     if isinstance(check, pd.Series):
-#         return check[0]
-#     return check
 
 
 # --------------------  Rules Input Functions ---------------#
