@@ -151,7 +151,8 @@ def input_toget():
     bamFile = expand("results/bam/{id}.clean.bam", id=wanted_inputs)
     bigWigs = expand("results/bigWigs/{id}.bw", id=wanted_inputs)
 
-    return bamFile.extend(bigWigs)
+    return bamFile + bigWigs
+
 
 # -------------------- Other helpers functions ---------------#
 
