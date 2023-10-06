@@ -168,6 +168,7 @@ def is_single_end(id):
     return check
 
 
+
 # --------------------  Rules Input Functions ---------------#
 
 

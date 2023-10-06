@@ -51,6 +51,7 @@ def write_unique_reads(bamfile1, bamfile2):
 
 
 #------ Main -------#
+
 sys.stdout = open(snakemake.log[0], 'w')
 sys.stderr = sys.stdout
 
