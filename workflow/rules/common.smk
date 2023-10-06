@@ -274,39 +274,9 @@ def normalization_factor(wildcards):
                 alpha = gamma / Nspike * 1000000  # normalization factor
 
     if is_single_end(wildcards.id):
-        return (
-            "--scaleFactor "
-            + str(round(alpha, 4))
-            + " --extendReads "
-            + str(config["params"]["deeptools"]["read_extension"])
+        return "--scaleFactor {} --extendReads {}".format(
+            str(round(alpha, 4)), str(config["params"]["deeptools"]["read_extension"])
         )
     else:
-        return "--scaleFactor " + str(round(alpha, 4)) + " --extendReads"
+        return "--scaleFactor {} --extendReads ".format(str(round(alpha, 4)))
     # TO DO: add log file with the norm factors stored
-# def get_reads_spike(wildcards):
-#     """Function called by aligners spike"""
-#     samp, rep = retrieve_index(**wildcards)
-#     if is_spike(**wildcards):
-#         # if trimming is performed, the trimmed fastqs are all in
-#         if config["trimming"]:
-#             if is_single_end(**wildcards):
-#                 return expand("results/trimmed/{id}.fastq.gz".format(**wildcards))
-#             else:
-#                 return expand(
-#                     "results/trimmed/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
-#                 )
-#         else:
-#             if is_single_end(**wildcards):
-#                 # to run merge only on samples that have multiple lanes
-#                 if wildcards.id in multiLanes_samp:
-#                     return expand("results/fastq/{id}.fastq.gz".format(**wildcards))
-#                 else:
-#                     return samples_sheet.loc[(samp, rep), "fastq_1"]
-#             else:
-#                 if wildcards.id in multiLanes_samp:
-#                     return expand(
-#                         "results/fastq/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
-#                     )
-#                 else:
-#                     u = samples_sheet.loc[(samp, rep), ["fastq_1", "fastq_2"]].dropna()
-#                     return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
