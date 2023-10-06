@@ -21,7 +21,7 @@ validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
 validate(config, schema="../schemas/config.schema.yaml")
 
-#print(samples_sheet)
+# print(samples_sheet)
 
 # let's get the samples that need to be merged due to presence of multiple lanes
 duplicated_indices = samples_sheet.index[
@@ -148,7 +148,6 @@ def input_toget():
     bigWigs=expand("results/bigWigs/{id}.bw", id=wanted_inputs)
 
     return bamFile+bigWigs
-
 # -------------------- Other helpers functions ---------------#
 
 
@@ -164,6 +163,7 @@ def is_single_end(id):
     if isinstance(check, pd.Series):
         return check[0]
     return check
+
 
 
 # --------------------  Rules Input Functions ---------------#
@@ -268,5 +268,3 @@ def get_reads(wildcards):
 #                 else:
 #                     u = samples_sheet.loc[(samp, rep), ["fastq_1", "fastq_2"]].dropna()
 #                     return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
-
-
