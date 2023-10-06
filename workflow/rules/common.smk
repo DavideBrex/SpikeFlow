@@ -166,8 +166,7 @@ def is_single_end(id):
     if isinstance(check, pd.Series):
         return check[0]
     return check
-
-
+    
 
 # --------------------  Rules Input Functions ---------------#
 
@@ -240,6 +239,49 @@ def get_reads(wildcards):
             else:
                 u = samples_sheet.loc[(samp, rep), ["fastq_1", "fastq_2"]].dropna()
                 return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
+
+
+
+def normalization_factor(wildcards):
+    """
+    Read the log message from the cleaning of bam files and compute normalization factor
+    By using the log file we avoid to read the bam file with pysam just to get # of aligned reads
+    """
+
+    with open(f"results/logs/spike/{wildcards.id}.removeSpikeDups", "r") as file:
+        info_sample = file.read().strip().split("\n")
+
+        # we need the information also from the input (if it is not the sample an input itself)
+        inputSamp = sample_to_input[wildcards.id]
+        if pd.isna(inputSamp):
+            Nsample = int(
+                info_sample[1].split(":")[-1]
+            )  # number of aligned reads in sample
+            alpha = 1 / (Nsample) * 1000000  # normalization factsor
+        else:
+            # open input log file
+            with open(f"results/logs/spike/{inputSamp}.removeSpikeDups", "r") as file:
+                info_input = file.read().strip().split("\n")
+
+                gamma = int(info_input[2].split(":")[-1]) / int(
+                    info_input[1].split(":")[-1]
+                )  # ratio spike/samples in input
+                Nspike = int(
+                    info_sample[2].split(":")[-1]
+                )  # number of spike reads in sample
+                alpha = gamma / Nspike * 1000000  # normalization factor
+
+    if is_single_end(wildcards.id):
+        return (
+            "--scaleFactor "
+            + str(round(alpha, 4))
+            + " --extendReads "
+            + str(config["params"]["deeptools"]["read_extension"])
+        )
+    else:
+        return "--scaleFactor " + str(round(alpha, 4)) + " --extendReads"
+    # TO DO: add log file with the norm factors stored
+
 # def get_reads_spike(wildcards):
 #     """Function called by aligners spike"""
 #     samp, rep = retrieve_index(**wildcards)
