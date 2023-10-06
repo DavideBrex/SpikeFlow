@@ -21,7 +21,7 @@ validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
 validate(config, schema="../schemas/config.schema.yaml")
 
-#print(samples_sheet)
+# print(samples_sheet)
 
 # let's get the samples that need to be merged due to presence of multiple lanes
 duplicated_indices = samples_sheet.index[
@@ -30,16 +30,17 @@ duplicated_indices = samples_sheet.index[
 multiLanes_samp = [f"{a}-rep{b}" for a, b in duplicated_indices]
 
 # create a dictionary of sample-input match
-idSamples=samples_sheet['sample'] + '-rep' +samples_sheet['replicate'].astype(str)
-inputSamples=samples_sheet['control'] + '-rep' +samples_sheet['control_replicate'].astype(str)
-sample_to_input = dict(zip(idSamples,inputSamples))
+idSamples = samples_sheet["sample"] + "-rep" + samples_sheet["replicate"].astype(str)
+inputSamples = (
+    samples_sheet["control"] + "-rep" + samples_sheet["control_replicate"].astype(str)
+)
+sample_to_input = dict(zip(idSamples, inputSamples))
 # -------------------- wildcard constraints --------------------#
 
 
 wildcard_constraints:
     id="|".join(set(["-rep".join(map(str, idx)) for idx in samples_sheet.index])),
     group="1|2",
-    control="|".join(set(["-rep".join(map(str, idx)) for idx in samples_sheet[pd.isna(samples_sheet.antibody)].index])),
 
 
 # -------------------- Sample sheet Sanity checks function ---------------#
@@ -144,10 +145,11 @@ def input_toget():
     for sample, replicate in samples_sheet.index.unique():
         wanted_inputs += [f"{sample}-rep{replicate}"]
 
-    bamFile=expand("results/bam/{id}.clean.bam", id=wanted_inputs)
-    bigWigs=expand("results/bigWigs/{id}.bw", id=wanted_inputs)
+    bamFile = expand("results/bam/{id}.clean.bam", id=wanted_inputs)
+    bigWigs = expand("results/bigWigs/{id}.bw", id=wanted_inputs)
 
-    return bamFile+bigWigs
+    return bamFile + bigWigs
+
 
 # -------------------- Other helpers functions ---------------#
 
@@ -237,11 +239,8 @@ def get_reads(wildcards):
             else:
                 u = samples_sheet.loc[(samp, rep), ["fastq_1", "fastq_2"]].dropna()
                 return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
-
-
 # def get_reads_spike(wildcards):
 #     """Function called by aligners spike"""
-
 #     samp, rep = retrieve_index(**wildcards)
 #     if is_spike(**wildcards):
 #         # if trimming is performed, the trimmed fastqs are all in
@@ -252,7 +251,6 @@ def get_reads(wildcards):
 #                 return expand(
 #                     "results/trimmed/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
 #                 )
-
 #         else:
 #             if is_single_end(**wildcards):
 #                 # to run merge only on samples that have multiple lanes
@@ -268,5 +266,3 @@ def get_reads(wildcards):
 #                 else:
 #                     u = samples_sheet.loc[(samp, rep), ["fastq_1", "fastq_2"]].dropna()
 #                     return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
-
-

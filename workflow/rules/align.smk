@@ -90,7 +90,6 @@ rule clean_spike:
     conda:
         "../envs/pysam.yaml"
     log:
-        "results/logs/alignments/spike/{id}.removeSpikeDups",
+        "results/logs/spike/{id}.removeSpikeDups",
     script:
         "../scripts/remove_spikeDups.py"
-

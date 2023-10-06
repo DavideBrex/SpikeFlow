@@ -23,6 +23,7 @@ include: "rules/trim.smk"
 include: "rules/align.smk"
 include: "rules/createBigWigs.smk"
 
+
 rule all:
     input:
         input_toget(),
