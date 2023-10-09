@@ -21,6 +21,7 @@ include: "rules/references.smk"
 include: "rules/common.smk"
 include: "rules/trim.smk"
 include: "rules/align.smk"
+include: "rules/createBigWigs.smk"
 
 
 rule all:

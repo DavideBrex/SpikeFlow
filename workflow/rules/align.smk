@@ -41,11 +41,11 @@ if config["aligner"] == "bowtie":
     # SPIKE alignment
     rule align_bowtie_spike:
         input:
-            reads=get_reads_spike,
+            reads=get_reads,
             idx="resources/spike_genome/genome/",
         output:
-            bam=temp("results/bam_spike/{id}_spike.bam"),
-            index=temp("results/bam_spike/{id}_spike.bam.bai"),
+            bam=temp("results/bam_spike/{id}_spike.tmp.bam"),
+            index=temp("results/bam_spike/{id}_spike.tmp.bam.bai"),
         threads: 8
         params:
             index=config["resources"]["ref_spike"]["index_spike"]
@@ -81,32 +81,15 @@ if config["aligner"] == "bowtie":
 rule clean_spike:
     input:
         sample_ref="results/bam/{id}.tmp.bam",
-        sample_spike="results/bam_spike/{id}_spike.bam",
+        sample_spike="results/bam_spike/{id}_spike.tmp.bam",
         sample_ref_index="results/bam/{id}.tmp.bam.bai",
-        sample_spike_index="results/bam_spike/{id}_spike.bam.bai",
+        sample_spike_index="results/bam_spike/{id}_spike.tmp.bam.bai",
     output:
-        sample_ref=temp("results/bam/{id}.bam.clean"),
-        sample_spike="results/bam_spike/{id}_spike.bam.clean",
+        sample_ref="results/bam/{id}.clean.bam",
+        sample_spike="results/bam_spike/{id}_spike.clean.bam",
     conda:
         "../envs/pysam.yaml"
     log:
-        "results/logs/alignments/spike/{id}.removeSpikeDups",
+        "results/logs/spike/{id}.removeSpikeDups",
     script:
         "../scripts/remove_spikeDups.py"
-
-
-# Dummy rule to change the name of the bam files to be able to have the same name structure in spike-in and non-spiked samples
-rule update_bam:
-    input:
-        get_bam,
-    output:
-        outBam="results/bam/{id}.bam",
-    conda:
-        "../envs/bowtie.yaml"
-    log:
-        "results/logs/alignments/spike/{id}.update_bam",
-    shell:
-        """
-        mv {input} {output.outBam}
-        samtools index {output.outBam} 2>> {log}
-        """

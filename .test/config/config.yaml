@@ -19,6 +19,9 @@ resources:
     release: 101
     # Genome build
     build: GRCh38 
+    #blacklist regions
+    blacklist: "data/hg38-blacklist.v2.bed"
+
   ref_spike:
     #if bowtie index is not avialable leave only "" , it will be created
     #otherwise proved the path to the folder containing bowtie index
@@ -41,6 +44,11 @@ params:
     # Memory used by every core of samtools (GB). Be careful that 
     # memory x threads is not bigger than the amount of memory assigned to align rule
     memory: 1
+  deeptools:
+    #change this according to: https://deeptools.readthedocs.io/en/latest/content/feature/effectiveGenomeSize.html
+    effective_genome_length: 2701495761
+    #read extension, only for SE
+    read_extension: 75
 
 threads:
   fastp:

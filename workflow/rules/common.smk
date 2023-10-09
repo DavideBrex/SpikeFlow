@@ -8,7 +8,7 @@ import numpy as np
 samples_sheet = (
     pd.read_csv(
         config["samples_sheet"],
-        dtype={"replicate": "Int64", "control_replicate": "Int64", "spike": "boolean"},
+        dtype={"replicate": "Int64", "control_replicate": "Int64"},
         sep=",",
     )
     .set_index(["sample", "replicate"], drop=False)
@@ -29,6 +29,15 @@ duplicated_indices = samples_sheet.index[
 ].unique()
 multiLanes_samp = [f"{a}-rep{b}" for a, b in duplicated_indices]
 
+# create a dictionary of sample-input match
+idSamples = samples_sheet["sample"].str.cat(
+    samples_sheet["replicate"].astype(str), sep="-rep"
+)
+inputSamples = samples_sheet["control"].str.cat(
+    samples_sheet["control_replicate"].astype(str), sep="-rep"
+)
+
+sample_to_input = dict(zip(idSamples, inputSamples))
 # -------------------- wildcard constraints --------------------#
 
 
@@ -45,7 +54,6 @@ def perform_checks(input_df):
         "antibody",
         "control",
         "control_replicate",
-        "spike",
         "peak_type",
         "fastq_1",
         "fastq_2",
@@ -81,7 +89,6 @@ def perform_checks(input_df):
 
     # 3. -check whether replicates from the same samples are all single-end or both paired-end
     #   -check if runs of the same sample   have same data type (single-end or paired -end)
-    #   -and also that spike column has the same values for all the reps of a sample
 
     for sample in input_df.index.get_level_values("sample").unique():
         if all(input_df.loc[[sample]].fastq_2.notna()):
@@ -93,23 +100,10 @@ def perform_checks(input_df):
                 )
             )
 
-        if pd.isnull(input_df.loc[[sample]].spike[0]):
-            pass
-        elif all(input_df.loc[[sample]].spike == True) or all(
-            input_df.loc[[sample]].spike == False
-        ):
-            pass
-        else:
-            raise ValueError(
-                "For sample {}, all replicates should have the same value for spike column".format(
-                    sample
-                )
-            )
-
     # 4. Control identifier and replicate has to match a provided sample identifier and replicate
     input_df_controls = input_df[
         "antibody"
-    ].isna()  # control sames (those with antibody to null)
+    ].isna()  # control samples (those with antibody to null)
 
     pairs_to_check = input_df[["control", "control_replicate"]]
     pairs_to_compare = input_df[["sample", "replicate"]].apply(tuple, axis=1)
@@ -154,7 +148,10 @@ def input_toget():
     for sample, replicate in samples_sheet.index.unique():
         wanted_inputs += [f"{sample}-rep{replicate}"]
 
-    return expand("results/bam/{id}.bam", id=wanted_inputs)
+    bamFile = expand("results/bam/{id}.clean.bam", id=wanted_inputs)
+    bigWigs = expand("results/bigWigs/{id}.bw", id=wanted_inputs)
+
+    return bamFile + bigWigs
 
 
 # -------------------- Other helpers functions ---------------#
@@ -169,14 +166,6 @@ def is_single_end(id):
     samp, rep = retrieve_index(id)
     check = pd.isnull(samples_sheet.loc[(samp, rep), "fastq_2"])
     # in case a sample has multiple lanes, we get a series instead of str
-    if isinstance(check, pd.Series):
-        return check[0]
-    return check
-
-
-def is_spike(id):
-    samp, rep = retrieve_index(id)
-    check = samples_sheet.loc[(samp, rep), "spike"]
     if isinstance(check, pd.Series):
         return check[0]
     return check
@@ -255,39 +244,39 @@ def get_reads(wildcards):
                 return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
 
 
-def get_reads_spike(wildcards):
-    """Function called by aligners spike"""
+def normalization_factor(wildcards):
+    """
+    Read the log message from the cleaning of bam files and compute normalization factor
+    By using the log file we avoid to read the bam file with pysam just to get # of aligned reads
+    """
 
-    samp, rep = retrieve_index(**wildcards)
-    if is_spike(**wildcards):
-        # if trimming is performed, the trimmed fastqs are all in
-        if config["trimming"]:
-            if is_single_end(**wildcards):
-                return expand("results/trimmed/{id}.fastq.gz".format(**wildcards))
-            else:
-                return expand(
-                    "results/trimmed/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
-                )
+    with open(f"results/logs/spike/{wildcards.id}.removeSpikeDups", "r") as file:
+        info_sample = file.read().strip().split("\n")
 
+        # we need the information also from the input (if it is not the sample an input itself)
+        inputSamp = sample_to_input[wildcards.id]
+        if pd.isna(inputSamp):
+            Nsample = int(
+                info_sample[1].split(":")[-1]
+            )  # number of aligned reads in sample
+            alpha = 1 / (Nsample) * 1000000  # normalization factsor
         else:
-            if is_single_end(**wildcards):
-                # to run merge only on samples that have multiple lanes
-                if wildcards.id in multiLanes_samp:
-                    return expand("results/fastq/{id}.fastq.gz".format(**wildcards))
-                else:
-                    return samples_sheet.loc[(samp, rep), "fastq_1"]
-            else:
-                if wildcards.id in multiLanes_samp:
-                    return expand(
-                        "results/fastq/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
-                    )
-                else:
-                    u = samples_sheet.loc[(samp, rep), ["fastq_1", "fastq_2"]].dropna()
-                    return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
+            # open input log file
+            with open(f"results/logs/spike/{inputSamp}.removeSpikeDups", "r") as file:
+                info_input = file.read().strip().split("\n")
 
+                gamma = int(info_input[2].split(":")[-1]) / int(
+                    info_input[1].split(":")[-1]
+                )  # ratio spike/samples in input
+                Nspike = int(
+                    info_sample[2].split(":")[-1]
+                )  # number of spike reads in sample
+                alpha = gamma / Nspike * 1000000  # normalization factor
 
-def get_bam(wildcards):
-    """Function called to handle bam cleaned from spike and those with no spike."""
-    if not is_spike(**wildcards):
-        return "results/bam/{id}.tmp.bam".format(**wildcards)
-    return "results/bam/{id}.bam.clean".format(**wildcards)
+    if is_single_end(wildcards.id):
+        return "--scaleFactor {} --extendReads {}".format(
+            str(round(alpha, 4)), str(config["params"]["deeptools"]["read_extension"])
+        )
+    else:
+        return "--scaleFactor {} --extendReads ".format(str(round(alpha, 4)))
+    # TO DO: add log file with the norm factors stored
