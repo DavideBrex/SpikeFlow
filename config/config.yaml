@@ -12,7 +12,7 @@ resources:
   ref: 
     #if bowtie index is not available leave only "" , it will be created
     #otherwise proved the path to the folder containing bowtie index (and add the name of the index after the path)
-    index: "/shares/CIBIO-Storage/CIBIO/sharedLC/human_genome/human_bowtie1_index/GRCh38"
+    index: ".test/data/subset_GRCh38_bowtieIndex/subset_GRCh38_bowtieIndex"
     # Ensembl species name
     species: homo_sapiens
     # Ensembl release
