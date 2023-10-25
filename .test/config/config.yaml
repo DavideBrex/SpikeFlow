@@ -1,6 +1,10 @@
 # path (from the repository root) to sample sheet (csv format, columns: sample, condition, ...)
 samples_sheet: config/samples_sheet.csv
 
+#if needed, specify an output folder
+#the default is the snakemake working directory
+output_path: ""
+
 # perform trimming: false or true
 # if true go to params (at the end)
 # to set desired trimming parameters
@@ -10,8 +14,8 @@ aligner: bowtie
 
 resources:
   ref: 
-    #if bowtie index is not avialable leave only "" , it will be created
-    #otherwise proved the path to the folder containing bowtie index
+    #if bowtie index is not available leave only "" , it will be created
+    #otherwise proved the path to the folder containing bowtie index (and add the name of the index after the path)
     index: "data/subset_GRCh38_bowtieIndex/subset_GRCh38_bowtieIndex"
     # Ensembl species name
     species: homo_sapiens
@@ -19,7 +23,7 @@ resources:
     release: 101
     # Genome build
     build: GRCh38 
-    #blacklist regions
+    #blacklist regions (from https://github.com/Boyle-Lab/Blacklist/tree/master/lists)
     blacklist: "data/hg38-blacklist.v2.bed"
 
   ref_spike:
@@ -31,7 +35,7 @@ resources:
     # Ensembl release
     release: 110
     # Genome build
-    build: dm6
+    build: BDGP6.46
 
 params:
   fastp-pe: ""
@@ -49,6 +53,17 @@ params:
     effective_genome_length: 2701495761
     #read extension, only for SE
     read_extension: 75
+  peakCalling:
+    #specify the ucsc genome name (hg38, mm10, dm6, etc.)
+    genome: "hg38"
+    chrom_sizes: ".test/data/hg38.chromsizes"
+    macs2:
+      pvalue: 1e-5
+    epic2:
+      fdr: 0.0005
+    edd:
+      fdr: 0.05
+
 
 threads:
   fastp:
