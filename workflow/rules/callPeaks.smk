@@ -28,30 +28,6 @@ rule macs2_callNarrowPeak:
         "v2.6.0/bio/macs2/callpeak"
 
 
-# rule macs2_callNarrowPeak_spike:
-#     input:
-#         treatment="{}results/bam_spike/{{sample}}_spike.clean.bam".format(outdir),
-#         control=lambda w: "{}results/bam_spike/{}_spike.clean.bam".format(outdir, sample_to_input[w.sample]),
-#     output:
-#         # all output-files must share the same basename and only differ by it's extension
-#         # Usable extensions (and which tools they implicitly call) are listed here:
-#         #         https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/macs2/callpeak.html.
-#         multiext("{}results/peakCalling/macs2_spike/{{sample}}".format(outdir),
-#                  "_spike_peaks.xls",
-#                  "_spike_peaks.narrowPeak",
-#                  )
-#     log:
-#         "{}results/logs/peakCalling/macs2/{{sample}}_spike_callpeak.log".format(outdir),
-#     params:
-#         lambda w: "--format BAM --nomodel" if is_single_end(w.sample) else "--format BAMPE"+
-#         " --gsize "+str(config["params"]["deeptools"]["effective_genome_length"])+
-#         " --pvalue "+config["params"]["peakCalling"]["macs2"]["pvalue"]+
-#         " --keep-dup all",
-
-#     wrapper:
-#         "v2.6.0/bio/macs2/callpeak"
-
-
 rule epic2_callBroadPeaks:
     input:
         treatment="{}results/bam/{{sample}}.clean.bam".format(outdir),
