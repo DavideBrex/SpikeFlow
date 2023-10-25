@@ -7,3 +7,6 @@ logs/**
 .cache
 .conda
 report/**
+Dockerfile
+config/samples_sheet_ER.csv
+config/samples_sheet_bap1.csv

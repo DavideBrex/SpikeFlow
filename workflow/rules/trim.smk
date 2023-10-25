@@ -7,9 +7,9 @@ rule merge_lanes_se:
     input:
         sample=get_fastq,
     output:
-        temp("results/fastq/{id}.fastq.gz"),
+        temp("{}results/fastq/{{id}}.fastq.gz".format(outdir)),
     log:
-        "results/logs/pipe-fastqs/{id}.log",
+        "{}results/logs/pipe-fastqs/{{id}}.log".format(outdir),
     threads: 1
     shell:
         "cat {input.sample} > {output} 2> {log}"
@@ -19,10 +19,10 @@ rule merge_lanes_pe:
     input:
         unpack(get_fastq),
     output:
-        fw=temp("results/fastq/{id}_1.fastq.gz"),
-        rv=temp("results/fastq/{id}_2.fastq.gz"),
+        fw=temp("{}results/fastq/{{id}}_1.fastq.gz".format(outdir)),
+        rv=temp("{}results/fastq/{{id}}_2.fastq.gz".format(outdir)),
     log:
-        "results/logs/pipe-fastqs/{id}.log",
+        "{}results/logs/pipe-fastqs/{{id}}.log",
     threads: 1
     shell:
         """
@@ -39,11 +39,11 @@ if config["trimming"]:
         input:
             sample=get_fastq_trimming,
         output:
-            trimmed="results/trimmed/{id}.fastq.gz",
-            html="report/trimmed/{id}.html",
-            json="report/trimmed/{id}.json",
+            trimmed="{}results/trimmed/{{id}}.fastq.gz".format(outdir),
+            html="{}report/trimmed/{{id}}.html".format(outdir),
+            json="{}report/trimmed/{{id}}.json".format(outdir),
         log:
-            "results/logs/fastp/{id}.log",
+            "{}results/logs/fastp/{{id}}.log".format(outdir),
         params:
             adapters=config["params"]["fastp-se"],
             extra="",
@@ -56,13 +56,13 @@ if config["trimming"]:
             sample=get_fastq_trimming,
         output:
             trimmed=[
-                "results/trimmed/{id}_1.fastq.gz",
-                "results/trimmed/{id}_2.fastq.gz",
+                "{}results/trimmed/{{id}}_1.fastq.gz".format(outdir),
+                "{}results/trimmed/{{id}}_2.fastq.gz".format(outdir),
             ],
-            html="report/trimmed/{id}.html",
-            json="report/trimmed/{id}.json",
+            html="{}report/trimmed/{{id}}.html".format(outdir),
+            json="{}report/trimmed/{{id}}.json".format(outdir),
         log:
-            "results/logs/fastp/{id}.log",
+            "{}results/logs/fastp/{{id}}.log".format(outdir),
         params:
             adapters=config["params"]["fastp-pe"],
             extra="",
