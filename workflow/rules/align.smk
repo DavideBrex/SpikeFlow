@@ -3,15 +3,15 @@ if config["aligner"] == "bowtie":
     rule align_bowtie:
         input:
             reads=get_reads,
-            idx="resources/reference_genome/genome/",
+            idx="resources/reference_genome/index/",
         output:
-            bam=temp("results/bam/{id}.tmp.bam"),
-            index=temp("results/bam/{id}.tmp.bam.bai"),
+            bam=temp("{}results/bam/{{id}}.tmp.bam".format(outdir)),
+            index=temp("{}results/bam/{{id}}.tmp.bam.bai".format(outdir)),
         threads: 8
         params:
             index=config["resources"]["ref"]["index"]
             if config["resources"]["ref"]["index"] != ""
-            else "resources/reference_genome/genome/genome",
+            else "resources/reference_genome/index/index_ref",
             bowtie=config["params"]["bowtie"]["global"],
             samtools_mem=config["params"]["samtools"]["memory"],
             inputsel=(
@@ -25,10 +25,10 @@ if config["aligner"] == "bowtie":
         conda:
             "../envs/bowtie.yaml"
         log:
-            align="results/logs/alignments/{id}.log",
-            rm_dups="results/logs/alignments/rm_dup/{id}.log",
+            align="{}results/logs/alignments/{{id}}.log".format(outdir),
+            rm_dups="{}results/logs/alignments/rm_dup/{{id}}.log".format(outdir),
         benchmark:
-            "results/.benchmarks/{id}.align.benchmark.txt"
+            "{}results/.benchmarks/{{id}}.align.benchmark.txt".format(outdir)
         shell:
             """
             bowtie -p {threads} {params.bowtie} -x {params.index} {params.inputsel} 2> {log.align} \
@@ -42,15 +42,15 @@ if config["aligner"] == "bowtie":
     rule align_bowtie_spike:
         input:
             reads=get_reads,
-            idx="resources/spike_genome/genome/",
+            idx="resources/spike_genome/index/",
         output:
-            bam=temp("results/bam_spike/{id}_spike.tmp.bam"),
-            index=temp("results/bam_spike/{id}_spike.tmp.bam.bai"),
+            bam=temp("{}results/bam_spike/{{id}}_spike.tmp.bam".format(outdir)),
+            index=temp("{}results/bam_spike/{{id}}_spike.tmp.bam.bai".format(outdir)),
         threads: 8
         params:
             index=config["resources"]["ref_spike"]["index_spike"]
             if config["resources"]["ref_spike"]["index_spike"] != ""
-            else "resources/spike_genome/genome/genome",
+            else "resources/spike_genome/index/index_spike",
             bowtie=config["params"]["bowtie"]["global"],
             samtools_mem=config["params"]["samtools"]["memory"],
             inputsel=(
@@ -64,10 +64,12 @@ if config["aligner"] == "bowtie":
         conda:
             "../envs/bowtie.yaml"
         log:
-            align="results/logs/alignments/spike/{id}_spike.log",
-            rm_dups="results/logs/alignments/spike/rm_dup/{id}_spike.log",
+            align="{}results/logs/alignments/spike/{{id}}_spike.log".format(outdir),
+            rm_dups="{}results/logs/alignments/spike/rm_dup/{{id}}_spike.log".format(
+                outdir
+            ),
         benchmark:
-            "results/.benchmarks/{id}.align.benchmark.txt"
+            "{}results/.benchmarks/{{id}}.align.benchmark.txt".format(outdir)
         shell:
             """
             bowtie -p {threads} {params.bowtie} -x {params.index} {params.inputsel} 2> {log.align} \
@@ -80,16 +82,16 @@ if config["aligner"] == "bowtie":
 
 rule clean_spike:
     input:
-        sample_ref="results/bam/{id}.tmp.bam",
-        sample_spike="results/bam_spike/{id}_spike.tmp.bam",
-        sample_ref_index="results/bam/{id}.tmp.bam.bai",
-        sample_spike_index="results/bam_spike/{id}_spike.tmp.bam.bai",
+        sample_ref="{}results/bam/{{id}}.tmp.bam".format(outdir),
+        sample_spike="{}results/bam_spike/{{id}}_spike.tmp.bam".format(outdir),
+        sample_ref_index="{}results/bam/{{id}}.tmp.bam.bai".format(outdir),
+        sample_spike_index="{}results/bam_spike/{{id}}_spike.tmp.bam.bai".format(outdir),
     output:
-        sample_ref="results/bam/{id}.clean.bam",
-        sample_spike="results/bam_spike/{id}_spike.clean.bam",
+        sample_ref="{}results/bam/{{id}}.clean.bam".format(outdir),
+        sample_spike="{}results/bam_spike/{{id}}_spike.clean.bam".format(outdir),
     conda:
         "../envs/pysam.yaml"
     log:
-        "results/logs/spike/{id}.removeSpikeDups",
+        "{}results/logs/spike/{{id}}.removeSpikeDups".format(outdir),
     script:
         "../scripts/remove_spikeDups.py"

@@ -44,6 +44,16 @@ sample_to_input = dict(zip(idSamples, inputSamples))
 wildcard_constraints:
     id="|".join(set(["-rep".join(map(str, idx)) for idx in samples_sheet.index])),
     group="1|2",
+    sample="|".join(
+        set(
+            [
+                "-rep".join(map(str, idx))
+                for idx in samples_sheet[
+                    ~samples_sheet["antibody"].isna()
+                ].index.unique()
+            ]
+        )
+    ),
 
 
 # -------------------- Sample sheet Sanity checks function ---------------#
@@ -142,16 +152,48 @@ perform_checks(samples_sheet)
 # -------------------- Define input files for rule all ---------------#
 
 
-#     return wanted_inputs
+# return wanted_inputs
 def input_toget():
     wanted_inputs = []
     for sample, replicate in samples_sheet.index.unique():
         wanted_inputs += [f"{sample}-rep{replicate}"]
 
-    bamFile = expand("results/bam/{id}.clean.bam", id=wanted_inputs)
-    bigWigs = expand("results/bigWigs/{id}.bw", id=wanted_inputs)
+    bamFile = expand("{}results/bam/{{id}}.clean.bam".format(outdir), id=wanted_inputs)
+    bigWigs = expand("{}results/bigWigs/{{id}}.bw".format(outdir), id=wanted_inputs)
 
-    return bamFile + bigWigs
+    # peak calling
+    SAMPLES = [key for key, value in sample_to_input.items() if value is not np.nan]
+    peak_files = []
+    for s in SAMPLES:
+        peakType = samples_sheet.loc[
+            (s.split("-rep")[0], int(s.split("-rep")[1])), "peak_type"
+        ][0]
+        if peakType == "narrow":
+            peak_files.append(
+                "{outdir}results/peakCalling/macs2_ref/{sample}_peaks.narrowPeak".format(
+                    outdir=outdir, sample=s
+                )
+            )
+        elif peakType == "broad":
+            peak_files.append(
+                "{outdir}results/peakCalling/epic2/{sample}_broadPeaks.bed".format(
+                    outdir=outdir, sample=s
+                )
+            )
+        else:
+            peak_files.append(
+                "{outdir}results/peakCalling/edd/{sample}/{sample}_peaks.bed".format(
+                    outdir=outdir, sample=s
+                )
+            )
+
+    # macs2_narrow = expand("{}results/peakCalling/macs2_ref/{sample}_peaks.narrowPeak".format(outdir), sample=SAMPLES)
+    # #macs2_narrow_spike = expand("{}results/macs2_spike/{sample}_spike_peaks.broadPeak".format(outdir), sample=SAMPLES)
+
+    # epic2_broad = expand("{}results/peakCalling/epic2/{sample}_broadPeaks.bed".format(outdir), sample=SAMPLES)
+
+    # return bamFile + bigWigs + macs2_narrow + macs2_narrow_spike
+    return bamFile + bigWigs + peak_files
 
 
 # -------------------- Other helpers functions ---------------#
@@ -197,21 +239,31 @@ def get_fastq_trimming(wildcards):
     """Function called by fastp_pe or se. Only called when trimming is activated"""
 
     samp, rep = retrieve_index(**wildcards)
-
     if is_single_end(**wildcards):
         # to run merge only on samples that have multiple lanes
         if wildcards.id in multiLanes_samp:
-            return expand("results/fastq/{id}.fastq.gz".format(**wildcards))
+            return expand("{}results/fastq/{id}.fastq.gz".format(outdir, **wildcards))
         else:
-            return samples_sheet.loc[(samp, rep), "fastq_1"]
+            toret = samples_sheet.loc[
+                (samp, rep), "fastq_1"
+            ]  # we need this check beacuse if multindex has duplicated, loc returns a series not a str
+            return toret.tolist() if isinstance(toret, pd.Series) else [toret]
     else:
         if wildcards.id in multiLanes_samp:
             return expand(
-                "results/fastq/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
+                "{}results/fastq/{id}_{group}.fastq.gz".format(outdir),
+                group=[1, 2],
+                **wildcards,
             )
         else:
-            u = samples_sheet.loc[(samp, rep), ["fastq_1", "fastq_2"]].dropna()
-            return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
+            u = samples_sheet.loc[
+                (samp, rep), ["fastq_1", "fastq_2"]
+            ].dropna()  # we need this check because if multindex has duplicated, loc returns a df not a series
+            return (
+                [u.fastq_1, u.fastq_2]
+                if isinstance(u, pd.Series)
+                else [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
+            )
 
 
 def get_reads(wildcards):
@@ -221,36 +273,53 @@ def get_reads(wildcards):
     # if trimming is performed, the trimmed fastqs are all in
     if config["trimming"]:
         if is_single_end(**wildcards):
-            return expand("results/trimmed/{id}.fastq.gz".format(**wildcards))
+            return expand("{}results/trimmed/{id}.fastq.gz".format(outdir, **wildcards))
         else:
             return expand(
-                "results/trimmed/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
+                "{}results/trimmed/{id}_{group}.fastq.gz".format(outdir),
+                group=[1, 2],
+                **wildcards,
             )
 
     else:
         if is_single_end(**wildcards):
             # to run merge only on samples that have multiple lanes
             if wildcards.id in multiLanes_samp:
-                return expand("results/fastq/{id}.fastq.gz".format(**wildcards))
+                return expand(
+                    "{}results/fastq/{id}.fastq.gz".format(outdir, **wildcards)
+                )
             else:
-                return samples_sheet.loc[(samp, rep), "fastq_1"]
+                toret = samples_sheet.loc[(samp, rep), "fastq_1"]
+                return toret.tolist() if isinstance(toret, pd.Series) else [toret]
         else:
             if wildcards.id in multiLanes_samp:
                 return expand(
-                    "results/fastq/{id}_{group}.fastq.gz", group=[1, 2], **wildcards
+                    "{}results/fastq/{id}_{group}.fastq.gz".format(outdir),
+                    group=[1, 2],
+                    **wildcards,
                 )
             else:
-                u = samples_sheet.loc[(samp, rep), ["fastq_1", "fastq_2"]].dropna()
-                return [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
+                u = samples_sheet.loc[
+                    (samp, rep), ["fastq_1", "fastq_2"]
+                ].dropna()  # we need this check because if multindex has duplicated, loc returns a df not a series
+                return (
+                    [u.fastq_1, u.fastq_2]
+                    if isinstance(u, pd.Series)
+                    else [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
+                )
 
 
+# --------------------  Rules Functions ---------------#
 def normalization_factor(wildcards):
     """
     Read the log message from the cleaning of bam files and compute normalization factor
     By using the log file we avoid to read the bam file with pysam just to get # of aligned reads
     """
-
-    with open(f"results/logs/spike/{wildcards.id}.removeSpikeDups", "r") as file:
+    # open sample log file
+    samp = wildcards.id
+    with open(
+        "{}results/logs/spike/{}.removeSpikeDups".format(outdir, samp), "r"
+    ) as file:
         info_sample = file.read().strip().split("\n")
 
         # we need the information also from the input (if it is not the sample an input itself)
@@ -262,7 +331,9 @@ def normalization_factor(wildcards):
             alpha = 1 / (Nsample) * 1000000  # normalization factsor
         else:
             # open input log file
-            with open(f"results/logs/spike/{inputSamp}.removeSpikeDups", "r") as file:
+            with open(
+                "{}results/logs/spike/{}.removeSpikeDups".format(outdir, inputSamp), "r"
+            ) as file:
                 info_input = file.read().strip().split("\n")
 
                 gamma = int(info_input[2].split(":")[-1]) / int(

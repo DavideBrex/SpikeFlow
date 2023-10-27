@@ -3,15 +3,15 @@
 
 rule return_genome_path:
     output:
-        genome=directory("resources/reference_genome/genome/"),
+        genome=directory("resources/reference_genome/index/"),
     log:
-        "results/logs/ref/return_genome_path.log",
+        "{}results/logs/ref/return_genome_path.log".format(outdir),
     params:
         genome_path=config["resources"]["ref"]["index"],
     shell:
         """
         if [ -n "{params.genome_path}" ]; then
-            mkdir resources/reference_genome/genome/
+            mkdir resources/reference_genome/index/
             prefix=$(basename {params.genome_path})
             directory=$(dirname {params.genome_path})
             ln -s $directory/*  {output.genome}
@@ -23,7 +23,7 @@ rule get_reference_genome:
     output:
         "resources/reference_genome/genome.fasta",
     log:
-        "results/logs/ref/get_reference_genome.log",
+        "{}results/logs/ref/get_reference_genome.log".format(outdir),
     params:
         species=config["resources"]["ref"]["species"],
         datatype="dna",
@@ -38,9 +38,9 @@ rule create_bowtie_index_reference:
     input:
         "resources/reference_genome/genome.fasta",
     output:
-        genome=directory("resources/reference_genome/genome/"),
+        genome=directory("resources/reference_genome/index/"),
     log:
-        "results/logs/ref/indexing_reference.log",
+        "{}results/logs/ref/indexing_reference.log".format(outdir),
     message:
         "Creating bowtie index"
     conda:
@@ -53,7 +53,8 @@ rule create_bowtie_index_reference:
         """
         # Add a condition in the shell script to determine if commands should run
         if [ -z "{params.genome_path}" ]; then
-            bowtie-build --threads {threads} {input} {output}/genome
+            mkdir resources/reference_genome/index/
+            bowtie-build --threads {threads} {input} {output}/index_ref
         fi
         """
 
@@ -73,15 +74,15 @@ else:
 
 rule return_spike_path:
     output:
-        genome=directory("resources/spike_genome/genome/"),
+        genome=directory("resources/spike_genome/index/"),
     log:
-        "results/logs/ref/return_spike_path.log",
+        "{}results/logs/ref/return_spike_path.log".format(outdir),
     params:
         genome_path=config["resources"]["ref_spike"]["index_spike"],
     shell:
         """
         if [ -n "{params.genome_path}" ]; then
-            mkdir resources/spike_genome/genome/
+            mkdir resources/spike_genome/index/
             prefix=$(basename {params.genome_path})
             directory=$(dirname {params.genome_path})
             ln -s $directory/*  {output.genome}
@@ -93,7 +94,7 @@ rule get_spike_genome:
     output:
         "resources/spike_genome/genome.fasta",
     log:
-        "results/logs/ref/get_spike_genome.log",
+        "{}results/logs/ref/get_spike_genome.log".format(outdir),
     params:
         species=config["resources"]["ref_spike"]["species"],
         datatype="dna",
@@ -108,9 +109,9 @@ rule create_bowtie_index_spike:
     input:
         "resources/spike_genome/genome.fasta",
     output:
-        genome=directory("resources/spike_genome/genome/"),
+        genome=directory("resources/spike_genome/index/"),
     log:
-        "results/logs/ref/indexing_spike.log",
+        "{}results/logs/ref/indexing_spike.log".format(outdir),
     message:
         "Creating bowtie index for spike-in genome"
     conda:
@@ -123,7 +124,8 @@ rule create_bowtie_index_spike:
         """
         # Add a condition in the shell script to determine if commands should run
         if [ -z "{params.genome_path}" ]; then
-            bowtie-build --threads {threads} {input} {output}/genome
+            mkdir resources/spike_genome/index/
+            bowtie-build --threads {threads} {input} {output}/index_spike >>{log} 2>&1
         fi
         """
 

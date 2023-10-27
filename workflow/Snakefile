@@ -17,11 +17,26 @@ configfile: "config/config.yaml"
 container: "docker://continuumio/miniconda3"
 
 
+if config["output_path"] != "":
+    if os.path.exists(config["output_path"]):
+        if config["output_path"][-1] != "/":
+            outdir = config["output_path"] + "/"
+        else:
+            outdir = config["output_path"]
+    else:
+        raise FileNotFoundError(
+            "The provided path to the output folder does not exist \nPlease check that the folder is present"
+        )
+else:
+    outdir = ""
+
+
 include: "rules/references.smk"
 include: "rules/common.smk"
 include: "rules/trim.smk"
 include: "rules/align.smk"
 include: "rules/createBigWigs.smk"
+include: "rules/callPeaks.smk"
 
 
 rule all:
