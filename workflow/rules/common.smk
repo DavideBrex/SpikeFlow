@@ -27,7 +27,7 @@ validate(config, schema="../schemas/config.schema.yaml")
 duplicated_indices = samples_sheet.index[
     samples_sheet.index.duplicated(keep=False)
 ].unique()
-multiLanes_samp = [f"{a}-rep{b}" for a, b in duplicated_indices]
+multiLanes_samp = ["{}-rep{}".format(a,b) for a, b in duplicated_indices]
 
 # create a dictionary of sample-input match
 idSamples = samples_sheet["sample"].str.cat(

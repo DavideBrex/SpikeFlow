@@ -86,4 +86,6 @@ rule edd_callVeryBroadPeaks:
             {input.treatment} {input.control} \
             {params.output_dir} \
             2> {log}
+        mv {params.output_dir}/log.txt {params.output_dir}/{wildcards.sample}_runlog.txt
+        mv {params.output_dir}/{wildcards.sample}_runlog.txt $(dirname {log})
         """
