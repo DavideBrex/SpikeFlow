@@ -24,6 +24,8 @@ rule macs2_callNarrowPeak:
         + " --pvalue "
         + config["params"]["peakCalling"]["macs2"]["pvalue"]
         + " --keep-dup all",
+    benchmark:
+        "{}results/.benchmarks/{{sample}}.macs2.benchmark.txt".format(outdir)
     wrapper:
         "v2.6.0/bio/macs2/callpeak"
 

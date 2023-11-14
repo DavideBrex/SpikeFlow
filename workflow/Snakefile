@@ -37,6 +37,7 @@ include: "rules/trim.smk"
 include: "rules/align.smk"
 include: "rules/createBigWigs.smk"
 include: "rules/callPeaks.smk"
+include: "rules/qc.smk"
 
 
 rule all:

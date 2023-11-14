@@ -192,9 +192,20 @@ def input_toget():
 
     # epic2_broad = expand("{}results/peakCalling/epic2/{sample}_broadPeaks.bed".format(outdir), sample=SAMPLES)
 
-    # return bamFile + bigWigs + macs2_narrow + macs2_narrow_spike
-    return bamFile + bigWigs + peak_files
+    # qc
+    fastqc = expand(
+        "{}results/QC/fastqc/{{id}}_fastqc.html".format(outdir), id=wanted_inputs
+    )
+    fingerPrint = expand(
+        "{}results/QC/fingerPrint/{{id}}.plot.pdf".format(outdir), id=wanted_inputs,
+    )
+    phantompeakqual = expand(
+        "{}results/QC/phantompeakqual/{{id}}.spp.out".format(outdir), id=wanted_inputs,
+    )
+    QCfiles = fastqc + fingerPrint + phantompeakqual + ["{}results/QC/multiqc/multiqc_report.html".format(outdir)]
 
+    # return bamFile + bigWigs + macs2_narrow + macs2_narrow_spike
+    return bamFile + bigWigs + peak_files + fastqc + QCfiles
 
 # -------------------- Other helpers functions ---------------#
 
