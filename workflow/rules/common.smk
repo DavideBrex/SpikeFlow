@@ -158,7 +158,7 @@ def input_toget():
     for sample, replicate in samples_sheet.index.unique():
         wanted_inputs += [f"{sample}-rep{replicate}"]
 
-    bamFile = expand("{}results/bam/{{id}}.clean.bam".format(outdir), id=wanted_inputs)
+    #bamFile = expand("{}results/bam/{{id}}.clean.bam".format(outdir), id=wanted_inputs)
     bigWigs = expand("{}results/bigWigs/{{id}}.bw".format(outdir), id=wanted_inputs)
 
     # peak calling
@@ -193,19 +193,10 @@ def input_toget():
     # epic2_broad = expand("{}results/peakCalling/epic2/{sample}_broadPeaks.bed".format(outdir), sample=SAMPLES)
 
     # qc
-    fastqc = expand(
-        "{}results/QC/fastqc/{{id}}_fastqc.html".format(outdir), id=wanted_inputs
-    )
-    fingerPrint = expand(
-        "{}results/QC/fingerPrint/{{id}}.plot.pdf".format(outdir), id=wanted_inputs,
-    )
-    phantompeakqual = expand(
-        "{}results/QC/phantompeakqual/{{id}}.spp.out".format(outdir), id=wanted_inputs,
-    )
-    QCfiles = fastqc + fingerPrint + phantompeakqual + ["{}results/QC/multiqc/multiqc_report.html".format(outdir)]
+    QCfiles =  ["{}results/QC/multiqc/multiqc_report.html".format(outdir)]
 
     # return bamFile + bigWigs + macs2_narrow + macs2_narrow_spike
-    return bamFile + bigWigs + peak_files + fastqc + QCfiles
+    return  bigWigs + peak_files  + QCfiles
 
 # -------------------- Other helpers functions ---------------#
 
@@ -326,34 +317,43 @@ def normalization_factor(wildcards):
     Read the log message from the cleaning of bam files and compute normalization factor
     By using the log file we avoid to read the bam file with pysam just to get # of aligned reads
     """
+    norm_type = config["normalization_type"]
     # open sample log file
     samp = wildcards.id
     with open(
-        "{}results/logs/spike/{}.removeSpikeDups".format(outdir, samp), "r"
+        "{}results/logs/spike/{}.removeSpikeDups".format(outdir, samp), "r+"
     ) as file:
         info_sample = file.read().strip().split("\n")
 
-        # we need the information also from the input (if it is not the sample an input itself)
-        inputSamp = sample_to_input[wildcards.id]
-        if pd.isna(inputSamp):
-            Nsample = int(
+        Nsample = int(
                 info_sample[1].split(":")[-1]
             )  # number of aligned reads in sample
-            alpha = 1 / (Nsample) * 1000000  # normalization factsor
+        Nspike = int(
+                    info_sample[2].split(":")[-1]
+                )  # number of spike reads in sample
+
+        # we need the information also from the input (if it is not the sample an input itself)
+        inputSamp = sample_to_input[wildcards.id]
+        if pd.isna(inputSamp) or norm_type != "RX-Input":
+            if norm_type == "Orlando":
+                alpha = (1 / Nspike) * 1000000 # From Orlando et. al 2014 (RRPM)
+            else:
+                alpha = (1 / Nsample) * 1000000  # RPM  
         else:
             # open input log file
             with open(
                 "{}results/logs/spike/{}.removeSpikeDups".format(outdir, inputSamp), "r"
-            ) as file:
-                info_input = file.read().strip().split("\n")
+            ) as input_file:
+                info_input = input_file.read().strip().split("\n")
 
                 gamma = int(info_input[2].split(":")[-1]) / int(
                     info_input[1].split(":")[-1]
                 )  # ratio spike/samples in input
-                Nspike = int(
-                    info_sample[2].split(":")[-1]
-                )  # number of spike reads in sample
                 alpha = gamma / Nspike * 1000000  # normalization factor
+
+        # TO DO: add log file with the norm factors stored
+        with open("{}results/logs/spike/{}.normFactor".format(outdir, samp), 'w') as file:
+            file.write("Normalization factor: {} \n".format(round(alpha,4)))
 
     if is_single_end(wildcards.id):
         return "--scaleFactor {} --extendReads {}".format(
@@ -361,4 +361,4 @@ def normalization_factor(wildcards):
         )
     else:
         return "--scaleFactor {} --extendReads ".format(str(round(alpha, 4)))
-    # TO DO: add log file with the norm factors stored
+    
