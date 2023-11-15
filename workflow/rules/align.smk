@@ -90,7 +90,7 @@ rule clean_spike:
         sample_ref="{}results/bam/{{id}}.clean.bam".format(outdir),
         sample_spike="{}results/bam_spike/{{id}}_spike.clean.bam".format(outdir),
     conda:
-        "../envs/pysam.yaml"
+        "../envs/various.yaml"
     log:
         "{}results/logs/spike/{{id}}.removeSpikeDups".format(outdir),
     benchmark:

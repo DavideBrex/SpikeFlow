@@ -6,12 +6,3 @@ channels:
 dependencies:
   - r-base=4.1.0
   - r-spp
-  - r-tidyverse
-  - bioconductor-org.Mm.eg.db
-  - bioconductor-org.Hs.eg.db
-  - bioconductor-TxDb.Mmusculus.UCSC.mm9.knownGene
-  - bioconductor-TxDb.Mmusculus.UCSC.mm10.knownGene
-  - bioconductor-TxDb.Hsapiens.UCSC.hg19.knownGene
-  - bioconductor-TxDb.Hsapiens.UCSC.hg18.knownGene
-  - bioconductor-ChIPseeker
-  - bioconductor-DiffBind

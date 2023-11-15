@@ -46,7 +46,7 @@ rule epic2_callBroadPeaks:
         fdr=config["params"]["peakCalling"]["epic2"]["fdr"],
         genome=config["params"]["peakCalling"]["genome"],
     conda:
-        "../envs/epic2.yaml"
+        "../envs/various.yaml"
     shell:
         """
         epic2 -t {input.treatment} \
