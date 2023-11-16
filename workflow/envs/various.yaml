@@ -7,5 +7,5 @@ dependencies:
   - pysam
   - chromap
   - bedtools
-  - idr
+  - chip-r
 

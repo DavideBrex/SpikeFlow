@@ -21,13 +21,13 @@ validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
 validate(config, schema="../schemas/config.schema.yaml")
 
-# print(samples_sheet)
+print(samples_sheet.index.get_level_values("sample"))
 
 # let's get the samples that need to be merged due to presence of multiple lanes
 duplicated_indices = samples_sheet.index[
     samples_sheet.index.duplicated(keep=False)
 ].unique()
-multiLanes_samp = ["{}-rep{}".format(a,b) for a, b in duplicated_indices]
+multiLanes_samp = ["{}-rep{}".format(a, b) for a, b in duplicated_indices]
 
 # create a dictionary of sample-input match
 idSamples = samples_sheet["sample"].str.cat(
@@ -158,7 +158,7 @@ def input_toget():
     for sample, replicate in samples_sheet.index.unique():
         wanted_inputs += [f"{sample}-rep{replicate}"]
 
-    #bamFile = expand("{}results/bam/{{id}}.clean.bam".format(outdir), id=wanted_inputs)
+    # bamFile = expand("{}results/bam/{{id}}.clean.bam".format(outdir), id=wanted_inputs)
     bigWigs = expand("{}results/bigWigs/{{id}}.bw".format(outdir), id=wanted_inputs)
 
     # peak calling
@@ -193,10 +193,11 @@ def input_toget():
     # epic2_broad = expand("{}results/peakCalling/epic2/{sample}_broadPeaks.bed".format(outdir), sample=SAMPLES)
 
     # qc
-    QCfiles =  ["{}results/QC/multiqc/multiqc_report.html".format(outdir)]
+    QCfiles = ["{}results/QC/multiqc/multiqc_report.html".format(outdir)]
 
     # return bamFile + bigWigs + macs2_narrow + macs2_narrow_spike
-    return  bigWigs + peak_files  + QCfiles
+    return bigWigs + peak_files + QCfiles
+
 
 # -------------------- Other helpers functions ---------------#
 
@@ -321,24 +322,22 @@ def normalization_factor(wildcards):
     # open sample log file
     samp = wildcards.id
     with open(
-        "{}results/logs/spike/{}.removeSpikeDups".format(outdir, samp), "r+"
+        "{}results/logs/spike/{}.removeSpikeDups".format(outdir, samp), "r"
     ) as file:
         info_sample = file.read().strip().split("\n")
 
         Nsample = int(
-                info_sample[1].split(":")[-1]
-            )  # number of aligned reads in sample
-        Nspike = int(
-                    info_sample[2].split(":")[-1]
-                )  # number of spike reads in sample
+            info_sample[1].split(":")[-1]
+        )  # number of aligned reads in sample
+        Nspike = int(info_sample[2].split(":")[-1])  # number of spike reads in sample
 
         # we need the information also from the input (if it is not the sample an input itself)
         inputSamp = sample_to_input[wildcards.id]
         if pd.isna(inputSamp) or norm_type != "RX-Input":
             if norm_type == "Orlando":
-                alpha = (1 / Nspike) * 1000000 # From Orlando et. al 2014 (RRPM)
+                alpha = (1 / Nspike) * 1000000  # From Orlando et. al 2014 (RRPM)
             else:
-                alpha = (1 / Nsample) * 1000000  # RPM  
+                alpha = (1 / Nsample) * 1000000  # RPM
         else:
             # open input log file
             with open(
@@ -352,8 +351,10 @@ def normalization_factor(wildcards):
                 alpha = gamma / Nspike * 1000000  # normalization factor
 
         # TO DO: add log file with the norm factors stored
-        with open("{}results/logs/spike/{}.normFactor".format(outdir, samp), 'w') as file:
-            file.write("Normalization factor: {} \n".format(round(alpha,4)))
+        with open(
+            "{}results/logs/spike/{}.normFactor".format(outdir, samp), "w"
+        ) as file:
+            file.write("Normalization factor: {} \n".format(round(alpha, 4)))
 
     if is_single_end(wildcards.id):
         return "--scaleFactor {} --extendReads {}".format(
@@ -361,4 +362,3 @@ def normalization_factor(wildcards):
         )
     else:
         return "--scaleFactor {} --extendReads ".format(str(round(alpha, 4)))
-    
