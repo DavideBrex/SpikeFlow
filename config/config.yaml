@@ -15,7 +15,6 @@ aligner: bowtie
 #type of normalization to perform to generate the bigwig files (one from RAW, Orlando , RX-Input)
 normalization_type: "RX-Input"
 
-
 resources:
   ref: 
     #if bowtie index is not available leave only "" , it will be created

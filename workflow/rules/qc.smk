@@ -69,9 +69,6 @@ rule create_qc_table_spike:
             "{}results/logs/spike/{{id}}.removeSpikeDups".format(outdir),
             id=set(idSamples),
         ),
-        normFactor=expand(
-            "{}results/logs/spike/{{id}}.normFactor".format(outdir), id=set(idSamples)
-        ),
     output:
         tab="{}results/QC/Spikein_qc_FULL.tsv".format(outdir),
         tab_multiqc="{}results/QC/Spike-in_Reads_mqc.tsv".format(outdir),

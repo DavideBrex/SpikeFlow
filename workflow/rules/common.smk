@@ -21,7 +21,7 @@ validate(samples_sheet, schema="../schemas/sampleSheet.schema.yaml")
 
 validate(config, schema="../schemas/config.schema.yaml")
 
-print(samples_sheet.index.get_level_values("sample"))
+#print(samples_sheet)
 
 # let's get the samples that need to be merged due to presence of multiple lanes
 duplicated_indices = samples_sheet.index[
@@ -351,10 +351,10 @@ def normalization_factor(wildcards):
                 alpha = gamma / Nspike * 1000000  # normalization factor
 
         # TO DO: add log file with the norm factors stored
-        with open(
-            "{}results/logs/spike/{}.normFactor".format(outdir, samp), "w"
-        ) as file:
-            file.write("Normalization factor: {} \n".format(round(alpha, 4)))
+    with open(
+        "{}results/logs/spike/{}.normFactor".format(outdir, samp), "w"
+    ) as file:
+        file.write("Normalization factor: {} \n".format(round(alpha, 4)))
 
     if is_single_end(wildcards.id):
         return "--scaleFactor {} --extendReads {}".format(
