@@ -6,3 +6,5 @@ channels:
 dependencies:
   - r-base=4.1.0
   - r-spp
+  - samtools
+  - gawk
