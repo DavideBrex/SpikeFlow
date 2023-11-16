@@ -55,12 +55,8 @@ rule phantom_peak_qual:
     threads: 5
     params:
         out_dir=lambda w, output: os.path.dirname(output.spp),
-    shell:
-        """
-        Rscript --vanilla workflow/scripts/run_spp_nodups.R \
-        -c={input} -savp -rf -p={threads} -odir={params.out_dir}  -out={output} -tmpdir={params.out_dir}  \
-        > {log} 2>&1
-        """
+    script:
+        "../scripts/run_spp_nodups.R"
 
 
 rule create_qc_table_spike:
