@@ -53,17 +53,18 @@ params:
     memory: 1
   deeptools:
     #change this according to: https://deeptools.readthedocs.io/en/latest/content/feature/effectiveGenomeSize.html
-    effective_genome_length: 2701495761
+    effective_genome_length: 11000000
     #read extension, only for SE
     read_extension: 75
   peakCalling:
-    #specify the ucsc genome name (hg38, mm10, dm6, etc.)
-    genome: "hg38"
     chrom_sizes: "data/hg38.chromsizes"
     macs2:
-      pvalue: 1e-5
+      pvalue: 0.05
     epic2:
-      fdr: 0.0005
+      #effective genome fraction, change this according to https://github.com/biocore-ntnu/epic2/blob/master/epic2/effective_sizes/hg38_50.txt
+      # in the github it is indicated as Effective genome size, and you need to know the read length in  order to set it
+      egf: 0.869 
+      fdr: 0.05
     edd:
       fdr: 0.05
 

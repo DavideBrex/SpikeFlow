@@ -23,6 +23,8 @@ validate(config, schema="../schemas/config.schema.yaml")
 
 # print(samples_sheet)
 
+# -------------------- global variables defintion --------------------#
+
 # let's get the samples that need to be merged due to presence of multiple lanes
 duplicated_indices = samples_sheet.index[
     samples_sheet.index.duplicated(keep=False)
@@ -38,6 +40,27 @@ inputSamples = samples_sheet["control"].str.cat(
 )
 
 sample_to_input = dict(zip(idSamples, inputSamples))
+
+# define narrow, broad and very-broad samples
+narrowSamples = [
+    "{}-rep{}".format(sample, rep)
+    for sample, rep in samples_sheet[samples_sheet["peak_type"] == "narrow"]
+    .index.unique()
+    .tolist()
+]
+broadSamples = [
+    "{}-rep{}".format(sample, rep)
+    for sample, rep in samples_sheet[samples_sheet["peak_type"] == "broad"]
+    .index.unique()
+    .tolist()
+]
+veryBroadSamples = [
+    "{}-rep{}".format(sample, rep)
+    for sample, rep in samples_sheet[samples_sheet["peak_type"] == "very-broad"]
+    .index.unique()
+    .tolist()
+]
+
 # -------------------- wildcard constraints --------------------#
 
 
@@ -109,8 +132,14 @@ def perform_checks(input_df):
                     sample
                 )
             )
-
-    # 4. Control identifier and replicate has to match a provided sample identifier and replicate
+        # 4. check if all replicates have the same peak type
+        if input_df.loc[[sample]].peak_type.nunique() > 1:
+            raise Exception(
+                "For sample {}, all replicates should have the same peak type".format(
+                    sample
+                )
+            )
+    # 5. Control identifier and replicate has to match a provided sample identifier and replicate
     input_df_controls = input_df[
         "antibody"
     ].isna()  # control samples (those with antibody to null)
@@ -129,7 +158,7 @@ def perform_checks(input_df):
             )
         )
 
-    # 5. in case an index is provided for the ref genome (different than ""), check whether it actually exists
+    # 6. in case an index is provided for the ref genome (different than ""), check whether it actually exists
     if config["resources"]["ref"]["index"] != "":
         if not os.path.exists(os.path.dirname(config["resources"]["ref"]["index"])):
             raise FileNotFoundError(
@@ -161,6 +190,15 @@ def input_toget():
     # bamFile = expand("{}results/bam/{{id}}.clean.bam".format(outdir), id=wanted_inputs)
     bigWigs = expand("{}results/bigWigs/{{id}}.bw".format(outdir), id=wanted_inputs)
 
+    # qc
+    QCfiles = ["{}results/QC/multiqc/multiqc_report.html".format(outdir)]
+    if narrowSamples:
+        QCfiles.append("{}results/QC/macs2_peaks_mqc.tsv".format(outdir))
+    if broadSamples:
+        QCfiles.append("{}results/QC/epic2_peaks_mqc.tsv".format(outdir))
+    if veryBroadSamples:
+        QCfiles.append("{}results/QC/edd_peaks_mqc.tsv".format(outdir))
+
     # peak calling
     SAMPLES = [key for key, value in sample_to_input.items() if value is not np.nan]
     peak_files = []
@@ -191,9 +229,6 @@ def input_toget():
     # #macs2_narrow_spike = expand("{}results/macs2_spike/{sample}_spike_peaks.broadPeak".format(outdir), sample=SAMPLES)
 
     # epic2_broad = expand("{}results/peakCalling/epic2/{sample}_broadPeaks.bed".format(outdir), sample=SAMPLES)
-
-    # qc
-    QCfiles = ["{}results/QC/multiqc/multiqc_report.html".format(outdir)]
 
     # return bamFile + bigWigs + macs2_narrow + macs2_narrow_spike
     return bigWigs + peak_files + QCfiles
@@ -254,7 +289,7 @@ def get_fastq_trimming(wildcards):
     else:
         if wildcards.id in multiLanes_samp:
             return expand(
-                "{}results/fastq/{id}_{group}.fastq.gz".format(outdir),
+                "{}results/fastq/{{id}}_{{group}}.fastq.gz".format(outdir),
                 group=[1, 2],
                 **wildcards,
             )
@@ -273,13 +308,13 @@ def get_reads(wildcards):
     """Function called by aligners."""
 
     samp, rep = retrieve_index(**wildcards)
-    # if trimming is performed, the trimmed fastqs are all in
+    # if trimming is performed, the trimmed fastqs are all in trimmed folder
     if config["trimming"]:
         if is_single_end(**wildcards):
             return expand("{}results/trimmed/{id}.fastq.gz".format(outdir, **wildcards))
         else:
             return expand(
-                "{}results/trimmed/{id}_{group}.fastq.gz".format(outdir),
+                "{}results/trimmed/{{id}}_{{group}}.fastq.gz".format(outdir),
                 group=[1, 2],
                 **wildcards,
             )
@@ -297,7 +332,7 @@ def get_reads(wildcards):
         else:
             if wildcards.id in multiLanes_samp:
                 return expand(
-                    "{}results/fastq/{id}_{group}.fastq.gz".format(outdir),
+                    "{}results/fastq/{{id}}_{{group}}.fastq.gz".format(outdir),
                     group=[1, 2],
                     **wildcards,
                 )

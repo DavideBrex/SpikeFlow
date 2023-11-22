@@ -22,7 +22,7 @@ rule merge_lanes_pe:
         fw=temp("{}results/fastq/{{id}}_1.fastq.gz".format(outdir)),
         rv=temp("{}results/fastq/{{id}}_2.fastq.gz".format(outdir)),
     log:
-        "{}results/logs/pipe-fastqs/{{id}}.log",
+        "{}results/logs/pipe-fastqs/{{id}}.log".format(outdir),
     threads: 1
     shell:
         """

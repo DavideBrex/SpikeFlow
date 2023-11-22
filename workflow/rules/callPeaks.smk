@@ -40,11 +40,15 @@ rule epic2_callBroadPeaks:
         broadPeaks="{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(
             outdir
         ),
+        summary="{}results/logs/peakCalling/epic2/{{sample}}_summary.txt".format(outdir),
     log:
         "{}results/logs/peakCalling/epic2/{{sample}}_callpeak.log".format(outdir),
     params:
         fdr=config["params"]["peakCalling"]["epic2"]["fdr"],
-        genome=config["params"]["peakCalling"]["genome"],
+        egf=config["params"]["peakCalling"]["epic2"]["egf"],
+        chrom_size=config["params"]["peakCalling"]["chrom_sizes"],
+    benchmark:
+        "{}results/.benchmarks/{{sample}}.epic2.benchmark.txt".format(outdir)
     conda:
         "../envs/various.yaml"
     shell:
@@ -53,9 +57,13 @@ rule epic2_callBroadPeaks:
               -c {input.control} \
               --guess-bampe \
               -fdr {params.fdr} \
-              --genome {params.genome} \
+              --chromsizes {params.chrom_size} \
+              --effective-genome-fraction {params.egf} \
               --output {output.broadPeaks} \
               2> {log}
+        
+        # Count the number of peaks and create a summary file
+        echo "Total Peaks: $(wc -l < {output.broadPeaks})" > {output.summary}
         """
 
 
@@ -69,6 +77,7 @@ rule edd_callVeryBroadPeaks:
         veryBroadPeaks="{}results/peakCalling/edd/{{sample}}/{{sample}}_peaks.bed".format(
             outdir
         ),
+        summary="{}results/logs/peakCalling/edd/{{sample}}_summary.txt".format(outdir),
     log:
         "{}results/logs/peakCalling/edd/{{sample}}_callpeak.log".format(outdir),
     params:
@@ -76,6 +85,8 @@ rule edd_callVeryBroadPeaks:
         fdr=config["params"]["peakCalling"]["edd"]["fdr"],
         blacklist=config["resources"]["ref"]["blacklist"],
         output_dir="{}results/peakCalling/edd/{{sample}}".format(outdir),
+    benchmark:
+        "{}results/.benchmarks/{{sample}}.edd.benchmark.txt".format(outdir)
     conda:
         "../envs/edd.yaml"
     threads: 8
@@ -90,4 +101,6 @@ rule edd_callVeryBroadPeaks:
             2> {log}
         mv {params.output_dir}/log.txt {params.output_dir}/{wildcards.sample}_runlog.txt
         mv {params.output_dir}/{wildcards.sample}_runlog.txt $(dirname {log})
+        # Count the number of peaks and create a summary file
+        echo "Total Peaks: $(wc -l < {output.veryBroadPeaks})" > {output.summary}
         """

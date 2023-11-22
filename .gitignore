@@ -12,3 +12,5 @@ config/samples_sheet_ER.csv
 config/samples_sheet_bap1.csv
 dag.svg
 report.html
+config/config_bap1.yaml
+config/samples_sheet_bap1Short.csv
