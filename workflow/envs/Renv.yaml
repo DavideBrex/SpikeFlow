@@ -1,0 +1,10 @@
+name: Renv
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults  ## block user/system channels
+dependencies:
+  - r-base=4.1.0
+  - r-spp
+  - samtools
+  - gawk

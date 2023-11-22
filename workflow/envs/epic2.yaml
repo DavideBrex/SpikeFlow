@@ -1,7 +1,0 @@
-name: epic2
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - epic2
-

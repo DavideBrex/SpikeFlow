@@ -12,6 +12,9 @@ trimming: true
 
 aligner: bowtie
 
+#type of normalization to perform to generate the bigwig files (one from RAW, Orlando , RX-Input)
+normalization_type: "RX-Input"
+
 resources:
   ref: 
     #if bowtie index is not available leave only "" , it will be created
@@ -54,13 +57,14 @@ params:
     #read extension, only for SE
     read_extension: 75
   peakCalling:
-    #specify the ucsc genome name (hg38, mm10, dm6, etc.)
-    genome: "hg38"
     chrom_sizes: ".test/data/hg38.chromsizes"
     macs2:
-      pvalue: 1e-5
+      pvalue: 0.05
     epic2:
-      fdr: 0.0005
+      #effective genome fraction, change this according to https://github.com/biocore-ntnu/epic2/blob/master/epic2/effective_sizes/hg38_50.txt
+      # in the github it is indicated as Effective genome size, and you need to know the read length in  order to set it
+      egf: 0.869 
+      fdr: 0.05
     edd:
       fdr: 0.05
 

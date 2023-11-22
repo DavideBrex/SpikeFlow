@@ -69,7 +69,7 @@ if config["aligner"] == "bowtie":
                 outdir
             ),
         benchmark:
-            "{}results/.benchmarks/{{id}}.align.benchmark.txt".format(outdir)
+            "{}results/.benchmarks/{{id}}_spike.align.benchmark.txt".format(outdir)
         shell:
             """
             bowtie -p {threads} {params.bowtie} -x {params.index} {params.inputsel} 2> {log.align} \
@@ -90,8 +90,10 @@ rule clean_spike:
         sample_ref="{}results/bam/{{id}}.clean.bam".format(outdir),
         sample_spike="{}results/bam_spike/{{id}}_spike.clean.bam".format(outdir),
     conda:
-        "../envs/pysam.yaml"
+        "../envs/various.yaml"
     log:
         "{}results/logs/spike/{{id}}.removeSpikeDups".format(outdir),
+    benchmark:
+        "{}results/.benchmarks/{{id}}.clean_spike.benchmark.txt".format(outdir)
     script:
         "../scripts/remove_spikeDups.py"

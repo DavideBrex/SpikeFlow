@@ -10,8 +10,16 @@ properties:
     type: string
   trimming:
     type: boolean
+  
+  normalization_type:
+    type: string
+    enum: 
+        - RAW
+        - Orlando
+        - RX-Input
 
 # entries that have to be in the config file for successful validation
 required:
   - samples_sheet
   - trimming
+

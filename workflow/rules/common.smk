@@ -23,11 +23,13 @@ validate(config, schema="../schemas/config.schema.yaml")
 
 # print(samples_sheet)
 
+# -------------------- global variables defintion --------------------#
+
 # let's get the samples that need to be merged due to presence of multiple lanes
 duplicated_indices = samples_sheet.index[
     samples_sheet.index.duplicated(keep=False)
 ].unique()
-multiLanes_samp = ["{}-rep{}".format(a,b) for a, b in duplicated_indices]
+multiLanes_samp = ["{}-rep{}".format(a, b) for a, b in duplicated_indices]
 
 # create a dictionary of sample-input match
 idSamples = samples_sheet["sample"].str.cat(
@@ -38,6 +40,27 @@ inputSamples = samples_sheet["control"].str.cat(
 )
 
 sample_to_input = dict(zip(idSamples, inputSamples))
+
+# define narrow, broad and very-broad samples
+narrowSamples = [
+    "{}-rep{}".format(sample, rep)
+    for sample, rep in samples_sheet[samples_sheet["peak_type"] == "narrow"]
+    .index.unique()
+    .tolist()
+]
+broadSamples = [
+    "{}-rep{}".format(sample, rep)
+    for sample, rep in samples_sheet[samples_sheet["peak_type"] == "broad"]
+    .index.unique()
+    .tolist()
+]
+veryBroadSamples = [
+    "{}-rep{}".format(sample, rep)
+    for sample, rep in samples_sheet[samples_sheet["peak_type"] == "very-broad"]
+    .index.unique()
+    .tolist()
+]
+
 # -------------------- wildcard constraints --------------------#
 
 
@@ -109,8 +132,14 @@ def perform_checks(input_df):
                     sample
                 )
             )
-
-    # 4. Control identifier and replicate has to match a provided sample identifier and replicate
+        # 4. check if all replicates have the same peak type
+        if input_df.loc[[sample]].peak_type.nunique() > 1:
+            raise Exception(
+                "For sample {}, all replicates should have the same peak type".format(
+                    sample
+                )
+            )
+    # 5. Control identifier and replicate has to match a provided sample identifier and replicate
     input_df_controls = input_df[
         "antibody"
     ].isna()  # control samples (those with antibody to null)
@@ -129,7 +158,7 @@ def perform_checks(input_df):
             )
         )
 
-    # 5. in case an index is provided for the ref genome (different than ""), check whether it actually exists
+    # 6. in case an index is provided for the ref genome (different than ""), check whether it actually exists
     if config["resources"]["ref"]["index"] != "":
         if not os.path.exists(os.path.dirname(config["resources"]["ref"]["index"])):
             raise FileNotFoundError(
@@ -158,8 +187,17 @@ def input_toget():
     for sample, replicate in samples_sheet.index.unique():
         wanted_inputs += [f"{sample}-rep{replicate}"]
 
-    bamFile = expand("{}results/bam/{{id}}.clean.bam".format(outdir), id=wanted_inputs)
+    # bamFile = expand("{}results/bam/{{id}}.clean.bam".format(outdir), id=wanted_inputs)
     bigWigs = expand("{}results/bigWigs/{{id}}.bw".format(outdir), id=wanted_inputs)
+
+    # qc
+    QCfiles = ["{}results/QC/multiqc/multiqc_report.html".format(outdir)]
+    if narrowSamples:
+        QCfiles.append("{}results/QC/macs2_peaks_mqc.tsv".format(outdir))
+    if broadSamples:
+        QCfiles.append("{}results/QC/epic2_peaks_mqc.tsv".format(outdir))
+    if veryBroadSamples:
+        QCfiles.append("{}results/QC/edd_peaks_mqc.tsv".format(outdir))
 
     # peak calling
     SAMPLES = [key for key, value in sample_to_input.items() if value is not np.nan]
@@ -193,7 +231,7 @@ def input_toget():
     # epic2_broad = expand("{}results/peakCalling/epic2/{sample}_broadPeaks.bed".format(outdir), sample=SAMPLES)
 
     # return bamFile + bigWigs + macs2_narrow + macs2_narrow_spike
-    return bamFile + bigWigs + peak_files
+    return bigWigs + peak_files + QCfiles
 
 
 # -------------------- Other helpers functions ---------------#
@@ -251,7 +289,7 @@ def get_fastq_trimming(wildcards):
     else:
         if wildcards.id in multiLanes_samp:
             return expand(
-                "{}results/fastq/{id}_{group}.fastq.gz".format(outdir),
+                "{}results/fastq/{{id}}_{{group}}.fastq.gz".format(outdir),
                 group=[1, 2],
                 **wildcards,
             )
@@ -270,13 +308,13 @@ def get_reads(wildcards):
     """Function called by aligners."""
 
     samp, rep = retrieve_index(**wildcards)
-    # if trimming is performed, the trimmed fastqs are all in
+    # if trimming is performed, the trimmed fastqs are all in trimmed folder
     if config["trimming"]:
         if is_single_end(**wildcards):
             return expand("{}results/trimmed/{id}.fastq.gz".format(outdir, **wildcards))
         else:
             return expand(
-                "{}results/trimmed/{id}_{group}.fastq.gz".format(outdir),
+                "{}results/trimmed/{{id}}_{{group}}.fastq.gz".format(outdir),
                 group=[1, 2],
                 **wildcards,
             )
@@ -294,7 +332,7 @@ def get_reads(wildcards):
         else:
             if wildcards.id in multiLanes_samp:
                 return expand(
-                    "{}results/fastq/{id}_{group}.fastq.gz".format(outdir),
+                    "{}results/fastq/{{id}}_{{group}}.fastq.gz".format(outdir),
                     group=[1, 2],
                     **wildcards,
                 )
@@ -315,6 +353,7 @@ def normalization_factor(wildcards):
     Read the log message from the cleaning of bam files and compute normalization factor
     By using the log file we avoid to read the bam file with pysam just to get # of aligned reads
     """
+    norm_type = config["normalization_type"]
     # open sample log file
     samp = wildcards.id
     with open(
@@ -322,27 +361,33 @@ def normalization_factor(wildcards):
     ) as file:
         info_sample = file.read().strip().split("\n")
 
+        Nsample = int(
+            info_sample[1].split(":")[-1]
+        )  # number of aligned reads in sample
+        Nspike = int(info_sample[2].split(":")[-1])  # number of spike reads in sample
+
         # we need the information also from the input (if it is not the sample an input itself)
         inputSamp = sample_to_input[wildcards.id]
-        if pd.isna(inputSamp):
-            Nsample = int(
-                info_sample[1].split(":")[-1]
-            )  # number of aligned reads in sample
-            alpha = 1 / (Nsample) * 1000000  # normalization factsor
+        if pd.isna(inputSamp) or norm_type != "RX-Input":
+            if norm_type == "Orlando":
+                alpha = (1 / Nspike) * 1000000  # From Orlando et. al 2014 (RRPM)
+            else:
+                alpha = (1 / Nsample) * 1000000  # RPM
         else:
             # open input log file
             with open(
                 "{}results/logs/spike/{}.removeSpikeDups".format(outdir, inputSamp), "r"
-            ) as file:
-                info_input = file.read().strip().split("\n")
+            ) as input_file:
+                info_input = input_file.read().strip().split("\n")
 
                 gamma = int(info_input[2].split(":")[-1]) / int(
                     info_input[1].split(":")[-1]
                 )  # ratio spike/samples in input
-                Nspike = int(
-                    info_sample[2].split(":")[-1]
-                )  # number of spike reads in sample
                 alpha = gamma / Nspike * 1000000  # normalization factor
+
+        # TO DO: add log file with the norm factors stored
+    with open("{}results/logs/spike/{}.normFactor".format(outdir, samp), "w") as file:
+        file.write("Normalization factor: {} \n".format(round(alpha, 4)))
 
     if is_single_end(wildcards.id):
         return "--scaleFactor {} --extendReads {}".format(
@@ -350,4 +395,3 @@ def normalization_factor(wildcards):
         )
     else:
         return "--scaleFactor {} --extendReads ".format(str(round(alpha, 4)))
-    # TO DO: add log file with the norm factors stored

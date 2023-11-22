@@ -16,6 +16,8 @@ rule bam2bigwig_general:
     log:
         "{}results/logs/bam2bigwig/{{id}}.log".format(outdir),
     threads: 5
+    benchmark:
+        "{}results/.benchmarks/{{id}}.bigwigs.benchmark.txt".format(outdir)
     wrapper:
         "v2.6.0/bio/deeptools/bamcoverage"
 

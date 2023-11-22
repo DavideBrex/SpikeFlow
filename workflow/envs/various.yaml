@@ -1,7 +1,11 @@
-name: pysam
+name: various
 channels:
   - conda-forge
   - bioconda
 dependencies:
+  - epic2
   - pysam
+  - chromap
+  - bedtools
+  - chip-r
 
