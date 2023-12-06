@@ -61,6 +61,41 @@ veryBroadSamples = [
     .tolist()
 ]
 
+
+def retrieve_index(id):
+    samp, rep = id.split("-rep")
+    return (samp, int(rep))
+
+
+# create a dictionary of sample-replicate match for the different peak types
+reps_dict_narrow = {}
+reps_dict_broad = {}
+reps_dict_verybroad = {}
+
+if narrowSamples:
+    for sample in narrowSamples:
+        if retrieve_index(sample)[0] in reps_dict_narrow:
+            reps_dict_narrow[retrieve_index(sample)[0]].append(sample)
+        else:
+            reps_dict_narrow[retrieve_index(sample)[0]] = [sample]
+if broadSamples:
+    for sample in broadSamples:
+        if retrieve_index(sample)[0] in reps_dict_broad:
+            reps_dict_broad[retrieve_index(sample)[0]].append(sample)
+        else:
+            reps_dict_broad[retrieve_index(sample)[0]] = [sample]
+if veryBroadSamples:
+    for sample in veryBroadSamples:
+        if retrieve_index(sample)[0] in reps_dict_verybroad:
+            reps_dict_verybroad[retrieve_index(sample)[0]].append(sample)
+        else:
+            reps_dict_verybroad[retrieve_index(sample)[0]] = [sample]
+
+# set the genome name (e.g. mm10, hg38) from the chrom sizes file
+genomeCode = os.path.splitext(
+    os.path.basename(config["params"]["peakCalling"]["chrom_sizes"])
+)[0]
+
 # -------------------- wildcard constraints --------------------#
 
 
@@ -190,56 +225,67 @@ def input_toget():
     # bamFile = expand("{}results/bam/{{id}}.clean.bam".format(outdir), id=wanted_inputs)
     bigWigs = expand("{}results/bigWigs/{{id}}.bw".format(outdir), id=wanted_inputs)
 
-    # qc
+    # qc and peak calling
     QCfiles = ["{}results/QC/multiqc/multiqc_report.html".format(outdir)]
+    peak_files = []
+
     if narrowSamples:
         QCfiles.append("{}results/QC/macs2_peaks_mqc.tsv".format(outdir))
+        peak_files += expand(
+            "{}results/peakCalling/macs2_ref/{{id}}_peaks.narrowPeak".format(outdir),
+            id=narrowSamples,
+        )
     if broadSamples:
         QCfiles.append("{}results/QC/epic2_peaks_mqc.tsv".format(outdir))
+        peak_files += expand(
+            "{}results/peakCalling/epic2/{{id}}_broadPeaks.bed".format(outdir),
+            id=broadSamples,
+        )
     if veryBroadSamples:
         QCfiles.append("{}results/QC/edd_peaks_mqc.tsv".format(outdir))
+        peak_files += expand(
+            "{}results/peakCalling/edd/{{id}}/{{id}}_peaks.bed".format(outdir),
+            id=veryBroadSamples,
+        )
 
-    # peak calling
-    SAMPLES = [key for key, value in sample_to_input.items() if value is not np.nan]
-    peak_files = []
-    for s in SAMPLES:
-        peakType = samples_sheet.loc[
-            (s.split("-rep")[0], int(s.split("-rep")[1])), "peak_type"
-        ][0]
-        if peakType == "narrow":
-            peak_files.append(
-                "{outdir}results/peakCalling/macs2_ref/{sample}_peaks.narrowPeak".format(
-                    outdir=outdir, sample=s
-                )
+    # if there are reps, we need to add to the peak files the merged samples
+    if narrowSamples or broadSamples:
+        input_dict = reps_dict_narrow | reps_dict_broad  # merge dicts
+        group_reps = [
+            key
+            for key, value in input_dict.items()
+            if isinstance(value, list) and len(value) >= 2
+        ]
+        if group_reps:
+            peak_files += expand(
+                "{}results/peakCalling/mergedPeaks/{{unique_rep}}_merged_optimal.bed".format(
+                    outdir
+                ),
+                unique_rep=group_reps,
             )
-        elif peakType == "broad":
-            peak_files.append(
-                "{outdir}results/peakCalling/epic2/{sample}_broadPeaks.bed".format(
-                    outdir=outdir, sample=s
-                )
+            peak_files += expand(
+                "{}results/peakCalling/annot/{{unique_rep}}_annot.txt".format(outdir),
+                unique_rep=group_reps,
             )
-        else:
-            peak_files.append(
-                "{outdir}results/peakCalling/edd/{sample}/{sample}_peaks.bed".format(
-                    outdir=outdir, sample=s
-                )
+    # for very broad peaks we shall use only intersect, whereas for narrow and broad we shall use chip-r
+    if veryBroadSamples:
+        group_reps = [
+            key
+            for key, value in reps_dict_verybroad.items()
+            if isinstance(value, list) and len(value) >= 2
+        ]
+        if group_reps:
+            peak_files += expand(
+                "{}results/peakCalling/mergedPeaks/{{unique_rep}}_merged_intersected.bed".format(
+                    outdir
+                ),
+                unique_rep=group_reps,
             )
 
-    # macs2_narrow = expand("{}results/peakCalling/macs2_ref/{sample}_peaks.narrowPeak".format(outdir), sample=SAMPLES)
-    # #macs2_narrow_spike = expand("{}results/macs2_spike/{sample}_spike_peaks.broadPeak".format(outdir), sample=SAMPLES)
-
-    # epic2_broad = expand("{}results/peakCalling/epic2/{sample}_broadPeaks.bed".format(outdir), sample=SAMPLES)
-
-    # return bamFile + bigWigs + macs2_narrow + macs2_narrow_spike
     return bigWigs + peak_files + QCfiles
 
 
 # -------------------- Other helpers functions ---------------#
-
-
-def retrieve_index(id):
-    samp, rep = id.split("-rep")
-    return (samp, int(rep))
 
 
 def is_single_end(id):
@@ -345,6 +391,30 @@ def get_reads(wildcards):
                     if isinstance(u, pd.Series)
                     else [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
                 )
+
+
+def get_replicate_peaks(wildcards):
+    """Function that returns the input files to merge replicates (if any) both narrow and broad peaks"""
+    if wildcards.unique_rep in reps_dict_narrow:
+        return expand(
+            "{}results/peakCalling/macs2_ref/{{sample}}_peaks.narrowPeak".format(
+                outdir
+            ),
+            sample=reps_dict_narrow[wildcards.unique_rep],
+        )
+    elif wildcards.unique_rep in reps_dict_broad:
+        return expand(
+            "{}results/logs/peakCalling/epic2/{{sample}}.bed".format(outdir),
+            sample=reps_dict_broad[wildcards.unique_rep],
+        )
+
+
+def get_replicate_peaks_edd(wildcards):
+    """Function that returns the input files to merge replicates (if any) for very broad  peaks"""
+    return expand(
+        "{}results/peakCalling/edd/{{sample}}/{{sample}}_peaks.bed".format(outdir),
+        sample=reps_dict_verybroad[wildcards.unique_rep],
+    )
 
 
 # --------------------  Rules Functions ---------------#

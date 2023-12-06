@@ -13,7 +13,7 @@ rule fastqc:
         out_dir=lambda w, output: os.path.dirname(output.html),
     shell:
         """
-        zcat {input.reads[0]} | fastqc stdin:{wildcards.id} -o {params.out_dir} 2> {log}
+        zcat {input.reads[0]} | fastqc stdin:{wildcards.id} -o {params.out_dir} &> {log}
         """
 
 
@@ -129,6 +129,9 @@ rule multiqc:
             id=set(idSamples),
         ),
         tab_spike="{}results/QC/Spike-in_Reads_mqc.tsv".format(outdir),
+        tab_macs2=rules.create_qc_table_macs2.output.tab,
+        tab_epic2=rules.create_qc_table_epic2.output.tab,
+        tab_edd=rules.create_qc_table_edd.output.tab,
     output:
         multiqc="{}results/QC/multiqc/multiqc_report.html".format(outdir),
     log:

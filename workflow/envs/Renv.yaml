@@ -6,5 +6,13 @@ channels:
 dependencies:
   - r-base=4.1.0
   - r-spp
+  - r-tidyverse
+  - bioconductor-org.hs.eg.db
+  - bioconductor-org.mm.eg.db
+  - bioconductor-chipseeker
+  - bioconductor-txdb.mmusculus.ucsc.mm9.knowngene
+  - bioconductor-txdb.mmusculus.ucsc.mm10.knowngene
+  - bioconductor-txdb.hsapiens.ucsc.hg19.knowngene
+  - bioconductor-txdb.hsapiens.ucsc.hg38.knowngene
   - samtools
   - gawk

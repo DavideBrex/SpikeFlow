@@ -41,6 +41,7 @@ rule epic2_callBroadPeaks:
             outdir
         ),
         summary="{}results/logs/peakCalling/epic2/{{sample}}_summary.txt".format(outdir),
+        bedfile="{}results/logs/peakCalling/epic2/{{sample}}.bed".format(outdir),
     log:
         "{}results/logs/peakCalling/epic2/{{sample}}_callpeak.log".format(outdir),
     params:
@@ -60,8 +61,10 @@ rule epic2_callBroadPeaks:
               --chromsizes {params.chrom_size} \
               --effective-genome-fraction {params.egf} \
               --output {output.broadPeaks} \
-              2> {log}
+              &> {log}
         
+        # we create a simpler bed output file with only the chromosome, start, end and peak score
+        awk '{{print $1, $2, $3, $6, int($5), $6, $7, $4, $9}}' {output.broadPeaks} > {output.bedfile}
         # Count the number of peaks and create a summary file
         echo "Total Peaks: $(wc -l < {output.broadPeaks})" > {output.summary}
         """
@@ -98,7 +101,7 @@ rule edd_callVeryBroadPeaks:
             {params.blacklist} \
             {input.treatment} {input.control} \
             {params.output_dir} \
-            2> {log}
+            &> {log}
         mv {params.output_dir}/log.txt {params.output_dir}/{wildcards.sample}_runlog.txt
         mv {params.output_dir}/{wildcards.sample}_runlog.txt $(dirname {log})
         # Count the number of peaks and create a summary file
