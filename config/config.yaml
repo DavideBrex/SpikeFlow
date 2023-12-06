@@ -67,6 +67,13 @@ params:
       fdr: 0.05
     edd:
       fdr: 0.05
+  peakMerge:
+    chipr:
+      size: 30 
+  peaksAnnotation:
+    promoter:
+      upstream: 2500
+      downstream: 2500
 
 
 threads:
