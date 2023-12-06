@@ -19,12 +19,23 @@ for f in snakemake.input["logFile"]:
         ]
 
 df_info = pd.DataFrame.from_dict(dict_allsamp, orient="index")
-df_info.columns = [
-    "Total mapped Reads",
-    "Tot. Sample Reads",
-    "Tot. spikeIn Reads",
-    "Common Reads",
-    "Percentage spikeIn",
-]
+if df_info.empty:
+    df_info = pd.DataFrame(columns=[
+        "Total mapped Reads",
+        "Tot. Sample Reads",
+        "Tot. spikeIn Reads",
+        "Common Reads",
+        "Percentage spikeIn",
+    ])
+else:
+    df_info.columns = [
+        "Total mapped Reads",
+        "Tot. Sample Reads",
+        "Tot. spikeIn Reads",
+        "Common Reads",
+        "Percentage spikeIn",
+    ]
+
+
 df_info.to_csv(snakemake.output["tab"], float_format="%.3f")
 df_info.iloc[:, 1:4].to_csv(snakemake.output["tab_multiqc"], float_format="%.2f")

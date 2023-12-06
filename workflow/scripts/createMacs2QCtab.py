@@ -10,5 +10,9 @@ for f in snakemake.input["logFile"]:
         dict_allsamp[idName] = [calledPeaks]
 
 df_info = pd.DataFrame.from_dict(dict_allsamp, orient="index")
-df_info.columns = ["Called Peaks"]
+if df_info.empty:
+    df_info = pd.DataFrame(columns=["Called Peaks"])
+else:
+    df_info.columns = ["Called Peaks"]
+
 df_info.to_csv(snakemake.output["tab"], sep="\t", index_label="Sample")
