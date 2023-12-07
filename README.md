@@ -136,7 +136,7 @@ If you don't have the genome indexes readily available, the pipeline can generat
     build: GRCh38 
 ```
 
-> **_⚠️ NOTE:_**  For the endogenous genome,  it's important to also include the path to blacklisted regions.  These regions, often associated with sequencing artifacts or other anomalies, can be downloaded from the Boyle Lab's Blacklist repository on GitHub. You can access these blacklisted region files [here](endogehttps://github.com/Boyle-Lab/Blacklist/tree/master/listsnous)
+> **_⚠️ NOTE:_**  For the endogenous genome,  it's important to also include the path to blacklisted regions.  These regions, often associated with sequencing artifacts or other anomalies, can be downloaded from the Boyle Lab's Blacklist repository on GitHub. You can access these blacklisted region files [here](https://github.com/Boyle-Lab/Blacklist/tree/master/lists)
 
 
 ### *Normalization*
