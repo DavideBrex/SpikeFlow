@@ -13,7 +13,8 @@ If you use this workflow in a paper, don't forget to give credits to the authors
 
 **ChIP-Rx-snakemake** is a Snakemake-based workflow designed for the analysis of ChIP-seq data with spike-in normalization (i.e. ChIP-Rx). Spike-in controls are used to provide a reference for normalizing sample-to-sample variation. These controls are typically DNA from a different species added to each ChIP and input sample in consistent amounts. This workflow facilitates accurate and reproducible chromatin immunoprecipitation studies by integrating state-of-the-art computational methodologies.
 
-Key Features:
+**Key Features**:
+
 - **Diverse Normalization Techniques**: This workflow implements three normalization methods,to accommodate varying experimental designs and enhance data comparability.
 
 - **Quality Control**:  Spike-in quality control, to ensure a proper comparison between different experimental conditions
@@ -25,9 +26,8 @@ Key Features:
 - **Scalability**: Leveraging Snakemake, the workflow ensures an automated, error-minimized pipeline adaptable to both small and large-scale genomic datasets.
 
 
-## Usage
-
-### Set up Snakemake
+## Installation 
+### Step 1 - get Snakemake running
 To run this pipeline, you'll first need to install **Snakemake** (version >= 6.3.0).
 If you already have conda installed, you can simply create a new environment:
 
@@ -53,7 +53,7 @@ or
 mamba activate snakemake
 ```
 
-### Download the workflow
+### Step 2 - Download the workflow
 
 To obtain the Snakemake workflow, you can:
 - Clone it on your local machine:
@@ -66,9 +66,9 @@ To obtain the Snakemake workflow, you can:
 The usage of this workflow is also described in the [Snakemake Workflow Catalog](https://snakemake.github.io/snakemake-workflow-catalog/?usage=DavideBrex%2FChIP-Rx-snakemake).
 
 
-### Configuration
+## Configuration
 
-#### Sample Sheet Input Requirements
+### 1. **Sample Sheet Input Requirements**
 
 Prior to executing the pipeline, you need to prepare a sample sheet containing detailed information about the samples to analyse. You can find an example of this file under ```config/samples_sheet.csv```.
 The required format is a comma-separated values (CSV) file, consisting of eight columns and including a header row.
@@ -84,18 +84,18 @@ For each sample (row), you need to specify:
 
 For the input samples, leave empty the values of the all the columns except for sample, replicate and fastq path(s).
 
-##### Example 1 (single end)
+#### Example 1 (single end)
 
 |sample           |replicate|antibody|control        |control_replicate|peak_type|fastq_1                                               |fastq_2|
 |-----------------|---------|--------|---------------|-----------------|---------|------------------------------------------------------|-------|
 |H3K4me3_untreated|1        |H3K4me3 |Input_untreated|1                |narrow   |fastq/H3K4me3_untreated-1_L1.fastq.gz    |       |
-|H3K4me3_untreated|1        |H3K4me3 |Input_untreated|1                |narrow   |fastq/H3K4me3_untreated-1__L2.fastq.gz    |       |
+|H3K4me3_untreated|1        |H3K4me3 |Input_untreated|1                |narrow   |fastq/H3K4me3_untreated-1_L2.fastq.gz    |       |
 |Input_untreated  |1        |        |               |                 |         |fastq/Input-untreated-1_fastq.gz|       |
 
 
-> **_⚠️ NOTE:_**  If your sample has multiple lanes, you can simple add a new row with the same values in all the columns except for fastq_1 (and fastq_2 if PE). In the table above, H3K4me3_untreated has two lanes
+> **_⚠️ NOTE:_**  If your sample has **multiple lanes**, you can simple add a new row with the same values in all the columns except for fastq_1 (and fastq_2 if PE). In the table above, H3K4me3_untreated has two lanes
 
-##### Example 2 (paired end)
+#### Example 2 (paired end)
 
 |sample           |replicate|antibody|control        |control_replicate|peak_type|fastq_1                                               |fastq_2                              |
 |-----------------|---------|--------|---------------|-----------------|---------|------------------------------------------------------|-------------------------------------|
@@ -106,18 +106,16 @@ For the input samples, leave empty the values of the all the columns except for 
 |Input_untreated  |1        |        |               |                 |         |fastq/Input-untreated-1_R1.fastq.gz                   |fastq/Input-untreated-1_R2.fastq.gz  |
 |Input_EGF        |1        |        |               |                 |         |fastq/Input-EGF-1_R1.fastq.gz                         |fastq/Input-EGF-1_R2.fastq.gz        |
 
-> **_⚠️ NOTE:_**  In this case, we have two replicates per condition (untreated and EGF) and the samples are paired-end. However, mixed situations (some single and some paired-end samples) are also accepted by the pipeline.
+> **_⚠️ NOTE:_**  In this case, we have two replicates per condition (untreated and EGF) and the samples are paired-end. However, **mixed situations (some single and some paired-end samples) are also accepted by the pipeline.**
 
-#### Config file
+### 2. **Config file**
 
-The last step before running the analysis is to adjust of the config file (```config/config.yaml```), which stores the parameters used throught the workflow. The file is written in YAML (Yet Another Markup Language), which is a human-readable data serialization format. It contains key-value pairs that can be nested to multiple leves.
+The last step before running the workflow is to adjust the parameters in the config file (```config/config.yaml```). The file is written in YAML (Yet Another Markup Language), which is a human-readable data serialization format. It contains key-value pairs that can be nested to multiple leves.
 
-##### Reference and exogenous genomes
-To run the pipline you need to set both endogenous and exogenous species (e.g. exogenous is drosophila and endogenous human).
+### *Reference and exogenous (spike-in) genomes*
 
-For the alignment, you can set whether to use bowtie or chromap (default is bowtie).
-
-In case you already have the genome indexes, you should add their paths under the field resources
+To execute the pipeline, it's essential to specify both *endogenous* and *exogenous* species; for example, use Drosophila (dm16) as the exogenous and Human (hg38)as the endogenous species.
+Regarding alignment, you have the option to select between Bowtie and Chromap for the alignment process, with Bowtie set as the default. If genome indexes are already available, you should input their paths in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data.
 
 ```yaml
 resources:
@@ -127,8 +125,7 @@ resources:
         index: /path/to/dm16.bowtie.index
 ```
 
-In case you do not have the indexes at hand, do not worry, the pipeline will generate them for you.
-To do so, you need to set the species, the ensembl release and build parameteres both for reference and spike-in. You can find these info on the ensembl [website](https://www.ensembl.org/index.html).
+If you don't have the genome indexes readily available, the pipeline can generate them for you. To facilitate this, you'll need to specify the parameters shown below for both the reference and spike-in species. These parameters include the species name, the Ensembl release, and the genome build version. You can find all of this information on the Ensembl [website](https://www.ensembl.org/index.html).
 
 ```yaml
     # Ensembl species name
@@ -139,14 +136,18 @@ To do so, you need to set the species, the ensembl release and build parameteres
     build: GRCh38 
 ```
 
-> **_⚠️ NOTE:_**  For the endogenous genome, please also add the path to blacklisted regions, that you can easily download from [here](endogehttps://github.com/Boyle-Lab/Blacklist/tree/master/listsnous)
+> **_⚠️ NOTE:_**  For the endogenous genome,  it's important to also include the path to blacklisted regions.  These regions, often associated with sequencing artifacts or other anomalies, can be downloaded from the Boyle Lab's Blacklist repository on GitHub. You can access these blacklisted region files [here](endogehttps://github.com/Boyle-Lab/Blacklist/tree/master/listsnous)
 
 
-##### Normalization type
+### *Normalization*
+
 In this field you can choose the type of normalization to perform on the samples. The available options are:
-- **RAW**: This is a RPM normalization, i.e. it normalizes the read counts to the total number of reads in a sample, measured per million reads. This method is straightforward but does not account for spike-in controls. 
-- **Orlando**: Standard Spike-in normalization as described in Orlando et al 2014. It does not incorporate input data in the normalization process, 
-- **RX-Input**: RX-Input is a modified version of the Orlando normalization that accounts for the total number of reads mapped to the spike-in in both the ChIP and input samples. This approach allows for more accurate normalization by accounting for variations in both immunoprecipitation efficiency and background noise (as represented by the input).
+
+- **RAW**: This is a RPM normalization, i.e. it normalizes the read counts to the total number of reads in a sample, measured per million reads. This method is straightforward but does not account for spike-in. 
+
+- **Orlando**: Standard Spike-in normalization as described in [Orlando et al 2014](https://pubmed.ncbi.nlm.nih.gov/25437568/). It does not incorporate input data in the normalization process.
+
+- **RX-Input** (default): RX-Input is a modified version of the Orlando normalization that accounts for the total number of reads mapped to the spike-in in both the ChIP and input samples. This approach allows for more accurate normalization by accounting for variations in both immunoprecipitation efficiency and background noise (as represented by the input).
 
 
 ```yaml
@@ -154,31 +155,33 @@ normalization_type: "RX-Input"
 ```
 
 
-##### Required options
+### *Required options*
 
-Based on your reference genome (e.g. mm10, hg38),there are twp required options to set:
+When configuring your pipeline based on the chosen reference/endogenous genome (like mm10 or hg38), two essential options need to be set:
 
-- **effective genome length**: This is required by deeptools to generate the bigWig files. The value of this parameter is used by the program to adjust the mappable portion of the genome, ensuring that the read densities represented in the BigWig files accurately reflect the underlying biological reality. See [here](https://deeptools.readthedocs.io/en/latest/content/feature/effectiveGenomeSize.html) the possibile values. 
+- **effective genome length**: This is required by deeptools to generate the bigWig files. The value of this parameter is used by the program to adjust the mappable portion of the genome, ensuring that the read densities represented in the BigWig files accurately reflect the underlying biological reality. You can find the possible values for this parameter in the deeptools [documentation](https://deeptools.readthedocs.io/en/latest/content/feature/effectiveGenomeSize.html).
 
-- **chrom sizes**: for an accurate peak calling, please change the chromosome sizes file accordingly. The supported genomes chrom sizes are avaialbe under ```resources/chrom_size```
-
-
-##### Other (optional) parameters
-
-- In case broad peak calling is set for some samples, please change the effective genome fraction according to this [page]( https://github.com/biocore-ntnu/epic2/blob/master/epic2/effective_sizes/hg38_50.txt). In the github page, it is indicated as effective genome size, and you need to know the read length  of your samples in order to set it
-
-- It is possible to do not perform trimmign by setting the flag to false
-
-- The p-values for the peak calling can be changed in the config file (narrow: macs2, broad:epic2, or very-broad:edd).
-
-- While merging the peaks from the replicates, size from Chip-R can be adjusted (see [here](https://github.com/rhysnewell/ChIP-R))
-
-- The threshold to annotate a peak is set to ±2500 bp around the promoter
+- **chrom sizes**: To achieve accurate peak calling, it's important to use the correct chromosome sizes file. The supported genomes' chromosome sizes are available under ```resources/chrom_size```.  **Make sure to select the file that corresponds to your chosen genome**.
 
 
-### Run the workflow
+### *Other (optional) parameters*
 
-To run the pipline type on the terminal (from within the folder with all the workflow subfolder):
+-  To direct Snakemake to save all outputs in a specific directory, add the desired path in the config file: ```output_path: "path/to/directory"```.
+
+- **Broad Peak Calling:** For samples requiring broad peak calling, adjust the effective genome fraction as per the guidelines on this [page]( https://github.com/biocore-ntnu/epic2/blob/master/epic2/effective_sizes/hg38_50.txt). The *'effective genome size'* mentioned on the GitHub page depends on the read length of your samples.
+
+- **Trimming Option:** Trimming can be skipped by setting the respective flag to false.
+
+- **P-Value Adjustment for Peak Calling:** Modify the p-values for peak calling in the config file. This applies to different peak calling methods: narrow (macs2), broad (epic2), or very-broad (edd).
+
+- **Peak Merging from Replicates:** While merging peaks from replicates, the size can be adjusted as described [here](https://github.com/rhysnewell/ChIP-R))
+
+- **Peak Annotation Threshold:** The default setting annotates a peak within ±2500 bp around the promoter region.
+
+
+## Run the workflow
+
+To run the pipeline, ensure you're in the main **Snakemake working directory**, which contains the subfolders  'workflow', 'resources', 'config', etc. Then, execute the following in the terminal:
 
 ```
 snakemake --cores all --use-conda 
@@ -190,9 +193,40 @@ For running the workflow while using a combination of conda and singularity for 
 snakemake --cores all --use-conda --use-singularity
 ```
 
-### Output files
+## Output files
 
-to write
+
+All the outputs of the workflow are stored in the ```results``` folder. Additionally, in case of any errors during the workflow execution, the log files are stored within the ```results/logs``` directory.
+
+
+The main outputs of the workflow are:
+
+- **MultiQC Report** 
+
+    Consolidates various quality control (QC) metrics:
+    - Basic QC with FastQC: Evaluates basic quality metrics of the sequencing data.
+    - Phantom Peak Qual Tools: Provides NSC and RSC values, indicating the quality and reproducibility of ChIP samples. NSC measures signal-to-noise ratio, while RSC assesses enrichment strength.
+    - Fingerprint Plots: Visual representation of the sample quality, showing how reads are distributed across the genome.
+    - Spike-in QC: Reveals the number of reads aligned to both the endogenous and exogenous genomes, crucial for evaluating spike-in normalization effectiveness.
+    - Peak Calling Data: Displays the number of peaks called per sample for each method (MACS2, EPIC2, EDD).
+
+     ```results/QC/multiqc/multiqc_report.html```
+
+- **Normalized BigWig Files**: 
+    - Essential for visualizing read distribution and creating detailed heatmaps.
+
+    ```results/bigWigs/```
+
+-  **Peak Files and Annotation**:
+    - Provides called peaks for each peak calling method, along with merged peaks for replicate samples.
+    - Peak annotation using ChIPseeker, resulting in two files for promoter and distal peaks for each sample
+
+    ```/results/peakCalling/```
+
+
+
+
+
 
 ## Authors
 
