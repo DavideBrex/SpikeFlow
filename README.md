@@ -25,6 +25,9 @@ If you use this workflow in a paper, don't forget to give credits to the authors
 
 - **Scalability**: Leveraging Snakemake, the workflow ensures an automated, error-minimized pipeline adaptable to both small and large-scale genomic datasets.
 
+Currently supported genomes:
+- Endogenous: mm9,mm10,hg19,hg38
+- Exogenous: any
 
 ## Installation 
 ### Step 1 - get Snakemake running
@@ -114,7 +117,7 @@ The last step before running the workflow is to adjust the parameters in the con
 
 ### *Reference and exogenous (spike-in) genomes*
 
-To execute the pipeline, it's essential to specify both *endogenous* and *exogenous* species; for example, use Drosophila (dm16) as the exogenous and Human (hg38)as the endogenous species.
+To execute the pipeline, it's essential to specify both *endogenous* and *exogenous* species; for example, use Drosophila (dm16) as the exogenous and Human (hg38) as the endogenous species.
 Regarding alignment, you have the option to select between Bowtie and Chromap for the alignment process, with Bowtie set as the default. If genome indexes are already available, you should input their paths in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data.
 
 ```yaml

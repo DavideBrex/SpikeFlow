@@ -1,5 +1,6 @@
 results/**
-resources/**
+resources/*
+!resources/chrom_sizes/
 logs/**
 .snakemake
 .snakemake/**
