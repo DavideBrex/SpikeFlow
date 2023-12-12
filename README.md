@@ -3,15 +3,13 @@
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
 [![GitHub actions status](https://github.com/DavideBrex/ChIP-Rx-snakemake/workflows/Tests/badge.svg?branch=main)](https://github.com/DavideBrex/ChIP-Rx-snakemake/actions?query=branch%3Amain+workflow%3ATests)
 
-## **Under development**
-
-A Snakemake workflow for the anlysis of ChIP-Rx data, i.e ChIP-Seq with reference exogenous genome spike-in normalization
+# SpikeFlow
 
 If you use this workflow in a paper, don't forget to give credits to the authors by citing the URL of this (original) repository. 
 
 ## About
 
-**ChIP-Rx-snakemake** is a Snakemake-based workflow designed for the analysis of ChIP-seq data with spike-in normalization (i.e. ChIP-Rx). Spike-in controls are used to provide a reference for normalizing sample-to-sample variation. These controls are typically DNA from a different species added to each ChIP and input sample in consistent amounts. This workflow facilitates accurate and reproducible chromatin immunoprecipitation studies by integrating state-of-the-art computational methodologies.
+**SpikeFlow** is a Snakemake-based workflow designed for the analysis of ChIP-seq data with spike-in normalization (i.e. ChIP-Rx). Spike-in controls are used to provide a reference for normalizing sample-to-sample variation. These controls are typically DNA from a different species added to each ChIP and input sample in consistent amounts. This workflow facilitates accurate and reproducible chromatin immunoprecipitation studies by integrating state-of-the-art computational methodologies.
 
 **Key Features**:
 
@@ -227,7 +225,7 @@ The main outputs of the workflow are:
     ```/results/peakCalling/```
 
 
-
+Report generation
 
 
 

@@ -67,6 +67,8 @@ rule create_qc_table_spike:
         tab_multiqc="{}results/QC/Spike-in_Reads_mqc.tsv".format(outdir),
     log:
         "{}results/logs/QC/Spike_in_qc.log".format(outdir),
+    conda:
+        "../envs/qc.yaml"
     script:
         "../scripts/createSpikeQCtab.py"
 
@@ -81,6 +83,8 @@ rule create_qc_table_epic2:
         tab="{}results/QC/epic2_peaks_mqc.tsv".format(outdir),
     log:
         "{}results/logs/QC/epic2_qc.log".format(outdir),
+    conda:
+        "../envs/qc.yaml"
     script:
         "../scripts/createEpic2QCtab.py"
 
@@ -95,6 +99,8 @@ rule create_qc_table_edd:
         tab="{}results/QC/edd_peaks_mqc.tsv".format(outdir),
     log:
         "{}results/logs/QC/edd_qc.log".format(outdir),
+    conda:
+        "../envs/qc.yaml"
     script:
         "../scripts/createEddQCtab.py"
 
@@ -111,8 +117,28 @@ rule create_qc_table_macs2:
         tab="{}results/QC/macs2_peaks_mqc.tsv".format(outdir),
     log:
         "{}results/logs/QC/macs2_qc.log".format(outdir),
+    conda:
+        "../envs/qc.yaml"
     script:
         "../scripts/createMacs2QCtab.py"
+
+
+rule create_qc_table_peakAnnot:
+    input:
+        logFile=expand(
+            "{}results/logs/peakCalling/peakAnnot/{{sample}}_annotInfo.txt".format(
+                outdir
+            ),
+            sample=narrowSamples + broadSamples,
+        ),
+    output:
+        tab="{}results/QC/peaks_annotation_mqc.tsv".format(outdir),
+    log:
+        "{}results/logs/QC/peaks_annotation_qc.log".format(outdir),
+    conda:
+        "../envs/qc.yaml"
+    script:
+        "../scripts/createPeakAnnotQCtab.py"
 
 
 rule multiqc:
@@ -132,6 +158,7 @@ rule multiqc:
         tab_macs2=rules.create_qc_table_macs2.output.tab,
         tab_epic2=rules.create_qc_table_epic2.output.tab,
         tab_edd=rules.create_qc_table_edd.output.tab,
+        tab_peakAnnot=rules.create_qc_table_peakAnnot.output.tab,
     output:
         multiqc="{}results/QC/multiqc/multiqc_report.html".format(outdir),
     log:

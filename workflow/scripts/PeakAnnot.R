@@ -17,7 +17,7 @@ Peak_Annot <- function(infile, tssRegion = c(-2500, 2500), TxDb, annoDb) {
   
   # read file and annotate peaks
   df <- readPeakFile(infile)
-  #just for the testing of the pipeline
+  #just for the testing of the pipeline, do not mind this
   if(as.character(seqnames(df))[1] == "chr10:14000000-25000000"){
     newname <- c("chr10")
     names(newname) <- "chr10:14000000-25000000"
@@ -45,14 +45,17 @@ after <- as.numeric(snakemake@params[["after"]])
 out1 <- as.character(snakemake@output[["annotations"]])
 out2 <- as.character(snakemake@output[["promoBed"]])
 out3 <- as.character(snakemake@output[["distalBed"]])
+out4 <- as.character(snakemake@output[["annotInfo"]])
 genome <- as.character(snakemake@params[["genome"]])
 
 #------ If the input is empty the script will stop here ------#
-if (file.size(input) == 0){
+if ( (!file.exists(input)) | (file.size(input) == 0)){
 
+  print("The input file is empty or does not exist")
   file.create(out1)
   file.create(out2)
   file.create(out3)
+  file.create(out4)
 
 } else {
   
@@ -80,7 +83,7 @@ if (file.size(input) == 0){
   distal.peaks <- annot %>% subset(annotation != "Promoter") %>% dplyr::select(c("seqnames", "start", "end", "V4", "V5")) 
   promo.peaks <- annot %>% subset(annotation == "Promoter") %>% dplyr::select(c("seqnames", "start", "end", "V4", "V5")) 
   
-  annot <- annot[-c(6,7,8,9,10,11)]
+  annot <- annot[-grep("^V[0-9]+$", colnames(annot))]
 
 ##################
 ## Write output ##
@@ -88,4 +91,25 @@ if (file.size(input) == 0){
   write.table(annot, file = out1, sep = "\t", quote = F, row.names = F)
   write.table(promo.peaks, file = out2, sep = "\t", quote = F, row.names = F, col.names = F)
   write.table(distal.peaks, file = out3, sep = "\t", quote = F, row.names = F, col.names = F)
+  if (out4 != ''){
+    # Create an empty data frame with specific column names
+    column_names <- c("Promoter", "5' UTR", "3' UTR", "Exon", "Intron", "Downstream", "Distal Intergenic")
+
+    df <- data.frame(matrix(ncol = length(column_names), nrow = 1))
+    colnames(df) <- column_names
+    
+    values <-   table(annot$annotation)
+    # Fill the matching columns in the data frame
+    for (name in names(values)) {
+      if (name %in% colnames(df)) {
+        df[1, name] <- values[name]
+      }
+    }
+    # Set non-matching columns to 0
+    df[is.na(df)] <- 0
+    # Print the data frame
+    colnames(df) <- sub(" ", "_", column_names)
+    print(df)
+    write.table(df, file = out4, sep = "\t", quote = F, row.names = F)
+  } 
 }

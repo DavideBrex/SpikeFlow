@@ -6,3 +6,5 @@ dependencies:
     - fastqc
     - multiqc
     - deeptools
+    - numpy
+    - pandas

@@ -32,7 +32,7 @@ resources:
   ref_spike:
     #if bowtie index is not avialable leave only "" , it will be created
     #otherwise proved the path to the folder containing bowtie index
-    index_spike: "/shares/CIBIO-Storage/GROUPS/sharedLC/Davide/drosophila_dm6/ensembl_index/index/dm6_index"
+    index_spike: ".test/data/dm6_index/bowtie1_dm6_index"
     # Ensembl species name
     species: drosophila_melanogaster 
     # Ensembl release
