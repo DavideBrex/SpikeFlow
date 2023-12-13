@@ -1,4 +1,4 @@
-<img align="left"  width="40%" src="LogoSpikeFlow.png">
+<img align="left"  width="60%" src="LogoSpikeFlow.png">
 
 <br clear="left"/>
 
