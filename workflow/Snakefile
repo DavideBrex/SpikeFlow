@@ -14,7 +14,7 @@ configfile: "config/config.yaml"
 
 # this container defines the underlying OS for each job when using the workflow
 # with --use-conda --use-singularity
-containerized: "docker://davidebrex/chiprxsnakemake:latest"
+containerized: "docker://davidebrex/spikeflow:latest"
 
 
 if config["output_path"] != "":

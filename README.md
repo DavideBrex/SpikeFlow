@@ -1,5 +1,4 @@
-<img align="right" width="250" height="250" src="LogoSpikeFlow.png">
-
+<img align="right"  width="25%" src="LogoSpikeFlow.png">
 
 # SpikeFlow
 
@@ -33,13 +32,14 @@ Currently supported genomes:
 ## Installation 
 ### Step 1 - get Snakemake running
 To run this pipeline, you'll first need to install **Snakemake** (version >= 6.3.0).
-If you already have conda installed, you can simply create a new environment:
+If you already have *conda* installed, you can simply create a new environment:
 
 ```
 conda create -c bioconda -c conda-forge -n snakemake snakemake
 ```
 
-In case you do not have conda, we reccomand to install Mamba (a drop-in replacement for conda). See [here](https://github.com/conda-forge/miniforge#mambaforge) the installation steps.
+In case *conda* is not installed on your computer/server, it is advisable to install Mamba, a compatible and efficient alternative.
+See [here](https://github.com/conda-forge/miniforge#mambaforge) the installation steps.
 
 Once Mamba is installed, run
 
@@ -56,6 +56,8 @@ or
 ```
 mamba activate snakemake
 ```
+
+> **_⚠️ NOTE:_**  For a fast installation of the workflow, it is recommended to use **Singularity** (compatible with version 3.9.5). This bypasses the need for *Conda* to set up required environments, as these are already present within the container that will be pulled from [dockerhub](https://hub.docker.com/repository/docker/davidebrex/spikeflow/general) with the use of the ```--use-singularity``` flag .To install singularity check out [this website](https://docs.sylabs.io/guides/3.0/user-guide/installation.html).
 
 ### Step 2 - Download the workflow
 
@@ -116,7 +118,7 @@ For the input samples, leave empty the values of the all the columns except for 
 
 The last step before running the workflow is to adjust the parameters in the config file (```config/config.yaml```). The file is written in YAML (Yet Another Markup Language), which is a human-readable data serialization format. It contains key-value pairs that can be nested to multiple leves.
 
-### *Reference and exogenous (spike-in) genomes*
+#### *Reference and exogenous (spike-in) genomes*
 
 To execute the pipeline, it's essential to specify both *endogenous* and *exogenous* species; for example, use Drosophila (dm16) as the exogenous and Human (hg38) as the endogenous species.
 Regarding alignment, you have the option to select between Bowtie and Chromap for the alignment process, with Bowtie set as the default. If genome indexes are already available, you should input their paths in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data.
@@ -143,7 +145,7 @@ If you don't have the genome indexes readily available, the pipeline can generat
 > **_⚠️ NOTE:_**  For the endogenous genome,  it's important to also include the path to blacklisted regions.  These regions, often associated with sequencing artifacts or other anomalies, can be downloaded from the Boyle Lab's Blacklist repository on GitHub. You can access these blacklisted region files [here](https://github.com/Boyle-Lab/Blacklist/tree/master/lists)
 
 
-### *Normalization*
+#### *Normalization*
 
 In this field you can choose the type of normalization to perform on the samples. The available options are:
 
@@ -159,7 +161,7 @@ normalization_type: "RX-Input"
 ```
 
 
-### *Required options*
+#### *Required options*
 
 When configuring your pipeline based on the chosen reference/endogenous genome (like mm10 or hg38), two essential options need to be set:
 
@@ -168,7 +170,7 @@ When configuring your pipeline based on the chosen reference/endogenous genome (
 - **chrom sizes**: To achieve accurate peak calling, it's important to use the correct chromosome sizes file. The supported genomes' chromosome sizes are available under ```resources/chrom_size```.  **Make sure to select the file that corresponds to your chosen genome**.
 
 
-### *Other (optional) parameters*
+#### *Other (optional) parameters*
 
 -  To direct Snakemake to save all outputs in a specific directory, add the desired path in the config file: ```output_path: "path/to/directory"```.
 
@@ -185,17 +187,32 @@ When configuring your pipeline based on the chosen reference/endogenous genome (
 
 ## Run the workflow
 
-To run the pipeline, ensure you're in the main **Snakemake working directory**, which contains the subfolders  'workflow', 'resources', 'config', etc. Then, execute the following in the terminal:
+To execute the pipeline, make sure to be in the main  **Snakemake working directory**, which includes subfolders like 'workflow', 'resources', and 'config'. 
+
+The workflow can be operated in two ways: using Conda alone, or a combination of Conda and Singularity (**recommended**). 
+After obtaining a copy of the workflow on your machine, you can verify its proper functioning by executing one of the two commands below. 
+The ```config``` and ```sample_sheet``` files come pre-configured for a test run.
+
+#### Conda 
 
 ```
-snakemake --cores all --use-conda 
+snakemake --cores 10 --use-conda 
 ```
 
-For running the workflow while using a combination of conda and singularity for software deployment, run Snakemake with
+This will install all the required conda envs (it might take a while, just for the first execution).
+
+#### Conda and Singularity (recommended)
 
 ```
-snakemake --cores all --use-conda --use-singularity
+snakemake --cores 10 --use-conda --use-singularity
 ```
+
+First, the singularity container will be pulled from DockerHub and then the workflow will be executed. 
+
+#### snakemake flags
+
+- ```--cores```: adjust this number (here set to 10) based on your machine configuration
+- ```-n```: add this flag  to the command line for a "dry run," which allows Snakemake to display the rules that it would execute, without actually running them.
 
 ## Output files
 
