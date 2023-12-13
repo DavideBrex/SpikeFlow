@@ -1,6 +1,6 @@
-<img align="right"  width="40%" src="LogoSpikeFlow.png">
+<img align="left"  width="40%" src="LogoSpikeFlow.png">
 
-# SpikeFlow
+<br clear="left"/>
 
 ### A snakemake pipeline for the analysis of ChIP-Rx data 
 
