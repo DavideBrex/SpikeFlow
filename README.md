@@ -3,7 +3,7 @@
 
 # SpikeFlow
 
-## A snakemake pipeline for the analysis of ChIP-Rx data 
+### A snakemake pipeline for the analysis of ChIP-Rx data 
 
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
 [![GitHub actions status](https://github.com/DavideBrex/SpikeFlow/workflows/Tests/badge.svg?branch=main)](https://github.com/DavideBrex/SpikeFlow/actions?query=branch%3Amain+workflow%3ATests)
