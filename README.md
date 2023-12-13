@@ -1,9 +1,12 @@
-# Snakemake workflow: `ChIP-Rx-snakemake`
+<img align="right" width="250" height="250" src="LogoSpikeFlow.png">
 
-[![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
-[![GitHub actions status](https://github.com/DavideBrex/ChIP-Rx-snakemake/workflows/Tests/badge.svg?branch=main)](https://github.com/DavideBrex/ChIP-Rx-snakemake/actions?query=branch%3Amain+workflow%3ATests)
 
 # SpikeFlow
+
+## A snakemake pipeline for the analysis of ChIP-Rx data 
+
+[![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
+[![GitHub actions status](https://github.com/DavideBrex/SpikeFlow/workflows/Tests/badge.svg?branch=main)](https://github.com/DavideBrex/SpikeFlow/actions?query=branch%3Amain+workflow%3ATests)
 
 If you use this workflow in a paper, don't forget to give credits to the authors by citing the URL of this (original) repository. 
 
@@ -64,7 +67,7 @@ To obtain the Snakemake workflow, you can:
 - Download the source code as zip file from this page (code button)
 
 
-The usage of this workflow is also described in the [Snakemake Workflow Catalog](https://snakemake.github.io/snakemake-workflow-catalog/?usage=DavideBrex%2FChIP-Rx-snakemake).
+The usage of this workflow is also described in the [Snakemake Workflow Catalog](https://snakemake.github.io/snakemake-workflow-catalog/?usage=DavideBrex%2FSpikeFlow).
 
 
 ## Configuration
