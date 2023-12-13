@@ -1,4 +1,4 @@
-<img align="right"  width="25%" src="LogoSpikeFlow.png">
+<img align="right"  width="40%" src="LogoSpikeFlow.png">
 
 # SpikeFlow
 
