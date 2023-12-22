@@ -25,10 +25,10 @@ if config["aligner"] == "bowtie":
         conda:
             "../envs/bowtie.yaml"
         log:
-            align="{}results/logs/alignments/{{id}}.log".format(outdir),
-            rm_dups="{}results/logs/alignments/rm_dup/{{id}}.log".format(outdir),
+            align="{}results/logs/alignments_bowtie/{{id}}.log".format(outdir),
+            rm_dups="{}results/logs/alignments_bowtie/rm_dup/{{id}}.log".format(outdir),
         benchmark:
-            "{}results/.benchmarks/{{id}}.align.benchmark.txt".format(outdir)
+            "{}results/.benchmarks/{{id}}.bowtie_align.benchmark.txt".format(outdir)
         shell:
             """
             bowtie -p {threads} {params.bowtie} -x {params.index} {params.inputsel} 2> {log.align} \
@@ -64,12 +64,12 @@ if config["aligner"] == "bowtie":
         conda:
             "../envs/bowtie.yaml"
         log:
-            align="{}results/logs/alignments/spike/{{id}}_spike.log".format(outdir),
-            rm_dups="{}results/logs/alignments/spike/rm_dup/{{id}}_spike.log".format(
+            align="{}results/logs/alignments_bowtie/spike/{{id}}_spike.log".format(outdir),
+            rm_dups="{}results/logs/alignments_bowtie/spike/rm_dup/{{id}}_spike.log".format(
                 outdir
             ),
         benchmark:
-            "{}results/.benchmarks/{{id}}_spike.align.benchmark.txt".format(outdir)
+            "{}results/.benchmarks/{{id}}_spike.bowtie_align.benchmark.txt".format(outdir)
         shell:
             """
             bowtie -p {threads} {params.bowtie} -x {params.index} {params.inputsel} 2> {log.align} \
@@ -78,6 +78,106 @@ if config["aligner"] == "bowtie":
             | samtools sort -m {params.samtools_mem}G -@ {threads} -T {output.bam}.tmp -o {output.bam} - 2>> {log.align}
             samtools index {output.bam}
             """
+
+if config["aligner"] == "chromap":
+
+    rule create_chromap_index_reference:
+        input:
+            ref=rules.get_reference_genome.output,
+        output:
+            index="resources/reference_genome/index_chromap/chromap_index_ref",
+        conda:
+            "../envs/various.yaml"
+        log:
+            "{}results/logs/ref/chromap_create_index_ref.log".format(outdir),
+        benchmark:
+            "{}results/.benchmarks/chromap_create_index_ref.benchmark.txt".format(outdir)
+        shell:
+            """
+            chromap -i -r {input.ref} -o {output.index} 2> {log}
+            """
+
+    rule align_chromap:
+        input:
+            reads=get_reads,
+            idx="resources/reference_genome/index_chromap/chromap_index_ref",
+            ref=rules.get_reference_genome.output,
+        output:
+            bam=temp("{}results/bam/{{id}}.tmp.bam".format(outdir)),
+            index=temp("{}results/bam/{{id}}.tmp.bam.bai".format(outdir)),
+        threads: 8
+        params:
+            samtools_mem=config["params"]["samtools"]["memory"],
+            inputsel=(
+                lambda wildcards, input: "-1 "+str(input.reads)
+                if len(input.reads) == 1
+                else " -1 {0} -2 {1} -l 2000 ".format(*input.reads)
+            ),
+        conda:
+            "../envs/various.yaml"
+        log:
+            align="{}results/logs/alignments_chromap/{{id}}.log".format(outdir),
+        benchmark:
+            "{}results/.benchmarks/{{id}}.chromap_align.benchmark.txt".format(outdir)
+        shell:
+            """
+            chromap -x {input.idx} -r {input.ref} {params.inputsel} \
+            --remove-pcr-duplicates --SAM  -t {threads} -o /dev/stdout 2> {log.align} \
+            | samtools view -Sb -F 4 - \
+            | samtools sort -m {params.samtools_mem}G -@ {threads} -T {output.bam}.tmp -o {output.bam} - 2>> {log.align}
+            samtools index {output.bam}
+            """
+
+
+    rule create_chromap_index_spike:
+        input:
+            ref=rules.get_spike_genome.output,
+        output:
+            index="resources/spike_genome/index_chromap/chromap_index_spike",
+        conda:
+            "../envs/various.yaml"
+        log:
+            "{}results/logs/ref/chromap_create_index_spike.log".format(outdir),
+        benchmark:
+            "{}results/.benchmarks/chromap_create_index_spike.benchmark.txt".format(outdir)
+        shell:
+            """
+            chromap -i -r {input.ref} -o {output.index} 2> {log}
+            """
+
+    # SPIKE alignment
+    rule align_chromaps_spike:
+        input:
+            reads=get_reads,
+            idx="resources/spike_genome/index_chromap/chromap_index_spike",
+            ref=rules.get_spike_genome.output,
+        output:
+            bam=temp("{}results/bam_spike/{{id}}_spike.tmp.bam".format(outdir)),
+            index=temp("{}results/bam_spike/{{id}}_spike.tmp.bam.bai".format(outdir)),
+        threads: 8
+        params:
+            samtools_mem=config["params"]["samtools"]["memory"],
+            inputsel=(
+                lambda wildcards, input: "-1 "+str(input.reads)
+                if len(input.reads) == 1
+                else " -1 {0} -2 {1} -l 2000 ".format(*input.reads)
+            ),
+        conda:
+            "../envs/various.yaml"
+        log:
+            align="{}results/logs/alignments_chromap/spike/{{id}}_spike.log".format(outdir),
+        benchmark:
+            "{}results/.benchmarks/{{id}}_spike.chromap_align.benchmark.txt".format(outdir)
+        shell:
+            """
+            chromap -x {input.idx} -r {input.ref} {params.inputsel} \
+            --remove-pcr-duplicates --SAM  -t {threads} -o /dev/stdout 2> {log.align} \
+            | samtools view -Sb -F 4 - \
+            | samtools sort -m {params.samtools_mem}G -@ {threads} -T {output.bam}.tmp -o {output.bam} - 2>> {log.align}
+            samtools index {output.bam}
+            """
+
+
 
 
 rule clean_spike:

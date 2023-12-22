@@ -8,9 +8,9 @@ output_path: ""
 # perform trimming: false or true
 # if true go to params (at the end)
 # to set desired trimming parameters
-trimming: true
+trimming: false
 
-aligner: bowtie
+aligner: "chromap"
 
 #type of normalization to perform to generate the bigwig files (one from RAW, Orlando , RX-Input)
 normalization_type: "RX-Input"

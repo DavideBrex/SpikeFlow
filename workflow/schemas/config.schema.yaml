@@ -11,6 +11,12 @@ properties:
   trimming:
     type: boolean
   
+  aligner:
+    type: string
+    enum:
+      - chromap
+      - bowtie
+
   normalization_type:
     type: string
     enum: 

@@ -40,7 +40,7 @@ rule create_bowtie_index_reference:
     output:
         genome=directory("resources/reference_genome/index/"),
     log:
-        "{}results/logs/ref/indexing_reference.log".format(outdir),
+        "{}results/logs/ref/bowtie_create_index_ref.log".format(outdir),
     message:
         "Creating bowtie index"
     conda:
