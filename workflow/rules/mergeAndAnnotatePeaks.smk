@@ -116,3 +116,5 @@ rule peakAnnot_singleRep:
         "../envs/Renv.yaml"
     script:
         "../scripts/PeakAnnot.R"
+
+ruleorder: peakAnnot_singleRep > peakAnnot_mergedReps
