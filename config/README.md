@@ -44,42 +44,44 @@ For the input samples, leave empty the values of the all the columns except for 
 
 The last step before running the workflow is to adjust the parameters in the config file (```config/config.yaml```). The file is written in YAML (Yet Another Markup Language), which is a human-readable data serialization format. It contains key-value pairs that can be nested to multiple leves.
 
-### *Reference and exogenous (spike-in) genomes*
+#### *Reference and exogenous (spike-in) genomes*
 
 To execute the pipeline, it's essential to specify both *endogenous* and *exogenous* species; for example, use Drosophila (dm16) as the exogenous and Human (hg38) as the endogenous species.
-Regarding alignment, you have the option to select between Bowtie and Chromap for the alignment process, with Bowtie set as the default. If genome indexes are already available, you should input their paths in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data.
+If bowtie v1 genome indexes are already available, you should input their paths (ending with the index files prefix) in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data. **PLEASE NOTE**, the index must be created with bowtie  v1.3.0.
+
 
 ```yaml
 resources:
     ref:
-        index: /path/to/hg38.bowtie.index
+        index: /path/to/hg38.bowtie.index/indexFilesPrefix
+        #blacklist regions 
+        blacklist: ".test/data/hg38-blacklist.v2.bed"
+
     ref_spike:
-        index: /path/to/dm16.bowtie.index
+        index: /path/to/dm16.bowtie.index/indexFilesPrefix
 ```
 
-If you don't have the genome indexes readily available, the pipeline can generate them for you. To facilitate this, you'll need to specify the parameters shown below for both the reference and spike-in species. These parameters include the species name, the Ensembl release, and the genome build version. You can find all of this information on the Ensembl [website](https://www.ensembl.org/index.html).
+If you don't have the bowtie genome indexes readily available, the pipeline can generate them for you. To facilitate this, you'll need to specify the ucsc genome name (e.g. hg38, mm10, etc) for both the reference and spike-in species. You can find the the genome assembly on the [UCSC Genome Browser](https://genome-euro.ucsc.edu/cgi-bin/hgGateway).
 
 ```yaml
-    # Ensembl species name
-    species: homo_sapiens
-    # Ensembl release
-    release: 101
-    # Genome build
-    build: GRCh38 
+    ref:
+        assembly: hg38
+    ref_spike:
+        spike_assembly: dm6
 ```
 
 > **_⚠️ NOTE:_**  For the endogenous genome,  it's important to also include the path to blacklisted regions.  These regions, often associated with sequencing artifacts or other anomalies, can be downloaded from the Boyle Lab's Blacklist repository on GitHub. You can access these blacklisted region files [here](https://github.com/Boyle-Lab/Blacklist/tree/master/lists)
 
 
-### *Normalization*
+#### *Normalization*
 
 In this field you can choose the type of normalization to perform on the samples. The available options are:
 
 - **RAW**: This is a RPM normalization, i.e. it normalizes the read counts to the total number of reads in a sample, measured per million reads. This method is straightforward but does not account for spike-in. 
 
-- **Orlando**: Standard Spike-in normalization as described in [Orlando et al 2014](https://pubmed.ncbi.nlm.nih.gov/25437568/). It does not incorporate input data in the normalization process.
+- **Orlando**: Spike-in normalization as described in [Orlando et al 2014](https://pubmed.ncbi.nlm.nih.gov/25437568/). Also reffered as Reference-adjusted Reads Per Million (RRPM). It does not incorporate input data in the normalization process.
 
-- **RX-Input** (default): RX-Input is a modified version of the Orlando normalization that accounts for the total number of reads mapped to the spike-in in both the ChIP and input samples. This approach allows for more accurate normalization by accounting for variations in both immunoprecipitation efficiency and background noise (as represented by the input).
+- **RX-Input** (default): RX-Input is a modified version of the Orlando normalization that accounts for the total number of reads mapped to the spike-in in both the ChIP and input samples. This approach allows for more accurate normalization by accounting for variations in both immunoprecipitation efficiency and background noise (as represented by the input). See [Fursova et al 2019](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6561741/#bib42) for further details.
 
 
 ```yaml
@@ -87,7 +89,7 @@ normalization_type: "RX-Input"
 ```
 
 
-### *Required options*
+#### *Required options*
 
 When configuring your pipeline based on the chosen reference/endogenous genome (like mm10 or hg38), two essential options need to be set:
 
@@ -96,7 +98,7 @@ When configuring your pipeline based on the chosen reference/endogenous genome (
 - **chrom sizes**: To achieve accurate peak calling, it's important to use the correct chromosome sizes file. The supported genomes' chromosome sizes are available under ```resources/chrom_size```.  **Make sure to select the file that corresponds to your chosen genome**.
 
 
-### *Other (optional) parameters*
+#### *Other (optional) parameters*
 
 -  To direct Snakemake to save all outputs in a specific directory, add the desired path in the config file: ```output_path: "path/to/directory"```.
 

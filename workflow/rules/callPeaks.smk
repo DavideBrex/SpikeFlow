@@ -92,7 +92,7 @@ rule edd_callVeryBroadPeaks:
         "{}results/.benchmarks/{{sample}}.edd.benchmark.txt".format(outdir)
     conda:
         "../envs/edd.yaml"
-    threads: 8
+    threads: config["threads"]["edd"]
     shell:
         """
         edd --nprocs {threads} \

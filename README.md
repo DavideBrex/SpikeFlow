@@ -121,25 +121,27 @@ The last step before running the workflow is to adjust the parameters in the con
 #### *Reference and exogenous (spike-in) genomes*
 
 To execute the pipeline, it's essential to specify both *endogenous* and *exogenous* species; for example, use Drosophila (dm16) as the exogenous and Human (hg38) as the endogenous species.
-Regarding alignment, you have the option to select between Bowtie and Chromap for the alignment process, with Bowtie set as the default. If genome indexes are already available, you should input their paths in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data.
+If bowtie v1 genome indexes are already available, you should input their paths (ending with the index files prefix) in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data. **PLEASE NOTE**, the index must be created with bowtie  v1.3.0.
+
 
 ```yaml
 resources:
     ref:
-        index: /path/to/hg38.bowtie.index
+        index: /path/to/hg38.bowtie.index/indexFilesPrefix
+        #blacklist regions 
+        blacklist: ".test/data/hg38-blacklist.v2.bed"
+
     ref_spike:
-        index: /path/to/dm16.bowtie.index
+        index: /path/to/dm16.bowtie.index/indexFilesPrefix
 ```
 
-If you don't have the genome indexes readily available, the pipeline can generate them for you. To facilitate this, you'll need to specify the parameters shown below for both the reference and spike-in species. These parameters include the species name, the Ensembl release, and the genome build version. You can find all of this information on the Ensembl [website](https://www.ensembl.org/index.html).
+If you don't have the bowtie genome indexes readily available, the pipeline can generate them for you. To facilitate this, you'll need to specify the ucsc genome name (e.g. hg38, mm10, etc) for both the reference and spike-in species. You can find the the genome assembly on the [UCSC Genome Browser](https://genome-euro.ucsc.edu/cgi-bin/hgGateway).
 
 ```yaml
-    # Ensembl species name
-    species: homo_sapiens
-    # Ensembl release
-    release: 101
-    # Genome build
-    build: GRCh38 
+    ref:
+        assembly: hg38
+    ref_spike:
+        spike_assembly: dm6
 ```
 
 > **_⚠️ NOTE:_**  For the endogenous genome,  it's important to also include the path to blacklisted regions.  These regions, often associated with sequencing artifacts or other anomalies, can be downloaded from the Boyle Lab's Blacklist repository on GitHub. You can access these blacklisted region files [here](https://github.com/Boyle-Lab/Blacklist/tree/master/lists)
@@ -151,9 +153,9 @@ In this field you can choose the type of normalization to perform on the samples
 
 - **RAW**: This is a RPM normalization, i.e. it normalizes the read counts to the total number of reads in a sample, measured per million reads. This method is straightforward but does not account for spike-in. 
 
-- **Orlando**: Standard Spike-in normalization as described in [Orlando et al 2014](https://pubmed.ncbi.nlm.nih.gov/25437568/). It does not incorporate input data in the normalization process.
+- **Orlando**: Spike-in normalization as described in [Orlando et al 2014](https://pubmed.ncbi.nlm.nih.gov/25437568/). Also reffered as Reference-adjusted Reads Per Million (RRPM). It does not incorporate input data in the normalization process.
 
-- **RX-Input** (default): RX-Input is a modified version of the Orlando normalization that accounts for the total number of reads mapped to the spike-in in both the ChIP and input samples. This approach allows for more accurate normalization by accounting for variations in both immunoprecipitation efficiency and background noise (as represented by the input).
+- **RX-Input** (default): RX-Input is a modified version of the Orlando normalization that accounts for the total number of reads mapped to the spike-in in both the ChIP and input samples. This approach allows for more accurate normalization by accounting for variations in both immunoprecipitation efficiency and background noise (as represented by the input). See [Fursova et al 2019](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6561741/#bib42) for further details.
 
 
 ```yaml
@@ -195,7 +197,7 @@ The ```config``` and ```sample_sheet``` files come pre-configured for a test run
 
 #### Conda 
 
-```
+```bash
 snakemake --cores 10 --use-conda 
 ```
 
@@ -203,16 +205,27 @@ This will install all the required conda envs (it might take a while, just for t
 
 #### Conda and Singularity (recommended)
 
-```
+```bash
 snakemake --cores 10 --use-conda --use-singularity
 ```
 
 First, the singularity container will be pulled from DockerHub and then the workflow will be executed. 
 
-#### snakemake flags
+#### snakemake flags/parameters
 
 - ```--cores```: adjust this number (here set to 10) based on your machine configuration
 - ```-n```: add this flag  to the command line for a "dry run," which allows Snakemake to display the rules that it would execute, without actually running them.
+- ```--singularity-args "-B /shares,/home -e"```: only with ```--use-singularity``` and if you are running SpikeFlow from a server that mounts /shares and /home disks (where you have your working dir and files).
+
+To execute the pipeline on a HPC cluster, please follow [these guidelines](https://snakemake.readthedocs.io/en/stable/tutorial/additional_features.html#cluster-execution).
+
+If you are using **Snakemake version $\ge$ 8**, the comman line arguments have [different names](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#containerization-of-conda-based-workflows). In this case, run the workflow with:
+
+```bash
+snakemake --cores --software-deployment-method conda apptainer
+# or the shorthand version
+snakemake --cores 10 --sdm conda apptainer
+```
 
 ## Output files
 
@@ -245,11 +258,7 @@ The main outputs of the workflow are:
     ```/results/peakCalling/```
 
 
-Report generation
-
-
-
 ## Authors
 
-- Davide Bressan (@DavideBrex)
+- Davide Bressan ([@DavideBrex](https://twitter.com/BrexDavide))
 

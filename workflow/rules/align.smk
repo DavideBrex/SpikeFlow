@@ -7,7 +7,7 @@ if config["aligner"] == "bowtie":
         output:
             bam=temp("{}results/bam/{{id}}.tmp.bam".format(outdir)),
             index=temp("{}results/bam/{{id}}.tmp.bam.bai".format(outdir)),
-        threads: 8
+        threads: config["threads"]["bowtie"]
         params:
             index=config["resources"]["ref"]["index"]
             if config["resources"]["ref"]["index"] != ""
@@ -46,7 +46,7 @@ if config["aligner"] == "bowtie":
         output:
             bam=temp("{}results/bam_spike/{{id}}_spike.tmp.bam".format(outdir)),
             index=temp("{}results/bam_spike/{{id}}_spike.tmp.bam.bai".format(outdir)),
-        threads: 8
+        threads: config["threads"]["bowtie_spike"]
         params:
             index=config["resources"]["ref_spike"]["index_spike"]
             if config["resources"]["ref_spike"]["index_spike"] != ""

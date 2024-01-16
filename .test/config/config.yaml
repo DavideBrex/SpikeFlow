@@ -18,27 +18,20 @@ normalization_type: "RX-Input"
 resources:
   ref: 
     #if bowtie index is not available leave only "" , it will be created
-    #otherwise proved the path to the folder containing bowtie index (and add the name of the index after the path)
-    index: "data/subset_GRCh38_bowtieIndex/subset_GRCh38_bowtieIndex"
-    # Ensembl species name
-    species: homo_sapiens
-    # Ensembl release
-    release: 101
-    # Genome build
-    build: GRCh38 
+    #otherwise provide the path to the folder containing bowtie index (and add the name of the index after the path)
+    #PLEASE NOTE: the index must be created with the same version of bowtie as the one installed in the conda environment (1.3.0)
+    index: "data/subset_GRCh38_bowtieIndex/subset_GRCh38_bowtieIndex" #THIS IS A TEST INDEX, do not use it for a real dataset
+    # ucsc genome name (e.g. hg38, mm10, etc)
+    assembly: hg38
     #blacklist regions (from https://github.com/Boyle-Lab/Blacklist/tree/master/lists)
     blacklist: "data/hg38-blacklist.v2.bed"
 
   ref_spike:
     #if bowtie index is not avialable leave only "" , it will be created
-    #otherwise proved the path to the folder containing bowtie index
+    #otherwise provide the path to the folder containing bowtie index (and add the name of the index after the path)
     index_spike: "data/dm6_index/bowtie1_dm6_index"
-    # Ensembl species name
-    species: drosophila_melanogaster 
-    # Ensembl release
-    release: 110
-    # Genome build
-    build: BDGP6.46
+    # ucsc genome name (e.g. hg38, mm10, etc)
+    spike_assembly: dm6
 
 params:
   fastp-pe: ""
@@ -77,7 +70,15 @@ params:
 
 threads:
   fastp:
-    10
+    5
   bowtie: 
     10
+  bowtie_spike:
+    5
+  generateBigWig:
+    5
+  qc:
+    5
+  edd:
+    2
   

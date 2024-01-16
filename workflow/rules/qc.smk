@@ -9,7 +9,7 @@ rule fastqc:
     conda:
         "../envs/qc.yaml"
     params:
-        threads=4,
+        threads=config["threads"]["qc"],
         out_dir=lambda w, output: os.path.dirname(output.html),
     shell:
         """
@@ -28,7 +28,7 @@ rule plotFingerprint:
         "{}results/logs/QC/fingerPrint/{{id}}.fingerPrint.log".format(outdir),
     conda:
         "../envs/qc.yaml"
-    threads: 5
+    threads: config["threads"]["qc"]
     shell:
         """
         plotFingerprint -b {input} \
@@ -49,7 +49,7 @@ rule phantom_peak_qual:
         "{}results/logs/QC/phantompeakqual/{{id}}.spp.log".format(outdir),
     conda:
         "../envs/Renv.yaml"
-    threads: 5
+    threads: config["threads"]["qc"]
     params:
         out_dir=lambda w, output: os.path.dirname(output.spp),
     script:

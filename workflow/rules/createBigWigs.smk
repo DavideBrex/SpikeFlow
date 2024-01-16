@@ -15,7 +15,7 @@ rule bam2bigwig_general:
         effective_genome_size=config["params"]["deeptools"]["effective_genome_length"],
     log:
         "{}results/logs/bam2bigwig/{{id}}.log".format(outdir),
-    threads: 5
+    threads: config["threads"]["generateBigWig"]
     benchmark:
         "{}results/.benchmarks/{{id}}.bigwigs.benchmark.txt".format(outdir)
     wrapper:

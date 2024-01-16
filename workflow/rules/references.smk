@@ -21,22 +21,29 @@ rule return_genome_path:
 
 rule get_reference_genome:
     output:
-        "resources/reference_genome/genome.fasta",
+        faFile="resources/reference_genome/{assembly}/{assembly}.fa",
     log:
-        "{}results/logs/ref/get_reference_genome.log".format(outdir),
+        "{}results/logs/ref/get_reference_{{assembly}}.log".format(outdir),
     params:
-        species=config["resources"]["ref"]["species"],
-        datatype="dna",
-        build=config["resources"]["ref"]["build"],
-        release=config["resources"]["ref"]["release"],
-    cache: True
-    wrapper:
-        "v2.6.0/bio/reference/ensembl-sequence"
+        provider="ucsc",  # optional, defaults to ucsc. Choose from ucsc, ensembl, and ncbi
+        assemblyRef=config["resources"]["ref"]["assembly"],
+    cache: "omit-software"  # mark as eligible for between workflow caching
+    conda:
+        "../envs/genomepy.yaml"
+    shell:
+        """
+        genomepy plugin enable blacklist
+        genomepy install {params.assemblyRef} -g resources/reference_genome \
+        --provider {params.provider} >>{log} 2>&1
+        """
 
 
 rule create_bowtie_index_reference:
     input:
-        "resources/reference_genome/genome.fasta",
+        expand(
+            "resources/reference_genome/{assembly}/{assembly}.fa",
+            assembly=config["resources"]["ref"]["assembly"],
+        ),
     output:
         genome=directory("resources/reference_genome/index/"),
     log:
@@ -45,7 +52,7 @@ rule create_bowtie_index_reference:
         "Creating bowtie index"
     conda:
         "../envs/bowtie.yaml"
-    threads: 10
+    threads: config["threads"]["bowtie"]
     params:
         genome_path=config["resources"]["ref"]["index"],
     cache: True
@@ -54,7 +61,7 @@ rule create_bowtie_index_reference:
         # Add a condition in the shell script to determine if commands should run
         if [ -z "{params.genome_path}" ]; then
             mkdir resources/reference_genome/index/
-            bowtie-build --threads {threads} {input} {output}/index_ref
+            bowtie-build --threads {threads} {input} {output}/index_ref >>{log} 2>&1
         fi
         """
 
@@ -92,22 +99,28 @@ rule return_spike_path:
 
 rule get_spike_genome:
     output:
-        "resources/spike_genome/genome.fasta",
+        faFile="resources/spike_genome/{assemblySpike}/{assemblySpike}.fa",
     log:
-        "{}results/logs/ref/get_spike_genome.log".format(outdir),
+        "{}results/logs/ref/get_spike_{{assemblySpike}}.log".format(outdir),
     params:
-        species=config["resources"]["ref_spike"]["species"],
-        datatype="dna",
-        build=config["resources"]["ref_spike"]["build"],
-        release=config["resources"]["ref_spike"]["release"],
-    cache: True
-    wrapper:
-        "v2.6.0/bio/reference/ensembl-sequence"
+        provider="ucsc",  # optional, defaults to ucsc. Choose from ucsc, ensembl, and ncbi
+        spike_assembly=config["resources"]["ref_spike"]["spike_assembly"],
+    cache: "omit-software"  # mark as eligible for between workflow caching
+    conda:
+        "../envs/genomepy.yaml"
+    shell:
+        """
+        genomepy install {params.spike_assembly} -g resources/spike_genome \
+        --provider {params.provider} >>{log} 2>&1
+        """
 
 
 rule create_bowtie_index_spike:
     input:
-        "resources/spike_genome/genome.fasta",
+        expand(
+            "resources/spike_genome/{assemblySpike}/{assemblySpike}.fa",
+            assemblySpike=config["resources"]["ref_spike"]["spike_assembly"],
+        ),
     output:
         genome=directory("resources/spike_genome/index/"),
     log:
@@ -116,7 +129,7 @@ rule create_bowtie_index_spike:
         "Creating bowtie index for spike-in genome"
     conda:
         "../envs/bowtie.yaml"
-    threads: 10
+    threads: config["threads"]["bowtie_spike"]
     params:
         genome_path=config["resources"]["ref_spike"]["index_spike"],
     cache: True

@@ -69,7 +69,7 @@ rule peakAnnot_mergedReps:
     params:
         before=config["params"]["peaksAnnotation"]["promoter"]["upstream"],
         after=config["params"]["peaksAnnotation"]["promoter"]["downstream"],
-        genome=genomeCode,
+        genome=config["resources"]["ref"]["assembly"],
     log:
         "{outdir}results/logs/peakCalling/peakAnnot/{{unique_rep}}_mergedReps.log".format(
             outdir=outdir
@@ -103,7 +103,7 @@ rule peakAnnot_singleRep:
     params:
         before=config["params"]["peaksAnnotation"]["promoter"]["upstream"],
         after=config["params"]["peaksAnnotation"]["promoter"]["downstream"],
-        genome=genomeCode,
+        genome=config["resources"]["ref"]["assembly"],
     log:
         "{outdir}results/logs/peakCalling/peakAnnot/{{sample}}_singleRep.log".format(
             outdir=outdir
@@ -116,5 +116,6 @@ rule peakAnnot_singleRep:
         "../envs/Renv.yaml"
     script:
         "../scripts/PeakAnnot.R"
+
 
 ruleorder: peakAnnot_singleRep > peakAnnot_mergedReps

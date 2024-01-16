@@ -39,7 +39,7 @@ if config["trimming"]:
         input:
             sample=get_fastq_trimming,
         output:
-            trimmed="{}results/trimmed/{{id}}.fastq.gz".format(outdir),
+            trimmed=temp("{}results/trimmed/{{id}}.fastq.gz".format(outdir)),
             html="{}report/trimmed/{{id}}.html".format(outdir),
             json="{}report/trimmed/{{id}}.json".format(outdir),
         log:
@@ -47,7 +47,7 @@ if config["trimming"]:
         params:
             adapters=config["params"]["fastp-se"],
             extra="",
-        threads: 3
+        threads: config["threads"]["fastp"]
         wrapper:
             "v2.6.0/bio/fastp"
 
@@ -55,10 +55,12 @@ if config["trimming"]:
         input:
             sample=get_fastq_trimming,
         output:
-            trimmed=[
-                "{}results/trimmed/{{id}}_1.fastq.gz".format(outdir),
-                "{}results/trimmed/{{id}}_2.fastq.gz".format(outdir),
-            ],
+            trimmed=temp(
+                [
+                    "{}results/trimmed/{{id}}_1.fastq.gz".format(outdir),
+                    "{}results/trimmed/{{id}}_2.fastq.gz".format(outdir),
+                ]
+            ),
             html="{}report/trimmed/{{id}}.html".format(outdir),
             json="{}report/trimmed/{{id}}.json".format(outdir),
         log:
@@ -66,6 +68,6 @@ if config["trimming"]:
         params:
             adapters=config["params"]["fastp-pe"],
             extra="",
-        threads: 3
+        threads: config["threads"]["fastp"]
         wrapper:
             "v2.6.0/bio/fastp"

@@ -101,11 +101,6 @@ if veryBroadSamples:
         key: value for key, value in reps_dict_verybroad.items() if len(value) > 1
     }  # we keep only those with more than 1 rep
 
-# set the genome name (e.g. mm10, hg38) from the chrom sizes file
-genomeCode = os.path.splitext(
-    os.path.basename(config["params"]["peakCalling"]["chrom_sizes"])
-)[0]
-
 # -------------------- wildcard constraints --------------------#
 
 
