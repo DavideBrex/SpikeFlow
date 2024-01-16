@@ -11,12 +11,30 @@ properties:
   trimming:
     type: boolean
   
+  aligner:
+    type: string
+    enum:
+        - 'bowtie'
   normalization_type:
     type: string
     enum: 
         - RAW
         - Orlando
         - RX-Input
+
+  resources:
+    type: object
+    properties:
+      ref:
+        type: object
+        properties:
+          assembly:
+            type: string
+            enum:
+              - mm9
+              - mm10
+              - hg19
+              - hg38
 
 # entries that have to be in the config file for successful validation
 required:

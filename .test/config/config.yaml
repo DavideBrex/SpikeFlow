@@ -50,7 +50,7 @@ params:
     #read extension, only for SE
     read_extension: 75
   peakCalling:
-    chrom_sizes: "data/hg38.chromsizes"
+    chrom_sizes: "data/hg38.chromsizes" #THIS IS A TEST FILE, do not use it for a real dataset
     macs2:
       pvalue: 0.05
     epic2:
