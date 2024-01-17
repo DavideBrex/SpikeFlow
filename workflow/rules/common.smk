@@ -215,6 +215,15 @@ def perform_checks(input_df):
             raise FileNotFoundError(
                 "The provided path to the spike genome index does not exist. \nPlease check that the folder is present and contains the indexing files"
             )
+    # 7. check if the chromsome sizes file exists and if the blacklist file exists
+    if not os.path.exists(config["params"]["peakCalling"]["chrom_sizes"]):
+        raise FileNotFoundError(
+            "The provided path to the chromosome sizes file does not exist. \nPlease check that the file is present"
+        )
+    if not os.path.exists(config["resources"]["ref"]["blacklist"]):
+        raise FileNotFoundError(
+            "The provided path to the blacklist file does not exist. \nPlease check that the file is present"
+        )
 
 
 # -------------------- Sample sheet Sanity checks ---------------#

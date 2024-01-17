@@ -60,6 +60,7 @@ params:
       fdr: 0.05
     edd:
       fdr: 0.05
+      extraParameters: "config/edd_parameters.conf"
   peakMerge:
     chipr:
       size: 30 

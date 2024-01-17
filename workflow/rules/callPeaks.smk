@@ -87,6 +87,7 @@ rule edd_callVeryBroadPeaks:
         chrom_size=config["params"]["peakCalling"]["chrom_sizes"],
         fdr=config["params"]["peakCalling"]["edd"]["fdr"],
         blacklist=config["resources"]["ref"]["blacklist"],
+        extraConfig=config["params"]["peakCalling"]["edd"]["extraParameters"],
         output_dir="{}results/peakCalling/edd/{{sample}}".format(outdir),
     benchmark:
         "{}results/.benchmarks/{{sample}}.edd.benchmark.txt".format(outdir)
@@ -97,11 +98,12 @@ rule edd_callVeryBroadPeaks:
         """
         edd --nprocs {threads} \
             --fdr {params.fdr} \
+            --config-file {params.extraConfig} \
             {params.chrom_size} \
             {params.blacklist} \
             {input.treatment} {input.control} \
-            {params.output_dir} \
-            &> {log}
+            {params.output_dir} &> {log} || touch {output.veryBroadPeaks} 
+            
         mv {params.output_dir}/log.txt {params.output_dir}/{wildcards.sample}_runlog.txt
         mv {params.output_dir}/{wildcards.sample}_runlog.txt $(dirname {log})
         # Count the number of peaks and create a summary file
