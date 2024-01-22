@@ -26,7 +26,7 @@ rule get_reference_genome:
         "{}results/logs/ref/get_reference_{{assembly}}.log".format(outdir),
     params:
         provider="ucsc",  # optional, defaults to ucsc. Choose from ucsc, ensembl, and ncbi
-        assemblyRef=config["resources"]["ref"]["assembly"],
+        assembly=config["resources"]["ref"]["assembly"],
     cache: "omit-software"  # mark as eligible for between workflow caching
     priority: 10
     conda:
