@@ -40,7 +40,6 @@ def unzip_file(gz_file):
 
 assembly = snakemake.params.assembly
 provider = snakemake.params.provider
-genomes_dir = snakemake.params.outDir
 output = snakemake.output[0]
 
 #prepare the download url
@@ -48,7 +47,7 @@ base_url = "http://hgdownload.soe.ucsc.edu/goldenPath/{}/bigZips/{}.fa.gz"
 genome_url = base_url.format(assembly, assembly)
 
 #prepare the output file
-outFileGZ = "{}/{}.fa.gz".format(genomes_dir, assembly)
+outFileGZ = output + ".gz"
 
 if not os.path.exists(output):
     print("Downloading {}...".format(genome_url))

@@ -27,7 +27,6 @@ rule get_reference_genome:
     params:
         provider="ucsc",  # optional, defaults to ucsc. Choose from ucsc, ensembl, and ncbi
         assemblyRef=config["resources"]["ref"]["assembly"],
-        outDir="resources/reference_genome",
     cache: "omit-software"  # mark as eligible for between workflow caching
     priority: 10
     conda:
@@ -103,7 +102,6 @@ rule get_spike_genome:
     params:
         provider="ucsc",  # optional, defaults to ucsc. Choose from ucsc, ensembl, and ncbi
         assembly=config["resources"]["ref_spike"]["spike_assembly"],
-        outDir="resources/spike_genome",
     cache: "omit-software"  # mark as eligible for between workflow caching
     priority: 10
     conda:
