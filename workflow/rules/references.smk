@@ -21,27 +21,24 @@ rule return_genome_path:
 
 rule get_reference_genome:
     output:
-        faFile="resources/reference_genome/{assembly}/{assembly}.fa",
+        faFile="resources/reference_genome/{assembly}.fa",
     log:
         "{}results/logs/ref/get_reference_{{assembly}}.log".format(outdir),
     params:
         provider="ucsc",  # optional, defaults to ucsc. Choose from ucsc, ensembl, and ncbi
-        assemblyRef=config["resources"]["ref"]["assembly"],
+        assembly=config["resources"]["ref"]["assembly"],
     cache: "omit-software"  # mark as eligible for between workflow caching
+    priority: 10
     conda:
-        "../envs/genomepy.yaml"
-    shell:
-        """
-        genomepy plugin enable blacklist
-        genomepy install {params.assemblyRef} -g resources/reference_genome \
-        --provider {params.provider} >>{log} 2>&1
-        """
+        "../envs/various.yaml"
+    script:
+        "../scripts/download_genome.py"
 
 
 rule create_bowtie_index_reference:
     input:
         expand(
-            "resources/reference_genome/{assembly}/{assembly}.fa",
+            "resources/reference_genome/{assembly}.fa",
             assembly=config["resources"]["ref"]["assembly"],
         ),
     output:
@@ -99,26 +96,24 @@ rule return_spike_path:
 
 rule get_spike_genome:
     output:
-        faFile="resources/spike_genome/{assemblySpike}/{assemblySpike}.fa",
+        faFile="resources/spike_genome/{assemblySpike}.fa",
     log:
         "{}results/logs/ref/get_spike_{{assemblySpike}}.log".format(outdir),
     params:
         provider="ucsc",  # optional, defaults to ucsc. Choose from ucsc, ensembl, and ncbi
-        spike_assembly=config["resources"]["ref_spike"]["spike_assembly"],
+        assembly=config["resources"]["ref_spike"]["spike_assembly"],
     cache: "omit-software"  # mark as eligible for between workflow caching
+    priority: 10
     conda:
-        "../envs/genomepy.yaml"
-    shell:
-        """
-        genomepy install {params.spike_assembly} -g resources/spike_genome \
-        --provider {params.provider} >>{log} 2>&1
-        """
+        "../envs/various.yaml"
+    script:
+        "../scripts/download_genome.py"
 
 
 rule create_bowtie_index_spike:
     input:
         expand(
-            "resources/spike_genome/{assemblySpike}/{assemblySpike}.fa",
+            "resources/spike_genome/{assemblySpike}.fa",
             assemblySpike=config["resources"]["ref_spike"]["spike_assembly"],
         ),
     output:

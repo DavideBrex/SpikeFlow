@@ -35,6 +35,20 @@ properties:
               - mm10
               - hg19
               - hg38
+      ref_spike:
+        type: object
+        properties:
+          spike_assembly:
+            type: string
+            enum:
+              - dm3
+              - dm6
+              - mm10
+              - mm9
+              - hg19
+              - hg38
+              - hs1
+
 
 # entries that have to be in the config file for successful validation
 required:
