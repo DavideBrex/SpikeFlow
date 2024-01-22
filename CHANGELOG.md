@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/DavideBrex/SpikeFlow/compare/v1.0.0...v1.0.1) (2024-01-22)
+
+
+### Bug Fixes
+
+* changed  genome download ([#9](https://github.com/DavideBrex/SpikeFlow/issues/9)) ([e8f3a57](https://github.com/DavideBrex/SpikeFlow/commit/e8f3a57c912c71dc665b8737d6e5a043167dc57f))
+
 ## 1.0.0 (2024-01-17)
 
 
