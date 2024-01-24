@@ -22,7 +22,7 @@ rule macs2_callNarrowPeak:
         + " --gsize "
         + str(config["params"]["deeptools"]["effective_genome_length"])
         + " --pvalue "
-        + config["params"]["peakCalling"]["macs2"]["pvalue"]
+        + str(config["params"]["peakCalling"]["macs2"]["pvalue"])
         + " --keep-dup all",
     benchmark:
         "{}results/.benchmarks/{{sample}}.macs2.benchmark.txt".format(outdir)
