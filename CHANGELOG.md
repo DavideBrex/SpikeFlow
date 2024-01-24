@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/DavideBrex/SpikeFlow/compare/v1.0.1...v1.0.2) (2024-01-24)
+
+
+### Bug Fixes
+
+* fixed check for user bowtie index ([#11](https://github.com/DavideBrex/SpikeFlow/issues/11)) ([4609a1c](https://github.com/DavideBrex/SpikeFlow/commit/4609a1c41970cad87b17e5c1519fc540bea8f945))
+
 ## [1.0.1](https://github.com/DavideBrex/SpikeFlow/compare/v1.0.0...v1.0.1) (2024-01-22)
 
 
