@@ -66,7 +66,7 @@ To obtain the Snakemake workflow, you can:
     1. Create a new github repository using this workflow [as a template](https://help.github.com/en/articles/creating-a-repository-from-a-template).
     2. [Clone](https://help.github.com/en/articles/cloning-a-repository) the newly created repository to your local system, in the folder where you want to perform the data analysis.
 
-- Download the source code as zip file from this page (code button)
+- Download the source code as zip file from the latest [version](https://github.com/DavideBrex/SpikeFlow/releases).
 
 
 The usage of this workflow is also described in the [Snakemake Workflow Catalog](https://snakemake.github.io/snakemake-workflow-catalog/?usage=DavideBrex%2FSpikeFlow).
@@ -221,7 +221,7 @@ First, the singularity container will be pulled from DockerHub and then the work
 
 To execute the pipeline on a HPC cluster, please follow [these guidelines](https://snakemake.readthedocs.io/en/stable/tutorial/additional_features.html#cluster-execution).
 
-If you are using **Snakemake version $\ge$ 8**, the comman line arguments have [different names](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#containerization-of-conda-based-workflows). In this case, run the workflow with:
+If you are using **Snakemake version $\ge$ 8**, the command line arguments have [different names](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#containerization-of-conda-based-workflows). In this case, run the workflow with:
 
 ```bash
 snakemake --cores --software-deployment-method conda apptainer

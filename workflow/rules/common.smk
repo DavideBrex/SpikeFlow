@@ -124,6 +124,40 @@ wildcard_constraints:
 
 # -------------------- Sample sheet Sanity checks function ---------------#
 def perform_checks(input_df):
+    def check_index_files(folder_path, prefix):
+        # Expected filenames
+        expected_files = [
+            "{}.1.ebwt",
+            "{}.2.ebwt",
+            "{}.3.ebwt",
+            "{}.4.ebwt",
+            "{}.rev.1.ebwt",
+            "{}.rev.2.ebwt",
+        ]
+        # Check if the folder exists
+        if not os.path.exists(folder_path):
+            raise FileNotFoundError(
+                "The genome index folder {} does not exist. \nPlease check that the folder is present and contains the indexing files".format(
+                    folder_path
+                )
+            )
+        # List all files in the directory to check for the presence of index files
+        files_in_directory = os.listdir(folder_path)
+        missing_files = []  # Check for each expected file
+        for file_pattern in expected_files:
+            expected_file = file_pattern.format(prefix)
+            if expected_file not in files_in_directory:
+                missing_files.append(expected_file)
+        # Report missing files
+        if missing_files:
+            raise FileNotFoundError(
+                """It appears that the genome index folder you provided is missing one/more indexing files.
+                \nPlease check that the index prefix is correct and the index files are present in {}""".format(
+                    folder_path
+                )
+            )
+
+    # config file header
     header = [
         "sample",
         "replicate",
@@ -203,18 +237,16 @@ def perform_checks(input_df):
 
     # 6. in case an index is provided for the ref genome (different than ""), check whether it actually exists
     if config["resources"]["ref"]["index"] != "":
-        if not os.path.exists(os.path.dirname(config["resources"]["ref"]["index"])):
-            raise FileNotFoundError(
-                "The provided path to the reference genome index does not exist. \nPlease check that the folder is present and contains the indexing files"
-            )
+        check_index_files(
+            os.path.dirname(config["resources"]["ref"]["index"]),
+            os.path.basename(config["resources"]["ref"]["index"]),
+        )
     # same for spike
     if config["resources"]["ref_spike"]["index_spike"] != "":
-        if not os.path.exists(
-            os.path.dirname(config["resources"]["ref_spike"]["index_spike"])
-        ):
-            raise FileNotFoundError(
-                "The provided path to the spike genome index does not exist. \nPlease check that the folder is present and contains the indexing files"
-            )
+        check_index_files(
+            os.path.dirname(config["resources"]["ref_spike"]["index_spike"]),
+            os.path.basename(config["resources"]["ref_spike"]["index_spike"]),
+        )
     # 7. check if the chromsome sizes file exists and if the blacklist file exists
     if not os.path.exists(config["params"]["peakCalling"]["chrom_sizes"]):
         raise FileNotFoundError(
