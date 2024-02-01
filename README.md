@@ -238,7 +238,7 @@ snakemake --cores 10 --use-conda
 ```
 This will install all the required conda envs (it might take a while, just for the first execution).
 
-#### snakemake flags/parameters
+#### Snakemake flags
 
 - ```--cores```: adjust this number (here set to 10) based on your machine configuration
 - ```-n```: add this flag  to the command line for a "dry run," which allows Snakemake to display the rules that it would execute, without actually running them. 
@@ -288,9 +288,9 @@ The main outputs of the workflow are:
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
-1. When you run SpikeFlow with Singularity ( ```--use-singularity```), you might get an error if you set the  ```-n``` flag ONLY at the first execution. Remove it and it should work.
+1. When you run SpikeFlow with Singularity ( ```--use-singularity```), you might get an error if you set the  ```-n``` flag. This happens ONLY at the first execution of the workflow. Remove the flag and it should work.
 
-2.  ```--use-singularity``` will pull the container from Docker Hub, which can require about 7 GB of free memory. In case you do not have enough space on your disk (```/tmp``` folder), Snakemake will throw the error message ```No space left on device```. To fix this, you might want to change the directory where Singularity downloads the image with to a location with more free space. This can be done by setting the ```SINGULARITY_TMPDIR``` env variable [See here for more details](https://docs.sylabs.io/guides/latest/user-guide/build_env.html#temporary-folders).
+2. The ``` --use-singularity```  option temporary requires about 7 GB of disk space to build the image from Docker Hub. If your ```/tmp``` directory is full, you'll encounter a ```No space left on device``` error. To avoid this, change the Singularity temp directory to a different disk by setting the ```SINGULARITY_TMPDIR``` environment variable. More details are available in the [Singularity guide on temporary folders](https://docs.sylabs.io/guides/latest/user-guide/build_env.html#temporary-folders).
 
 <a name="citation"></a>
 ## Citation
