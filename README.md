@@ -45,7 +45,7 @@ If you use this workflow in a paper, don't forget to give credits to the authors
 
 <a name="install"></a>
 ## Installation 
-### Step 1 - get Snakemake running
+### Step 1 - Install Snakemake
 To run this pipeline, you'll first need to install **Snakemake** (version >= 6.3.0).
 Please check the Snakemake documentation on [how to install](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
 If you already have *conda* installed, you can simply create a new environment and install Snakemake with:
@@ -70,10 +70,13 @@ or
 mamba activate snakemake
 ```
 
+### Step 2 - Install Singularity (recommended)
 
-> **_⚠️ NOTE:_**  For a fast installation of the workflow, it is recommended to use **Singularity** (compatible with version 3.9.5). This bypasses the need for *Conda* to set up required environments, as these are already present within the container that will be pulled from [dockerhub](https://hub.docker.com/repository/docker/davidebrex/spikeflow/general) with the use of the ```--use-singularity``` flag .To install singularity check [its website](https://docs.sylabs.io/guides/3.0/user-guide/installation.html).
+For a fast installation of the workflow, it is recommended to use **Singularity** (compatible with version 3.9.5). This bypasses the need for *Conda* to set up required environments, as these are already present within the container that will be pulled from [dockerhub](https://hub.docker.com/repository/docker/davidebrex/spikeflow/general) with the use of the ```--use-singularity``` flag.
 
-### Step 2 - Download SpikeFlow
+To install singularity check [its website](https://docs.sylabs.io/guides/3.0/user-guide/installation.html).
+
+### Step 3 - Download SpikeFlow
 
 To obtain SpikeFlow, you can:
 
@@ -81,7 +84,7 @@ To obtain SpikeFlow, you can:
 
 2.  Clone the repository on your local machine. See [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the instructions.
 
-### Step 3 - Test the workflow
+### Step 4 - Test the workflow
 
 Once you obtained the latest version of SpikeFlow, the ```config.yaml```  and the ```samples_sheet.csv```  files are already set to run an installation test. 
 You can open them to have an idea about their structure. 
