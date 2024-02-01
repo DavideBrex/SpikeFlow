@@ -7,12 +7,12 @@
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
 [![GitHub actions status](https://github.com/DavideBrex/SpikeFlow/workflows/Tests/badge.svg?branch=main)](https://github.com/DavideBrex/SpikeFlow/actions?query=branch%3Amain+workflow%3ATests)
 
-If you use this workflow in a paper, don't forget to give credits to the authors by citing the URL of this (original) repository. 
+If you use this workflow in a paper, don't forget to give credits to the authors. See the [Citation](https://github.com/DavideBrex/SpikeFlow#Citation) section.
 
 ## About
 
 **SpikeFlow** is a Snakemake-based workflow designed for the analysis of ChIP-seq data with spike-in normalization (i.e. ChIP-Rx). Spike-in controls are used to provide a reference for normalizing sample-to-sample variation. These controls are typically DNA from a different species added to each ChIP and input sample in consistent amounts. This workflow facilitates accurate and reproducible chromatin immunoprecipitation studies by integrating state-of-the-art computational methodologies.
-
+ 
 **Key Features**:
 
 - **Diverse Normalization Techniques**: This workflow implements three normalization methods,to accommodate varying experimental designs and enhance data comparability.
@@ -29,24 +29,32 @@ Currently supported genomes:
 - Endogenous: mm9,mm10,hg19,hg38
 - Exogenous: any
 
+
+# Table of Contents
+
+
+1. [Installation](#install)
+2. [Configuration](#config)
+
+
+<a name="install"></a>
 ## Installation 
 ### Step 1 - get Snakemake running
 To run this pipeline, you'll first need to install **Snakemake** (version >= 6.3.0).
+Please check the Snakemake documentation on [how to install](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
+
 If you already have *conda* installed, you can simply create a new environment:
 
 ```
 conda create -c bioconda -c conda-forge -n snakemake snakemake
 ```
 
-In case *conda* is not installed on your computer/server, it is advisable to install Mamba, a compatible and efficient alternative.
-See [here](https://github.com/conda-forge/miniforge#mambaforge) the installation steps.
-
-Once Mamba is installed, run
-
+For mamba, use the following code:
 
 ```
- mamba create -c conda-forge -c bioconda --name snakemake
+ mamba create -c conda-forge -c bioconda -n snakemake snakemake
 ```
+
 
 Once the environment is created, activate it with:
 ```
@@ -57,21 +65,28 @@ or
 mamba activate snakemake
 ```
 
+
 > **_⚠️ NOTE:_**  For a fast installation of the workflow, it is recommended to use **Singularity** (compatible with version 3.9.5). This bypasses the need for *Conda* to set up required environments, as these are already present within the container that will be pulled from [dockerhub](https://hub.docker.com/repository/docker/davidebrex/spikeflow/general) with the use of the ```--use-singularity``` flag .To install singularity check out [this website](https://docs.sylabs.io/guides/3.0/user-guide/installation.html).
 
-### Step 2 - Download the workflow
+### Step 2 - Download SpikeFlow
 
-To obtain the Snakemake workflow, you can:
-- Clone it on your local machine:
-    1. Create a new github repository using this workflow [as a template](https://help.github.com/en/articles/creating-a-repository-from-a-template).
-    2. [Clone](https://help.github.com/en/articles/cloning-a-repository) the newly created repository to your local system, in the folder where you want to perform the data analysis.
+To obtain SpikeFlow, you can:
 
-- Download the source code as zip file from the latest [version](https://github.com/DavideBrex/SpikeFlow/releases).
+1.  Download the source code as zip file from the latest [version](https://github.com/DavideBrex/SpikeFlow/releases/latest).
+
+2.  Clone the repository on your local machine. See [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the instructions.
+
+### Step 3 - Test the workflow
+
+Once you obtained the latest version of SpikeFlow, the ``` config```  and the ``` sample sheet```  files are already set to run an installation test. 
+You can open them to have an idea about how they are structured. 
+All the files needed for the test are in the ```.test``` folder (on ubuntu, type ctrl + h to see hidden files and folders).
+To test whether SpikeFlow is working properly, please jump directly to the [Run the workflow](https://github.com/DavideBrex/SpikeFlow#run-the-workflow) section of the documentation.
 
 
 The usage of this workflow is also described in the [Snakemake Workflow Catalog](https://snakemake.github.io/snakemake-workflow-catalog/?usage=DavideBrex%2FSpikeFlow).
 
-
+<a name="config"></a>
 ## Configuration
 
 ### 1. **Sample Sheet Input Requirements**
@@ -79,14 +94,17 @@ The usage of this workflow is also described in the [Snakemake Workflow Catalog]
 Prior to executing the pipeline, you need to prepare a sample sheet containing detailed information about the samples to analyse. You can find an example of this file under ```config/samples_sheet.csv```.
 The required format is a comma-separated values (CSV) file, consisting of eight columns and including a header row.
 For each sample (row), you need to specify:
-1. **sample**: Unique sample name 
-2. **replicate**: Integer indicating the number of replicate (if no replicate simply add 1)
-3. **antibody**: antibody used for the experiment
-4. **control**: Unique sample name of the control (it has to be specified also in the sample column, but in another row)
-5. **control_replicate**: Integer indicating the number of replicate for the control sample
-6. **peak_type**: can only be equal to: narrow, broad, very-broad. It indicates the type of peak calling to perform
-7. **fastq_1**: path to the fastq file of the sample (if paired-end, here goes the forward mate, i.e. R1)
-8. **fastq_2**: ONLY for paired-end, otherwise leave empty. Path to the fastq file of the reverse mate (i.e. R2)
+
+| Column Name           | Description                                                                                             	|
+|-------------------	|----------------------------------------------------------------------------------------------------------	|
+| sample            	| Unique sample name                                                                                       	|
+| replicate         	| Integer indicating the number of replicate (if no replicate simply add 1)                                	|
+| antibody          	| Antibody used for the experiment (leave empty for Input samples)                                         	|
+| control           	| Unique sample name of the control (it has to be specified also in the sample column, but in another row) 	|
+| control_replicate 	| Integer indicating the number of replicate for the control sample (if no replicate simply add 1)         	|
+| peak_type         	| Can only be equal to: narrow, broad, very-broad. It indicates the type of peak calling to perform        	|
+| fastq_1           	| Path to the fastq file of the sample (if paired-end, here goes the forward mate, i.e. R1)                	|
+| fastq_2           	| ONLY for paired-end, otherwise leave empty. Path to the fastq file of the reverse mate (i.e. R2)         	|
 
 For the input samples, leave empty the values of the all the columns except for sample, replicate and fastq path(s).
 
@@ -259,8 +277,12 @@ The main outputs of the workflow are:
 
     ```/results/peakCalling/```
 
+## Troubleshooting
 
-## Authors
+
+## Citation
+
+https://github.com/DavideBrex/SpikeFlow
 
 - Davide Bressan ([@DavideBrex](https://twitter.com/BrexDavide))
 
