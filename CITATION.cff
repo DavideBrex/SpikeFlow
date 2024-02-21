@@ -1,0 +1,28 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: SpikeFlow
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Davide
+    family-names: Bressan
+    email: davidebx96@gmail.com
+    orcid: 'https://orcid.org/0000-0003-4757-2535'
+    affiliation: University of Trento - Italy
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.10686980
+repository-code: 'https://github.com/DavideBrex/SpikeFlow'
+abstract: A snakemake pipeline for the analysis of ChIP-Rx data
+keywords:
+  - ChIP-seq
+  - Normalisation
+  - NGS
+  - Spike-in
+license: MIT
+version: 1.1.0
+date-released: '2024-02-21'
