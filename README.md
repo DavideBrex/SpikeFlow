@@ -6,6 +6,9 @@
 
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
 [![GitHub actions status](https://github.com/DavideBrex/SpikeFlow/workflows/Tests/badge.svg?branch=main)](https://github.com/DavideBrex/SpikeFlow/actions?query=branch%3Amain+workflow%3ATests)
+[![DOI](https://zenodo.org/badge/665587139.svg)](https://zenodo.org/doi/10.5281/zenodo.10686979)
+
+
 
 If you use this workflow in a paper, don't forget to give credits to the authors. See the [citation](#citation) section.
 
