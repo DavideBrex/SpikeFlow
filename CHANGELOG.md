@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/DavideBrex/SpikeFlow/compare/v1.0.2...v1.1.0) (2024-02-21)
+
+
+### Features
+
+* added conf to doc ([4ac4f0e](https://github.com/DavideBrex/SpikeFlow/commit/4ac4f0e6fdfacf1237144dea906fd98581fc26ef))
+* changed docs ([#13](https://github.com/DavideBrex/SpikeFlow/issues/13)) ([4ac4f0e](https://github.com/DavideBrex/SpikeFlow/commit/4ac4f0e6fdfacf1237144dea906fd98581fc26ef))
+
 ## [1.0.2](https://github.com/DavideBrex/SpikeFlow/compare/v1.0.1...v1.0.2) (2024-01-24)
 
 
