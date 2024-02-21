@@ -5,14 +5,17 @@
 Prior to executing the pipeline, you need to prepare a sample sheet containing detailed information about the samples to analyse. You can find an example of this file under ```config/samples_sheet.csv```.
 The required format is a comma-separated values (CSV) file, consisting of eight columns and including a header row.
 For each sample (row), you need to specify:
-1. **sample**: Unique sample name 
-2. **replicate**: Integer indicating the number of replicate (if no replicate simply add 1)
-3. **antibody**: antibody used for the experiment
-4. **control**: Unique sample name of the control (it has to be specified also in the sample column, but in another row)
-5. **control_replicate**: Integer indicating the number of replicate for the control sample
-6. **peak_type**: can only be equal to: narrow, broad, very-broad. It indicates the type of peak calling to perform
-7. **fastq_1**: path to the fastq file of the sample (if paired-end, here goes the forward mate, i.e. R1)
-8. **fastq_2**: ONLY for paired-end, otherwise leave empty. Path to the fastq file of the reverse mate (i.e. R2)
+
+| Column Name           | Description                                                                                             	|
+|-------------------	|----------------------------------------------------------------------------------------------------------	|
+| sample            	| Unique sample name                                                                                       	|
+| replicate         	| Integer indicating the number of replicate (if no replicate simply add 1)                                	|
+| antibody          	| Antibody used for the experiment (leave empty for Input samples)                                         	|
+| control           	| Unique sample name of the control (it has to be specified also in the sample column, but in another row) 	|
+| control_replicate 	| Integer indicating the number of replicate for the control sample (if no replicate simply add 1)         	|
+| peak_type         	| Can only be equal to: narrow, broad, very-broad. It indicates the type of peak calling to perform        	|
+| fastq_1           	| Path to the fastq file of the sample (if paired-end, here goes the forward mate, i.e. R1)                	|
+| fastq_2           	| ONLY for paired-end, otherwise leave empty. Path to the fastq file of the reverse mate (i.e. R2)         	|
 
 For the input samples, leave empty the values of the all the columns except for sample, replicate and fastq path(s).
 
