@@ -38,46 +38,7 @@ if config["aligner"] == "bowtie":
             samtools index {output.bam}
             """
 
-    # SPIKE alignment
-    rule align_bowtie_spike:
-        input:
-            reads=get_reads,
-            idx="resources/spike_genome/index/",
-        output:
-            bam=temp("{}results/bam_spike/{{id}}_spike.tmp.bam".format(outdir)),
-            index=temp("{}results/bam_spike/{{id}}_spike.tmp.bam.bai".format(outdir)),
-        threads: config["threads"]["bowtie_spike"]
-        params:
-            index=config["resources"]["ref_spike"]["index_spike"]
-            if config["resources"]["ref_spike"]["index_spike"] != ""
-            else "resources/spike_genome/index/index_spike",
-            bowtie=config["params"]["bowtie"]["global"],
-            samtools_mem=config["params"]["samtools"]["memory"],
-            inputsel=(
-                lambda wildcards, input: input.reads
-                if len(input.reads) == 1
-                else config["params"]["bowtie"]["pe"]
-                + " -1 {0} -2 {1}".format(*input.reads)
-            ),
-        message:
-            "SPIKE-IN - Aligning {input} with parameters {params.bowtie}"
-        conda:
-            "../envs/bowtie.yaml"
-        log:
-            align="{}results/logs/alignments/spike/{{id}}_spike.log".format(outdir),
-            rm_dups="{}results/logs/alignments/spike/rm_dup/{{id}}_spike.log".format(
-                outdir
-            ),
-        benchmark:
-            "{}results/.benchmarks/{{id}}_spike.align.benchmark.txt".format(outdir)
-        shell:
-            """
-            bowtie -p {threads} {params.bowtie} -x {params.index} {params.inputsel} 2> {log.align} \
-            | samblaster --removeDups 2> {log.rm_dups} \
-            | samtools view -Sb -F 4 - \
-            | samtools sort -m {params.samtools_mem}G -@ {threads} -T {output.bam}.tmp -o {output.bam} - 2>> {log.align}
-            samtools index {output.bam}
-            """
+
 
 
 rule clean_spike:
@@ -97,3 +58,6 @@ rule clean_spike:
         "{}results/.benchmarks/{{id}}.clean_spike.benchmark.txt".format(outdir)
     script:
         "../scripts/remove_spikeDups.py"
+
+
+

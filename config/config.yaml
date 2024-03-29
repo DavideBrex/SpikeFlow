@@ -27,9 +27,6 @@ resources:
     blacklist: ".test/data/hg38-blacklist.v2.bed"
 
   ref_spike:
-    #if bowtie index is not avialable leave only "" , it will be created
-    #otherwise provide the path to the folder containing bowtie index (and add the name of the index after the path)
-    index_spike: ".test/data/dm6_index/bowtie1_dm6_index"
     # ucsc genome name (e.g. hg38, mm10, etc)
     spike_assembly: dm6
 

@@ -35,11 +35,15 @@ rule get_reference_genome:
         "../scripts/download_genome.py"
 
 
-rule create_bowtie_index_reference:
+rule create_bowtie_index:
     input:
-        expand(
+        refGenome=expand(
             "resources/reference_genome/{assembly}.fa",
             assembly=config["resources"]["ref"]["assembly"],
+        ),
+        spikeGenome=expand(
+            "resources/spike_genome/{assemblySpike}.fa",
+            assemblySpike=config["resources"]["ref_spike"]["spike_assembly"],
         ),
     output:
         genome=directory("resources/reference_genome/index/"),
@@ -58,7 +62,16 @@ rule create_bowtie_index_reference:
         # Add a condition in the shell script to determine if commands should run
         if [ -z "{params.genome_path}" ]; then
             mkdir resources/reference_genome/index/
-            bowtie-build --threads {threads} {input} {output}/index_ref >>{log} 2>&1
+
+            # add flag to Exogenous genome chromosome names to distinguish from endogenous genome
+            awk '/^>/ {sub(/^>/, ">EXO_")} 1' {input.spikeGenome} > resources/spike_genome/exo.tmp
+            mv resources/spike_genome/exo.tmp {input.spikeGenome}
+
+            # merge endogenous and exogenous genomes
+            cat {input.refGenome} {input.spikeGenome} > resources/reference_genome/mergedGenome.fa
+
+            #build index
+            bowtie-build --threads {threads} resources/reference_genome/mergedGenome.fa {output}/index_ref >>{log} 2>&1
         fi
         """
 
@@ -66,32 +79,15 @@ rule create_bowtie_index_reference:
 # Rule priority
 if config["resources"]["ref"]["index"]:
 
-    ruleorder: return_genome_path > create_bowtie_index_reference
+    ruleorder: return_genome_path > create_bowtie_index
 
 else:
 
-    ruleorder: create_bowtie_index_reference > return_genome_path
+    ruleorder: create_bowtie_index > return_genome_path
 
 
 # SPIKE IN RULES
 
-
-rule return_spike_path:
-    output:
-        genome=directory("resources/spike_genome/index/"),
-    log:
-        "{}results/logs/ref/return_spike_path.log".format(outdir),
-    params:
-        genome_path=config["resources"]["ref_spike"]["index_spike"],
-    shell:
-        """
-        if [ -n "{params.genome_path}" ]; then
-            mkdir resources/spike_genome/index/
-            prefix=$(basename {params.genome_path})
-            directory=$(dirname {params.genome_path})
-            ln -s $directory/*  {output.genome}
-        fi
-        """
 
 
 rule get_spike_genome:
@@ -109,40 +105,3 @@ rule get_spike_genome:
     script:
         "../scripts/download_genome.py"
 
-
-rule create_bowtie_index_spike:
-    input:
-        expand(
-            "resources/spike_genome/{assemblySpike}.fa",
-            assemblySpike=config["resources"]["ref_spike"]["spike_assembly"],
-        ),
-    output:
-        genome=directory("resources/spike_genome/index/"),
-    log:
-        "{}results/logs/ref/indexing_spike.log".format(outdir),
-    message:
-        "Creating bowtie index for spike-in genome"
-    conda:
-        "../envs/bowtie.yaml"
-    threads: config["threads"]["bowtie_spike"]
-    params:
-        genome_path=config["resources"]["ref_spike"]["index_spike"],
-    cache: True
-    shell:
-        """
-        # Add a condition in the shell script to determine if commands should run
-        if [ -z "{params.genome_path}" ]; then
-            mkdir resources/spike_genome/index/
-            bowtie-build --threads {threads} {input} {output}/index_spike >>{log} 2>&1
-        fi
-        """
-
-
-# Rule priority
-if config["resources"]["ref_spike"]["index_spike"]:
-
-    ruleorder: return_spike_path > create_bowtie_index_spike
-
-else:
-
-    ruleorder: create_bowtie_index_spike > return_spike_path
