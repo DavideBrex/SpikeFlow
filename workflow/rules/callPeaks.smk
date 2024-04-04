@@ -1,7 +1,7 @@
 rule macs2_callNarrowPeak:
     input:
-        treatment="{}results/bam/{{sample}}.clean.bam".format(outdir),
-        control=lambda w: "{}results/bam/{}.clean.bam".format(
+        treatment="{}results/bam/{{sample}}_ref.sorted.bam".format(outdir),
+        control=lambda w: "{}results/bam/{}_ref.sorted.bam".format(
             outdir, sample_to_input[w.sample]
         ),
     output:
@@ -32,8 +32,8 @@ rule macs2_callNarrowPeak:
 
 rule epic2_callBroadPeaks:
     input:
-        treatment="{}results/bam/{{sample}}.clean.bam".format(outdir),
-        control=lambda w: "{}results/bam/{}.clean.bam".format(
+        treatment="{}results/bam/{{sample}}_ref.sorted.bam".format(outdir),
+        control=lambda w: "{}results/bam/{}_ref.sorted.bam".format(
             outdir, sample_to_input[w.sample]
         ),
     output:
@@ -72,8 +72,8 @@ rule epic2_callBroadPeaks:
 
 rule edd_callVeryBroadPeaks:
     input:
-        treatment="{}results/bam/{{sample}}.clean.bam".format(outdir),
-        control=lambda w: "{}results/bam/{}.clean.bam".format(
+        treatment="{}results/bam/{{sample}}_ref.sorted.bam".format(outdir),
+        control=lambda w: "{}results/bam/{}_ref.sorted.bam".format(
             outdir, sample_to_input[w.sample]
         ),
     output:

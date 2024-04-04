@@ -51,9 +51,7 @@ rule create_bowtie_index:
         "{}results/logs/ref/indexing_reference.log".format(outdir),
     message:
         "Creating bowtie index"
-    conda:
-        "../envs/bowtie.yaml"
-    threads: config["threads"]["bowtie"]
+    threads: config["threads"]["bowtie2"]
     params:
         genome_path=config["resources"]["ref"]["index"],
     cache: True
@@ -64,14 +62,15 @@ rule create_bowtie_index:
             mkdir resources/reference_genome/index/
 
             # add flag to Exogenous genome chromosome names to distinguish from endogenous genome
-            awk '/^>/ {sub(/^>/, ">EXO_")} 1' {input.spikeGenome} > resources/spike_genome/exo.tmp
-            mv resources/spike_genome/exo.tmp {input.spikeGenome}
+            awk '/^>/ {{sub(/^>/, ">EXO_")}} 1' {input.spikeGenome} > resources/spike_genome/exo.tmp.fa
 
             # merge endogenous and exogenous genomes
-            cat {input.refGenome} {input.spikeGenome} > resources/reference_genome/mergedGenome.fa
+            cat {input.refGenome} resources/spike_genome/exo.tmp.fa > resources/reference_genome/mergedGenome.fa
+
+            rm resources/spike_genome/exo.tmp.fa
 
             #build index
-            bowtie-build --threads {threads} resources/reference_genome/mergedGenome.fa {output}/index_ref >>{log} 2>&1
+            bowtie2-build --threads {threads} resources/reference_genome/mergedGenome.fa {output}/index_ref >>{log} 2>&1
         fi
         """
 

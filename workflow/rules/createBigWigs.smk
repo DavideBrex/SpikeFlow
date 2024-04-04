@@ -1,6 +1,6 @@
 rule bam2bigwig_general:
     input:
-        bam="{}results/bam/{{id}}.clean.bam".format(outdir),
+        bam="{}results/bam/{{id}}_ref.sorted.bam".format(outdir),
         logFile="{}results/logs/spike/{{id}}.removeSpikeDups".format(outdir),
         logFileInput=lambda wildcards: "{}results/logs/spike/{}.removeSpikeDups".format(
             outdir, sample_to_input[wildcards.id]

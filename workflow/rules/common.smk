@@ -127,12 +127,12 @@ def perform_checks(input_df):
     def check_index_files(folder_path, prefix):
         # Expected filenames
         expected_files = [
-            "{}.1.ebwt",
-            "{}.2.ebwt",
-            "{}.3.ebwt",
-            "{}.4.ebwt",
-            "{}.rev.1.ebwt",
-            "{}.rev.2.ebwt",
+            "{}.1.bt2",
+            "{}.2.bt2",
+            "{}.3.bt2",
+            "{}.4.bt2",
+            "{}.rev.1.bt2",
+            "{}.rev.2.bt2",
         ]
         # Check if the folder exists
         if not os.path.exists(folder_path):
@@ -340,7 +340,7 @@ def is_single_end(id):
     check = pd.isnull(samples_sheet.loc[(samp, rep), "fastq_2"])
     # in case a sample has multiple lanes, we get a series instead of str
     if isinstance(check, pd.Series):
-        return check[0]
+        return check.iloc[0]
     return check
 
 

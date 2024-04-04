@@ -19,7 +19,7 @@ rule fastqc:
 
 rule plotFingerprint:
     input:
-        "{}results/bam/{{id}}.clean.bam".format(outdir),
+        "{}results/bam/{{id}}_ref.sorted.bam".format(outdir),
     output:
         qualMetrics="{}results/QC/fingerPrint/{{id}}.qualityMetrics.tsv".format(outdir),
         raw_counts="{}results/QC/fingerPrint/{{id}}.rawcounts.tsv".format(outdir),
@@ -42,7 +42,7 @@ rule plotFingerprint:
 
 rule phantom_peak_qual:
     input:
-        "{}results/bam/{{id}}.clean.bam".format(outdir),
+        "{}results/bam/{{id}}_ref.sorted.bam".format(outdir),
     output:
         spp="{}results/QC/phantompeakqual/{{id}}.spp.out".format(outdir),
     log:

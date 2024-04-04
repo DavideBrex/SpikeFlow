@@ -14,7 +14,7 @@ properties:
   aligner:
     type: string
     enum:
-        - 'bowtie'
+        - 'bowtie2'
   normalization_type:
     type: string
     enum: 
