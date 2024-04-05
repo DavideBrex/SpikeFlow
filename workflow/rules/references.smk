@@ -54,6 +54,8 @@ rule create_bowtie_index:
     threads: config["threads"]["bowtie2"]
     params:
         genome_path=config["resources"]["ref"]["index"],
+    conda:
+        "../envs/bowtie2.yaml"
     cache: True
     shell:
         """

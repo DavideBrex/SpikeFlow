@@ -219,6 +219,10 @@ def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='dm6_', threads = 1):
 	readInfo.write("Ref-spike_commonReads:%s\n" % diff_genome)
 	readInfo.write("NSampleReads:%s\n" % human_reads)
 	readInfo.write("NSpikeReads:%s\n" % fly_reads)
+	readInfo.write("UnmappedReads:%s\n" % unmapped_reads)
+	readInfo.write("QCFailReads:%s\n" % qcfail_reads)
+	readInfo.write("SecondaryReads:%s\n" % secondary_reads)
+	readInfo.write("LowMapQReads:%s\n" % low_maq)
 	readInfo.close()
 
 

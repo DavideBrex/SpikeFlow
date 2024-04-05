@@ -35,7 +35,7 @@ params:
   fastp-se: ""
   bowtie2: 
     global: " --sensitive "
-    map_quality: 30
+    map_quality: 8
 
   samtools:
     # Memory used by every core of samtools (GB). Be careful that 

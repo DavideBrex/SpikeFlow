@@ -56,21 +56,21 @@ rule phantom_peak_qual:
         "../scripts/run_spp_nodups.R"
 
 
-rule create_qc_table_spike:
+rule create_qc_table_splitBam:
     input:
         logFile=expand(
             "{}results/logs/spike/{{id}}.removeSpikeDups".format(outdir),
             id=set(idSamples),
         ),
     output:
-        tab="{}results/QC/Spikein_qc_FULL.tsv".format(outdir),
-        tab_multiqc="{}results/QC/Spike-in_Reads_mqc.tsv".format(outdir),
+        tab="{}results/QC/SplitBam_qc_FULL.tsv".format(outdir),
+        tab_multiqc="{}results/QC/SplitBam_Reads_mqc.tsv".format(outdir),
     log:
-        "{}results/logs/QC/Spike_in_qc.log".format(outdir),
+        "{}results/logs/QC/SplitBam_qc.log".format(outdir),
     conda:
         "../envs/qc.yaml"
     script:
-        "../scripts/createSpikeQCtab.py"
+        "../scripts/createSplitBamQCtab.py"
 
 
 rule create_qc_table_epic2:
@@ -154,7 +154,7 @@ rule multiqc:
             "{}results/QC/fingerPrint/{{id}}.plot.pdf".format(outdir),
             id=set(idSamples),
         ),
-        tab_spike="{}results/QC/Spike-in_Reads_mqc.tsv".format(outdir),
+        tab_spike="{}results/QC/SplitBam_Reads_mqc.tsv".format(outdir),
         tab_macs2=rules.create_qc_table_macs2.output.tab,
         tab_epic2=rules.create_qc_table_epic2.output.tab,
         tab_edd=rules.create_qc_table_edd.output.tab,

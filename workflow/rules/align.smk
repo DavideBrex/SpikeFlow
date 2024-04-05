@@ -20,6 +20,11 @@ if config["aligner"] == "bowtie2":
                 else config["params"]["bowtie2"]["pe"]
                 + " -1 {0} -2 {1}".format(*input.reads)
             ),
+            forSamblaster=(
+                lambda wildcards, input: " --ignoreUnmated ".format(input.reads)
+                if len(input.reads) == 1
+                else ""
+            ),
         message:
             "Aligning {input} with parameters {params.bowtie2}"
         conda:
@@ -32,13 +37,11 @@ if config["aligner"] == "bowtie2":
         shell:
             """
             bowtie2 -p {threads} {params.bowtie2} -x {params.index} {params.inputsel} 2> {log.align} \
+            | samblaster {params.forSamblaster} --removeDups 2> {log.rm_dups} \
             | samtools view -Sb -F 4 - \
             | samtools sort -m {params.samtools_mem}G -@ {threads} -T {output.bam}.tmp -o {output.bam} - 2>> {log.align}
             samtools index {output.bam}
             """
-
-
-
 
 rule split_bam:
     input:
