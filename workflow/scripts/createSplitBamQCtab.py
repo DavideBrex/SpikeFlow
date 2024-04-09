@@ -23,10 +23,9 @@ for f in snakemake.input["logFile"]:
             ((list_splitBam_values[2] / (list_splitBam_values[1] + list_splitBam_values[2])) * 100),
         ]
 
-print(dict_allsamp)
 
 df_info = pd.DataFrame.from_dict(dict_allsamp, orient="index")
-print(df_info)
+
 if df_info.empty:
     df_info = pd.DataFrame(columns=[
         "Tot. mapped Reads",

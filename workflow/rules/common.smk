@@ -277,7 +277,14 @@ def input_toget():
     if narrowSamples:
         QCfiles.append("{}results/QC/macs2_peaks_mqc.tsv".format(outdir))
         peak_files += expand(
-            "{}results/peakCalling/macs2_ref/{{sample}}_peaks.narrowPeak".format(
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
+                outdir
+            ),
+            sample=narrowSamples,
+        )
+        #for testing Spiker peak calling, we also add those output files
+        peak_files += expand(
+            "{}results/peakCallingNorm/{{sample}}.treat.pileup.SpikeIn_scaled.bdg".format(
                 outdir
             ),
             sample=narrowSamples,
@@ -290,6 +297,13 @@ def input_toget():
         QCfiles.append("{}results/QC/epic2_peaks_mqc.tsv".format(outdir))
         peak_files += expand(
             "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(outdir),
+            sample=broadSamples,
+        )
+        #for testing Spiker peak calling, we also add those output files
+        peak_files += expand(
+            "{}results/peakCallingNorm/{{sample}}.treat.pileup.SpikeIn_scaled.bdg".format(
+                outdir
+            ),
             sample=broadSamples,
         )
         annot_files += expand(
@@ -444,7 +458,7 @@ def get_replicate_peaks(wildcards):
     """Function that returns the input files to merge replicates (if any) both narrow and broad peaks"""
     if wildcards.unique_rep in reps_dict_narrow:
         return expand(
-            "{}results/peakCalling/macs2_ref/{{sample}}_peaks.narrowPeak".format(
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
                 outdir
             ),
             sample=reps_dict_narrow[wildcards.unique_rep],
@@ -467,7 +481,7 @@ def get_replicate_peaks_edd(wildcards):
 def get_singelRep_peaks(wildcards):
     """Function that returns the input files to annot single sample peak files both narrow and broad peaks"""
     if wildcards.sample in narrowSamples:
-        return "{}results/peakCalling/macs2_ref/{{sample}}_peaks.narrowPeak".format(
+        return "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
             outdir, sample=wildcards.sample
         )
     elif wildcards.sample in broadSamples:
@@ -524,3 +538,24 @@ def normalization_factor(wildcards):
         )
     else:
         return "--scaleFactor {} --extendReads ".format(str(round(alpha, 4)))
+
+def spiker_normalization_factor(wildcards):
+    """
+    Function called by Spiker peak calling
+    It returns the normalization factors for treatment and control samples once calculated by the function above
+    """
+    treatment_file = "{}results/logs/spike/{}.normFactor".format(outdir, wildcards.sample)
+    #since the peak calling is done only on treatment samples, we need to get the input sample (and it has to have a control)
+    control_file = "{}results/logs/spike/{}.normFactor".format(outdir, sample_to_input[wildcards.sample])
+    with open(treatment_file) as tf, open(control_file) as cf:
+        treatment_norm_factor = tf.read().strip().split(":")[-1].strip()
+        control_norm_factor = cf.read().strip().split(":")[-1].strip()
+    return "--csf {} --tsf {}".format(control_norm_factor, treatment_norm_factor)
+
+
+def check_peak_type(wildcards):
+    """Function to check the peak type of the sample"""
+    if wildcards.sample in narrowSamples:
+        return ""
+    elif wildcards.sample in broadSamples:
+        return "--broad"

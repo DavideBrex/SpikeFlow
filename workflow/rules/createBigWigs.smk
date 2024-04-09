@@ -13,13 +13,24 @@ rule bam2bigwig_general:
     params:
         extra=lambda wildcards: normalization_factor(wildcards),
         effective_genome_size=config["params"]["deeptools"]["effective_genome_length"],
+    message:
+        "Generating bigwig file for {input.bam} using bamCoverage"
+    conda:
+        "../envs/qc.yaml"
     log:
         "{}results/logs/bam2bigwig/{{id}}.log".format(outdir),
     threads: config["threads"]["generateBigWig"]
     benchmark:
         "{}results/.benchmarks/{{id}}.bigwigs.benchmark.txt".format(outdir)
-    wrapper:
-        "v2.6.0/bio/deeptools/bamcoverage"
+    shell:
+        """
+        bamCoverage --blackListFileName {input.blacklist} \
+                    {params.extra} \
+                    --numberOfProcessors {threads} \
+                    --effectiveGenomeSize {params.effective_genome_size} \
+                    --bam {input.bam} \
+                    --outFileName {output.out} \
+                    --outFileFormat bigwig \
+                    > {log} 2>&1
+        """
 
-
-# ruleorder: clean_spike > bam2bigwig_general

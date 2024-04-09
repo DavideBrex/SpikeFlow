@@ -5,7 +5,9 @@ channels:
 dependencies:
   - epic2
   - pysam
-  - chromap
   - bedtools
   - chip-r
+  - fastp
+  - pip:
+    - spiker
 

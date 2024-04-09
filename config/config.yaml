@@ -8,7 +8,7 @@ output_path: ""
 # perform trimming: false or true
 # if true go to params (at the end)
 # to set desired trimming parameters
-trimming: false
+trimming: true
 
 aligner: bowtie2
 
@@ -31,10 +31,11 @@ resources:
     spike_assembly: dm6
 
 params:
+  #trimming parameters. If needed, add the parameters for the fastp below here
   fastp-pe: ""
   fastp-se: ""
   bowtie2: 
-    global: " --sensitive "
+    global: "--sensitive"
     map_quality: 8
 
   samtools:
@@ -49,7 +50,8 @@ params:
   peakCalling:
     chrom_sizes: ".test/data/hg38.chromsizes" #THIS IS A TEST FILE, do not use it for a real dataset
     macs2:
-      pvalue: 0.05
+      qvalue: 0.01
+      extraOptions: ""
     epic2:
       #effective genome fraction, change this according to https://github.com/biocore-ntnu/epic2/blob/master/epic2/effective_sizes/hg38_50.txt
       # in the github it is indicated as Effective genome size, and you need to know the read length in  order to set it

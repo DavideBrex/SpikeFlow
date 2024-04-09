@@ -44,12 +44,29 @@ if config["trimming"]:
             json="{}report/trimmed/{{id}}.json".format(outdir),
         log:
             "{}results/logs/fastp/{{id}}.log".format(outdir),
+        message:
+            "Trimming {input.sample} with fastp-se."
+        conda:
+            "../envs/various.yaml"
         params:
-            adapters=config["params"]["fastp-se"],
-            extra="",
+            extra=config["params"]["fastp-se"],
         threads: config["threads"]["fastp"]
-        wrapper:
-            "v2.6.0/bio/fastp"
+        shell:
+            """
+            if ! command -v fastp &> /dev/null
+            then
+                echo "fastp could not be found"
+                exit 1
+            fi
+            
+            fastp --thread {threads} \
+                -i {input.sample} \
+                -o {output.trimmed} \
+                {params.extra} \
+                --html {output.html} \
+                --json {output.json} \
+                2> {log}
+            """
 
     rule fastp_pe:
         input:
@@ -65,9 +82,27 @@ if config["trimming"]:
             json="{}report/trimmed/{{id}}.json".format(outdir),
         log:
             "{}results/logs/fastp/{{id}}.log".format(outdir),
+        message:
+            "Trimming {input.sample} with fastp-pe."
+        conda:
+            "../envs/various.yaml"
         params:
-            adapters=config["params"]["fastp-pe"],
-            extra="",
+            extra=config["params"]["fastp-pe"],
         threads: config["threads"]["fastp"]
-        wrapper:
-            "v2.6.0/bio/fastp"
+        shell:
+            """
+            if ! command -v fastp &> /dev/null
+            then
+                echo "fastp could not be found"
+                exit 1
+            fi
+            fastp --thread {threads} \
+                -i {input.sample[0]} \
+                -I {input.sample[1]} \
+                -o {output.trimmed[0]} \
+                -O {output.trimmed[1]} \
+                --html {output.html} \
+                --json {output.json} \
+                {params.extra} \
+                2> {log}
+            """
