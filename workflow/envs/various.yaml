@@ -5,6 +5,7 @@ channels:
 dependencies:
   - epic2
   - pysam
+  - pandas
   - bedtools
   - chip-r
   - fastp

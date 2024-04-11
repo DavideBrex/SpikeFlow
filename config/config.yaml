@@ -15,6 +15,14 @@ aligner: bowtie2
 #type of normalization to perform to generate the bigwig files (one from RAW, Orlando , RX-Input)
 normalization_type: "Orlando"
 
+#choose whether you want to perform differential peaks analysis
+#the group for the samples will be extracted from the sample name (after the last _)
+diffPeakAnalysis:
+  perform_diff_analysis: true
+  contrast: "EGF_vs_untreated"
+  padjust: 0.01
+  log2FCcutoff: 1.5
+
 resources:
   ref: 
     #if bowtie index is not available leave only "" , it will be created

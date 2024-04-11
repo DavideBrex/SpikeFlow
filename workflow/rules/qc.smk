@@ -108,7 +108,7 @@ rule create_qc_table_edd:
 rule create_qc_table_macs2:
     input:
         logFile=expand(
-            "{}results/peakCalling/macs2_ref/{{sample}}_peaks.narrowPeak".format(
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
                 outdir
             ),
             sample=narrowSamples,
@@ -156,7 +156,7 @@ rule multiqc:
         ),
         tab_spike="{}results/QC/SplitBam_Reads_mqc.tsv".format(outdir),
         tab_macs2=rules.create_qc_table_macs2.output.tab,
-        tab_epic2=rules.create_qc_table_epic2.output.tab,
+        tab_epic2=rules.create_qc_table_epic2.  output.tab,
         tab_edd=rules.create_qc_table_edd.output.tab,
         tab_peakAnnot=rules.create_qc_table_peakAnnot.output.tab,
     output:

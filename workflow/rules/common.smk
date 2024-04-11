@@ -343,7 +343,11 @@ def input_toget():
                 unique_rep=list(reps_dict_verybroad.keys()),
             )
 
-    return bigWigs + peak_files + QCfiles + annot_files
+    # we need the consensus peaks for the differential analysis
+    if config["diffPeakAnalysis"]["perform_diff_analysis"]:
+        return bigWigs + peak_files + QCfiles + annot_files + ["{}results/differentialAnalysis/diffPeaks.tsv".format(outdir)] 
+    else:
+        return bigWigs + peak_files + QCfiles + annot_files
 
 
 # -------------------- Other helpers functions ---------------#
@@ -530,7 +534,7 @@ def normalization_factor(wildcards):
 
         # TO DO: add log file with the norm factors stored
     with open("{}results/logs/spike/{}.normFactor".format(outdir, samp), "w") as file:
-        file.write("Normalization factor: {} \n".format(round(alpha, 4)))
+        file.write("Normalization factor:{}\n".format(round(alpha, 4)))
 
     if is_single_end(wildcards.id):
         return "--scaleFactor {} --extendReads {}".format(

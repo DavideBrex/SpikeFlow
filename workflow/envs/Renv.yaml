@@ -14,5 +14,6 @@ dependencies:
   - bioconductor-txdb.mmusculus.ucsc.mm10.knowngene
   - bioconductor-txdb.hsapiens.ucsc.hg19.knowngene
   - bioconductor-txdb.hsapiens.ucsc.hg38.knowngene
+  - bioconductor-DESeq2
   - samtools
   - gawk

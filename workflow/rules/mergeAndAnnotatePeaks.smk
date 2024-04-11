@@ -25,6 +25,57 @@ rule merge_rep_peaks:
         mv {params.outputPrefix}_all.bed $(dirname {log})
         """
 
+rule consensus_peaks:
+    input:
+        expand(
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
+                outdir
+            ),
+            sample=narrowSamples)
+    output:
+        "{outdir}results/peakCalling/mergedPeaks/consensusPeaks.bed".format(outdir=outdir),
+    params:
+        min_num_reps=2,
+    log:
+        "{outdir}results/logs/peakCalling/mergedPeaks/consensusPeaks.log".format(outdir=outdir),
+    threads: 1
+    benchmark:
+        "{}results/.benchmarks/consensusPeaks.benchmark.txt".format(outdir)
+    conda:
+        "../envs/various.yaml"
+    script:
+        "../scripts/consensusPeaks.py"
+
+
+rule count_reads_on_peaks:
+    input:
+        bamFiles=expand(
+            "{}results/bam/{{sample}}_ref.sorted.bam".format(
+                outdir
+            ),
+            sample=narrowSamples
+        ),
+        consensus_peaks="{outdir}results/peakCalling/mergedPeaks/consensusPeaks.bed".format(outdir=outdir),
+    output:
+        output_tsv="{outdir}results/peakCalling/mergedPeaks/readsOnConsensusPeaks.tsv".format(outdir=outdir),
+    params:
+        joined_bams=lambda w, input: ",".join(input.bamFiles),
+        map_qual=config["params"]["bowtie2"]["map_quality"],
+    log:
+        "{}results/logs/peakCalling/mergedPeaks/countReadsOnPeaks.log".format(outdir),
+    benchmark:
+        "{}results/.benchmarks/countReadsOnPeaks.benchmark.txt".format(outdir)
+    conda:
+        "../envs/various.yaml"
+    shell:
+        """
+        python3 workflow/scripts/frag_count.py -b {input.consensus_peaks} \
+            -i {params.joined_bams} \
+            -o {output.output_tsv} \
+            --mapq {params.map_qual} &> {log}
+        """
+
+
 
 rule merge_rep_peaks_edd:
     input:

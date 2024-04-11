@@ -85,6 +85,14 @@ rule macs2_callNormPeaks:
             --bw  \
             --cleanup \
             -o {params.output_dir} &> {log}
+
+        #we modify the output peak names in the narrow (first case) or broad (else) files
+        if [ -z {params.peak_type} ]    
+        then
+            sed -i -e 's_results/peakCallingNorm/__' -e 's/\(Peak\)\([0-9]\)/\\1_\\2/g' {params.output_dir}.narrowPeak 2>> {log}
+        else
+            sed -i -e 's_results/peakCallingNorm/__' -e 's/\(Peak\)\([0-9]\)/\\1_\\2/g' {params.output_dir}.broadPeak 2>> {log}
+        fi
         """
 
 
