@@ -21,6 +21,17 @@ properties:
         - RAW
         - Orlando
         - RX-Input
+  diffPeakAnalysis:
+    type: object
+    properties:
+      perform_diff_analysis:
+        type: boolean
+      contrast:
+        type: string
+      padjust:
+        type: number
+      log2FCcutoff:
+        type: number
 
   resources:
     type: object
@@ -28,6 +39,8 @@ properties:
       ref:
         type: object
         properties:
+          index:
+            type: string
           assembly:
             type: string
             enum:

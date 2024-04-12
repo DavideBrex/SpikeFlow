@@ -9,13 +9,12 @@ rule differential_peaks:
         ),
     output:
         diffTab="{outdir}results/differentialAnalysis/diffPeaks.tsv".format(outdir=outdir),
-        volcanoPlot="{outdir}results/differentialAnalysis/volcanoPlot.pdf".format(outdir=outdir),
-        pcaPlot="{outdir}results/differentialAnalysis/pcaPlot.pdf".format(outdir=outdir),
     params:
         contrast=config["diffPeakAnalysis"]["contrast"],
         padjCutoff=config["diffPeakAnalysis"]["padjust"],
         log2FCcutoff=config["diffPeakAnalysis"]["log2FCcutoff"],
         normMethod=config["normalization_type"],
+        outdir='{outdir}results/differentialAnalysis/'.format(outdir=outdir),
     log:
         "{}results/logs/DifferentialAnalysis/DifferentialAnalysis.log".format(outdir),
     conda:

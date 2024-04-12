@@ -252,6 +252,26 @@ def perform_checks(input_df):
             "The provided path to the blacklist file does not exist. \nPlease check that the file is present"
         )
 
+    # 8. check if the contrast is correctly defined
+    if config["diffPeakAnalysis"]["perform_diff_analysis"]:
+        contrastToCheck = config["diffPeakAnalysis"]["contrast"]
+        all_conditions = [sample.rsplit("_",1)[1] for sample in input_df.index.get_level_values("sample").unique().tolist()]
+        # check the format of the contrast
+        if "_vs_" in contrastToCheck:
+            contrast = contrastToCheck.split("_vs_")
+            if len(contrast) != 2:
+                raise ValueError(
+                    "The contrast should be defined as 'condA_vs_condB'. Please check the contrast definition in the config file"
+                )
+            if contrast[0] not in all_conditions or contrast[1] not in all_conditions:
+                raise ValueError(
+                    "One of the condition in the contrast is not present in the samplesheet. Please check the contrast definition in the config file"
+                )
+        else:
+            raise ValueError(
+                "The contrast should be defined as 'condA_vs_condB'. Please check the contrast definition in the config file"
+            )
+
 
 # -------------------- Sample sheet Sanity checks ---------------#
 
