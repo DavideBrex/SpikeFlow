@@ -7,18 +7,20 @@ suppressPackageStartupMessages(require(DESeq2))
 suppressPackageStartupMessages(require(tidyverse))
 
 # Read the params
-contrastToApply <- snakemake@params[["contrast"]]
+contrastToApply <- gsub("_diffPeaks.tsv", "", basename(snakemake@output[['diffTab']]))
 padjCutoff <- snakemake@params[["padjCutoff"]]
 log2FCcutoff <- snakemake@params[["log2FCcutoff"]]
 outdir <- snakemake@params[["outdir"]]
+normFactorsFiles <- snakemake@input[['logFile']]
 
+print(contrastToApply)
 # Read the file with raw counts
 cat("Reading raw counts\n")
 countsTab <- read.table(snakemake@input[['rawReadsOnPeaks']], check.names = F, header = TRUE, sep = "\t")
 #remove the chr, star, end columns
 countsTab <- countsTab[,-c(2,3,4)]
 #set rownames to region
-countsTab <- countsTab %>%  column_to_rownames("region")
+countsTab <- countsTab %>% column_to_rownames("region")
 
 colNames <- colnames(countsTab)
 
@@ -32,6 +34,7 @@ if (length(colNames) == 0){
   cat("Only one sample found, skipping differential analysis")
   quit(save =  "no",  status=0)
 }
+
 
 # Extract the parameters
 leftContrast <- strsplit(contrastToApply, "_vs_")[[1]][1]
@@ -47,7 +50,6 @@ group <- gsub(".*_", "", colNames)
 # now read normFactors from spike-in
 cat("Reading normFactors\n")
 
-normFactorsFiles <- snakemake@input[['logFile']]
 
 # Read the first line from each file
 normFactorsList <- sapply(normFactorsFiles, function(path) {
@@ -73,71 +75,120 @@ colData <- data.frame(sample = colnames(countsTab), condition = group)
 rownames(colData) <- colData$sample
 
 stopifnot(all(rownames(colData) %in% colnames(countsTab)))
-# Create the DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = countsTab, colData = colData, design = ~ condition)
 
-# Perform differential analysis
-stopifnot(colnames(assay(dds)) == colnames(normFactorsList))
-if (mean(normFactorsList) > 5000){
-  normFactorsList <- normFactorsList/10000
-}
+print(colData)
+#in case there is just one sample per group we cannot run deseq2, we simply calculate the logFC
 
-sizeFactors(dds) <- normFactorsList
-dds <- estimateDispersions(dds)
-dds <- nbinomWaldTest(dds)
-# Get the results
-results <- results(dds, contrast = c("condition", leftContrast, rightContrast))
+if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$condition) == 1) {
+  cat("Only one sample per group, skipping DESeq2 and only calculate log2FC!\n")
+  dds <- DESeqDataSetFromMatrix(countData = countsTab, colData = colData, design = ~ 1)
+  stopifnot(colnames(assay(dds)) == colnames(normFactorsList))
+  #we invert the normFactorsList, since this is the similar to adding a row to the countTab with the 
+  #number of spike-ins reads and then run:  dds <- estimateSizeFactors(dds, controlGenes=1)
+  #see here: https://support.bioconductor.org/p/9147716/
+  sizeFactors(dds) <- 1/normFactorsList
 
+  # Calculate vst and logFC
+  tableVST <- counts(dds,normalized = T) %>% as.data.frame() 
+  sample1 <- colData[colData$condition == leftContrast,]$sample
+  sample2 <- colData[colData$condition == rightContrast,]$sample
+  tableVST$log2FC <- log2(tableVST[,sample1]+0.01) - log2(tableVST[,sample2]+0.01)
+  cat("Saving results\n")
+  tableVST <- tableVST %>% rownames_to_column("region")
+  write.table(tableVST[,c('region',sample1, sample2, "log2FC")], file = snakemake@output[['diffTab']], sep = "\t", quote = F, row.names = F, col.names = T)
 
-#------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
-#PCA PLOT
-#------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
-cat("Plotting PCA\n")
-
-pcaPLot <- DESeq2::plotPCA(rlog(dds), intgroup = "condition", returnData = F) +
-  theme_bw() 
-
+  #------------------------------------------------------------------------------#
+  #------------------------------------------------------------------------------#
+  #scatter plot of logFC
+  #------------------------------------------------------------------------------#
+  #------------------------------------------------------------------------------#
+  minLim <- log2(min(c(tableVST[,sample1], tableVST[,sample2]))+0.01)
+  maxLim <- log2(max(c(tableVST[,sample1], tableVST[,sample2]))+0.01)
   
-pdf(paste0(outdir, 'pcaPlot.pdf'), width = 10, height = 10)
-pcaPLot
-dev.off()
-#------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
-#VOLCANO PLOT
-#------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
-cat("Plotting Volcano\n")
-resultsToPlot <- results %>%  
-  as.data.frame() %>%
-  mutate(
-    Levels = case_when(log2FoldChange >= log2FCcutoff & padj <= padjCutoff ~ paste0("Increased-binding in ", leftContrast),
-                       log2FoldChange <= -log2FCcutoff & padj <= padjCutoff ~ paste0("Increased-binding in", rightContrast) ,
-                       TRUE ~ "Unchanged")
-  )
+  plotScatter <- ggplot(tableVST, aes(x = log2(tableVST[,sample2]+0.01), y = log2(tableVST[,sample1]+0.01))) +
+    geom_point(aes(color = log2FC), alpha = 0.6) +
+    theme_bw() +
+    xlab(paste0("log2(", sample2, "+0.01)")) +
+    ylab(paste0("log2(", sample1, "+0.01)")) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed") + 
+    xlim(c(minLim, maxLim)) + ylim(c(minLim, maxLim)) +
+    theme(legend.position = "none")
+  
+  print(paste0(outdir, contrastToApply, "_log2_scatterPlot.pdf"))
+  pdf(paste0(outdir, contrastToApply, "_log2_scatterPlot.pdf"), width = 10, height = 10)
+  print(plotScatter)
+  dev.off()
+  #------------------------------------------------------------------------------#
+  #------------------------------------------------------------------------------#
+  
+} else {
+  # Create the DESeqDataSet object
+  dds <- DESeqDataSetFromMatrix(countData = countsTab, colData = colData, design = ~ condition)
 
-p2 <- ggplot(resultsToPlot, aes(log2FoldChange, -log(padj,10))) +
-  geom_point(aes(color = Levels)) +
-  xlab(expression("log2FC")) + 
-  ylab(expression("-log10(p-adjusted)")) +
-  scale_color_manual(values = c( "firebrick3","dodgerblue3",  "gray50"))+
-  theme_minimal()
+  # Perform differential analysis
+  stopifnot(colnames(assay(dds)) == colnames(normFactorsList))
+  #if (mean(normFactorsList) > 5000){
+  #  normFactorsList <- normFactorsList/10000
+  #}
+  sizeFactors(dds) <- 1/normFactorsList
+  dds <- estimateDispersions(dds)
+  dds <- nbinomWaldTest(dds)
+  # Get the results
+  results <- results(dds, contrast = c("condition", leftContrast, rightContrast))
 
-pdf(paste0(outdir, 'volcanoPlot.pdf'), width = 10, height = 10)
-p2
-dev.off()
-#------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
-# save table
-cat("Saving results\n")
 
-results <- results %>%
-            data.frame %>% 
-            round(3) %>% 
-            rownames_to_column(var = "region")
+  #------------------------------------------------------------------------------#
+  #------------------------------------------------------------------------------#
+  #PCA PLOT
+  #------------------------------------------------------------------------------#
+  #------------------------------------------------------------------------------#
+  cat("Plotting PCA\n")
 
-write.table(results, file = snakemake@output[['diffTab']], sep = "\t", quote = F, row.names = F, col.names = T)
+  pcaPLot <- DESeq2::plotPCA(rlog(dds), intgroup = "condition", returnData = F) +
+    theme_bw() 
+
+    
+  pdf(paste0(outdir,contrastToApply, '_pcaPlot.pdf'), width = 10, height = 10)
+  print(pcaPLot)
+  dev.off()
+  #------------------------------------------------------------------------------#
+  #------------------------------------------------------------------------------#
+  #VOLCANO PLOT
+  #------------------------------------------------------------------------------#
+  #------------------------------------------------------------------------------#
+  cat("Plotting Volcano\n")
+  resultsToPlot <- results %>%  
+    as.data.frame() %>%
+    mutate(
+      Levels = case_when(log2FoldChange >= log2FCcutoff & padj <= padjCutoff ~ paste0("Increased-binding in ", leftContrast),
+                        log2FoldChange <= -log2FCcutoff & padj <= padjCutoff ~ paste0("Increased-binding in", rightContrast) ,
+                        TRUE ~ "Unchanged")
+    )
+
+  p2 <- ggplot(resultsToPlot, aes(log2FoldChange, -log(padj,10))) +
+    geom_point(aes(color = Levels)) +
+    xlab(expression("log2FC")) + 
+    ylab(expression("-log10(p-adjusted)")) +
+    scale_color_manual(values = c( "firebrick3","dodgerblue3",  "gray50"))+
+    theme_minimal()
+
+  pdf(paste0(outdir,contrastToApply,'_volcanoPlot.pdf'), width = 10, height = 10)
+  print(p2)
+  dev.off()
+  #------------------------------------------------------------------------------#
+  #------------------------------------------------------------------------------#
+  #------------------------------------------------------------------------------#
+  # save table
+  cat("Saving results\n")
+
+  results <- results %>%
+              data.frame %>% 
+              round(3) %>% 
+              rownames_to_column(var = "region")
+
+  write.table(results, file = snakemake@output[['diffTab']], sep = "\t", quote = F, row.names = F, col.names = T)
+
+
+}
 
 cat("Done\n")

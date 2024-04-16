@@ -26,8 +26,13 @@ properties:
     properties:
       perform_diff_analysis:
         type: boolean
-      contrast:
-        type: string
+      contrasts:
+        type: object
+        additionalProperties:
+          type: array
+          items:
+            type: string
+            minItems : 1
       padjust:
         type: number
       log2FCcutoff:

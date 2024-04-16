@@ -101,6 +101,16 @@ if veryBroadSamples:
         key: value for key, value in reps_dict_verybroad.items() if len(value) > 1
     }  # we keep only those with more than 1 rep
 
+# since the consensus peaks are divided by antibody, we need to create a dictionary with the samples for each antibody
+antibody_dict = {}  
+for antibody in samples_sheet["antibody"].dropna().unique():
+    antibody_dict[antibody] = [
+    "{}-rep{}".format(sample, rep)
+    for sample, rep in samples_sheet[samples_sheet["antibody"] == antibody]
+    .index.unique()
+    .tolist()
+    ]
+
 # -------------------- wildcard constraints --------------------#
 
 
@@ -254,24 +264,48 @@ def perform_checks(input_df):
 
     # 8. check if the contrast is correctly defined
     if config["diffPeakAnalysis"]["perform_diff_analysis"]:
-        contrastToCheck = config["diffPeakAnalysis"]["contrast"]
-        all_conditions = [sample.rsplit("_",1)[1] for sample in input_df.index.get_level_values("sample").unique().tolist()]
-        # check the format of the contrast
-        if "_vs_" in contrastToCheck:
-            contrast = contrastToCheck.split("_vs_")
-            if len(contrast) != 2:
+        contrastsToCheck = config["diffPeakAnalysis"]["contrasts"]
+        # diff bind analysis is performed only on the samples with antibody (and with same antibody value)
+        for antibodyItem in contrastsToCheck:
+            # we check that the antibody is present in the samplesheet
+            if antibodyItem not in input_df[['antibody']].values:
                 raise ValueError(
-                    "The contrast should be defined as 'condA_vs_condB'. Please check the contrast definition in the config file"
+                    "Please indicate a valid antibody in the contrasts (config file) for the differential binding analysis\n"+
+                    "The antibody has to be defined in the samplesheet for each sampel (not input)"
                 )
-            if contrast[0] not in all_conditions or contrast[1] not in all_conditions:
-                raise ValueError(
-                    "One of the condition in the contrast is not present in the samplesheet. Please check the contrast definition in the config file"
-                )
-        else:
-            raise ValueError(
-                "The contrast should be defined as 'condA_vs_condB'. Please check the contrast definition in the config file"
-            )
+            subdf = input_df[input_df['antibody'] == antibodyItem]
+            sample_groups_antibody =  [sample.rsplit("_",1)[1] for sample in subdf.index.get_level_values("sample").unique().tolist()]
+            #we check that the conditions in the contrast are present in the samplesheet and with right format
+            for contrast in contrastsToCheck[antibodyItem]:
+                if "_vs_" in contrast:
+                    contrastElem = contrast.split("_vs_")
+                    if len(contrastElem) != 2:
+                        raise ValueError(
+                            "The contrast should be defined as 'groupA_vs_groupB'. Please check the contrast definition in the config file\n"+
+                            "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                        )
+                    if contrastElem[0] not in sample_groups_antibody or contrastElem[1] not in sample_groups_antibody:
+                        raise ValueError(
+                            "One of the group in the contrast is not present in the samplesheet. Please check the contrast definition in the config file\n"+
+                            "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
 
+                        )
+                    if contrastElem[0] == contrastElem[1]:
+                        raise ValueError(
+                            "The groups in the contrast should be different. Please check the contrast definition in the config file\n"+
+                            "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                        )
+                else:
+                    raise ValueError(
+                        "The contrast should be defined as 'groupA_vs_groupB'. Please check the contrast definition in the config file\n"+
+                        "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                    )
+            # 9. if contrast is okay, we need to check the peak type are the same for all samples
+            if len(subdf.peak_type.unique()) > 1:
+                raise ValueError("The peak type is not the same for all samples with antibody {}. For differential peaks please specify same peak type".format(antibodyItem))
+            if subdf.peak_type.unique() == "very-broad":
+                raise ValueError("The differential binding analysis can not be performed on very-broad peaks")
+                
 
 # -------------------- Sample sheet Sanity checks ---------------#
 
@@ -365,7 +399,16 @@ def input_toget():
 
     # we need the consensus peaks for the differential analysis
     if config["diffPeakAnalysis"]["perform_diff_analysis"]:
-        return bigWigs + peak_files + QCfiles + annot_files + ["{}results/differentialAnalysis/diffPeaks.tsv".format(outdir)] 
+        diff_peak_files = []
+        # we add to otputs the different combinations of antibody and contrast
+        for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items():
+            for contrast in contrasts:
+                path = "{outdir}results/differentialAnalysis/{antibody}/{contrast}_diffPeaks.tsv".format(
+                    outdir=outdir, antibody=antibody, contrast=contrast
+                )
+                diff_peak_files.append(path)
+
+        return bigWigs + peak_files + QCfiles + annot_files + diff_peak_files  
     else:
         return bigWigs + peak_files + QCfiles + annot_files
 
@@ -514,6 +557,19 @@ def get_singelRep_peaks(wildcards):
         )
 
 
+def get_bams_by_antibody(wildcards):
+    """Function that returns the bam files for the antibody for the consensus peaks"""
+    return expand(
+        "{}results/bam/{{sample}}_ref.sorted.bam".format(outdir),
+        sample=antibody_dict[wildcards.antibody],
+    )
+
+def get_normFactor_by_antibody(wildcards):
+    """Function that returns the normalization factors for the antibody for the diff peaks analysis"""
+    return expand(
+        "{}results/logs/spike/{{sample}}.normFactor".format(outdir),
+        sample=antibody_dict[wildcards.antibody],
+    )
 # --------------------  Rules Functions ---------------#
 def normalization_factor(wildcards):
     """
