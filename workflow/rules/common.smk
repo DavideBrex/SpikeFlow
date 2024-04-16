@@ -322,7 +322,7 @@ def input_toget():
 
     # qc and peak calling
     QCfiles = [
-        "{}results/QC/multiqc/multiqc_report.html".format(outdir),
+        "{}results/QC/multiqc/SpikeFlow_multiqc_report.html".format(outdir),
         "{}results/QC/peaks_annotation_mqc.tsv".format(outdir),
     ]
     peak_files = []

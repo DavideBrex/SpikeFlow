@@ -159,8 +159,15 @@ rule multiqc:
         tab_epic2=rules.create_qc_table_epic2.  output.tab,
         tab_edd=rules.create_qc_table_edd.output.tab,
         tab_peakAnnot=rules.create_qc_table_peakAnnot.output.tab,
+        plotDiffAnalysis=expand(
+            "{outdir}results/differentialAnalysis/{{antibody}}/{{contrast}}_diffPeaks.tsv".format(outdir=outdir),
+            antibody=config["diffPeakAnalysis"]["contrasts"].keys(),
+            contrast=list(set().union(*config["diffPeakAnalysis"]["contrasts"].values())),  
+        )
+        if config["diffPeakAnalysis"]["perform_diff_analysis"] 
+        else "",
     output:
-        multiqc="{}results/QC/multiqc/multiqc_report.html".format(outdir),
+        multiqc="{}results/QC/multiqc/SpikeFlow_multiqc_report.html".format(outdir),
     log:
         "{}results/logs/QC/multiqc/multiqc.log".format(outdir),
     conda:
@@ -175,6 +182,7 @@ rule multiqc:
         --exclude macs2 \
         --ignore-samples *spike \
         --force \
+        --config config/multiqc_config.yaml \
         2> {log}
         """
 

@@ -24,6 +24,8 @@ diffPeakAnalysis:
       - "EGF_vs_untreated"
   padjust: 0.01
   log2FCcutoff: 1.5
+  #minNumSamples: number indicating in how many samples a peak should be present in order to be kept for the consensus peak set
+  minNumSamples: 1 
 
 resources:
   ref: 

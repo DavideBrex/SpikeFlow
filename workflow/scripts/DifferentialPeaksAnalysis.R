@@ -107,15 +107,20 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
   
   plotScatter <- ggplot(tableVST, aes(x = log2(tableVST[,sample2]+0.01), y = log2(tableVST[,sample1]+0.01))) +
     geom_point(aes(color = log2FC), alpha = 0.6) +
-    theme_bw() +
     xlab(paste0("log2(", sample2, "+0.01)")) +
     ylab(paste0("log2(", sample1, "+0.01)")) +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed") + 
     xlim(c(minLim, maxLim)) + ylim(c(minLim, maxLim)) +
-    theme(legend.position = "none")
+    theme(legend.position = "none") +
+    theme_bw(base_size=15)
+
   
   print(paste0(outdir, contrastToApply, "_log2_scatterPlot.pdf"))
   pdf(paste0(outdir, contrastToApply, "_log2_scatterPlot.pdf"), width = 10, height = 10)
+  print(plotScatter)
+  dev.off()
+  #png for multiqc
+  png(paste0(outdir, contrastToApply, "_log2_scatterPlot_mqc.png"), , width=800, height=800)
   print(plotScatter)
   dev.off()
   #------------------------------------------------------------------------------#
@@ -145,10 +150,14 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
   cat("Plotting PCA\n")
 
   pcaPLot <- DESeq2::plotPCA(rlog(dds), intgroup = "condition", returnData = F) +
-    theme_bw() 
+    theme_bw(base_size = 17) +
+    labs(title = "PCA plot", color='Group')
 
-    
   pdf(paste0(outdir,contrastToApply, '_pcaPlot.pdf'), width = 10, height = 10)
+  print(pcaPLot)
+  dev.off()
+  #png for multiqc
+  png(paste0(outdir,contrastToApply, '_pcaPlot_mqc.png'), width=800, height=800)
   print(pcaPLot)
   dev.off()
   #------------------------------------------------------------------------------#
@@ -170,9 +179,14 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
     xlab(expression("log2FC")) + 
     ylab(expression("-log10(p-adjusted)")) +
     scale_color_manual(values = c( "firebrick3","dodgerblue3",  "gray50"))+
-    theme_minimal()
+    theme_minimal(base_size = 17)+
+    labs(title = "Volcano plot")
 
-  pdf(paste0(outdir,contrastToApply,'_volcanoPlot.pdf'), width = 10, height = 10)
+  pdf(paste0(outdir,contrastToApply,'_volcanoPlot.pdf'), width = 11, height = 10)
+  print(p2)
+  dev.off()
+  #png for multiqc
+  png(paste0(outdir,contrastToApply,'_volcanoPlot_mqc.png'), width=10000, height=800)
   print(p2)
   dev.off()
   #------------------------------------------------------------------------------#

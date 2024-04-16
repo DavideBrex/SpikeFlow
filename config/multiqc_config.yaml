@@ -1,0 +1,27 @@
+title: "SpikeFlow"
+subtitle: "A snakemake pipeline for the analysis of ChIP-Rx data"
+intro_text: "MultiQC reports summarise analysis results."
+report_comment: ""
+show_analysis_paths: False
+show_analysis_time: False
+skip_versions_section: true
+
+custom_logo: "../LogoSpikeFlow.png"
+
+module_order:
+    - general_stats
+    - bowtie2
+    - samblaster
+    - SplitBam_Reads
+    - peakSection
+    - peaks_annotation
+    - deepTools
+    - fastqc
+
+top_modules:
+    -general_stats
+    -bowtie2
+    -samblaster
+    -SplitBam_Reads
+    -peakSection
+    -peaks_annotation
