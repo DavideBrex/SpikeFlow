@@ -27,20 +27,29 @@ rule merge_rep_peaks:
 
 rule consensus_peaks:
     input:
-        expand(
+        narrowCalled=expand(
             "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
                 outdir
             ),
-            sample=narrowSamples)
+            sample=narrowSamples),
+        broadCalled=expand(
+            "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(
+                outdir
+            ),
+            sample=broadSamples),
     output:
-        "{outdir}results/peakCalling/mergedPeaks/consensusPeaks.bed".format(outdir=outdir),
+        outTab="{}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
+            outdir
+            ),
     params:
-        min_num_reps=2,
+        min_num_reps=config["diffPeakAnalysis"]["minNumSamples"],
+        antibody=lambda w: config["diffPeakAnalysis"]["contrasts"][w.antibody],
+        sampleNamesToUse=lambda w: antibody_dict[w.antibody],
     log:
-        "{outdir}results/logs/peakCalling/mergedPeaks/consensusPeaks.log".format(outdir=outdir),
+        "{outdir}results/logs/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.log".format(outdir=outdir),
     threads: 1
     benchmark:
-        "{}results/.benchmarks/consensusPeaks.benchmark.txt".format(outdir)
+        "{}results/.benchmarks/{{antibody}}_consensusPeaks.benchmark.txt".format(outdir)
     conda:
         "../envs/various.yaml"
     script:
@@ -49,22 +58,17 @@ rule consensus_peaks:
 
 rule count_reads_on_peaks:
     input:
-        bamFiles=expand(
-            "{}results/bam/{{sample}}_ref.sorted.bam".format(
-                outdir
-            ),
-            sample=narrowSamples
-        ),
-        consensus_peaks="{outdir}results/peakCalling/mergedPeaks/consensusPeaks.bed".format(outdir=outdir),
+        bamFiles=get_bams_by_antibody,
+        consensus_peaks="{outdir}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(outdir=outdir),
     output:
-        output_tsv="{outdir}results/peakCalling/mergedPeaks/readsOnConsensusPeaks.tsv".format(outdir=outdir),
+        output_tsv="{outdir}results/peakCalling/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(outdir=outdir),
     params:
         joined_bams=lambda w, input: ",".join(input.bamFiles),
         map_qual=config["params"]["bowtie2"]["map_quality"],
     log:
-        "{}results/logs/peakCalling/mergedPeaks/countReadsOnPeaks.log".format(outdir),
+        "{}results/logs/peakCalling/mergedPeaks/{{antibody}}_countReadsOnPeaks.log".format(outdir),
     benchmark:
-        "{}results/.benchmarks/countReadsOnPeaks.benchmark.txt".format(outdir)
+        "{}results/.benchmarks/{{antibody}}_countReadsOnPeaks.benchmark.txt".format(outdir)
     conda:
         "../envs/various.yaml"
     shell:

@@ -10,6 +10,8 @@ sys.stderr = sys.stdout
 # Assuming snakemake.input is a list of peak files and snakemake.output is the output file path
 peak_files = snakemake.input
 output_path = snakemake.output[0]
+antibody = snakemake.params.antibody
+sampleNamesToUse = snakemake.params.sampleNamesToUse
 
 # Minimum number of replicates a peak must be present in to be included
 min_num_reps = snakemake.params.min_num_reps
@@ -17,11 +19,14 @@ min_num_reps = snakemake.params.min_num_reps
 #check if bedtools is installed
 assert shutil.which('bedtools') is not None, "ERROR! bedtools is not installed, can't create consensus peaks. Please check conda env."
 
+#we want to merge only the peaks that are from the same antibody
+peak_files_subset= [p for p in peak_files if os.path.basename(p).rsplit('_',1)[0] in sampleNamesToUse]
+print("Merging peaks from the following files:{}".format(peak_files_subset))
 
 # Create a temporary file for merged peaks
 temp_merged_peaks_path = output_path + ".tmp_merged_peaks.bed"
 with open(temp_merged_peaks_path, 'w') as temp_file:
-    cmd = f"cat {' '.join(peak_files)} | sort -k1,1 -k2,2n | bedtools merge -i stdin -d 150 -c 4,5,6,7,8,9,10 -o collapse,mean,collapse,mean,collapse,collapse,collapse"
+    cmd = f"cat {' '.join(peak_files_subset)} | sort -k1,1 -k2,2n | bedtools merge -i stdin -d 150 -c 4,5,6,7,8,9,10 -o collapse,mean,collapse,mean,collapse,collapse,collapse"
     subprocess.run(cmd, shell=True, stdout=temp_file)
 
 # Process the merged peaks

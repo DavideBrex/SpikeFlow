@@ -19,7 +19,9 @@ normalization_type: "Orlando"
 #the group for the samples will be extracted from the sample name (after the last _)
 diffPeakAnalysis:
   perform_diff_analysis: true
-  contrast: "EGF_vs_untreated"
+  contrasts:
+    H3K4me3:
+      - "EGF_vs_untreated"
   padjust: 0.01
   log2FCcutoff: 1.5
 
