@@ -304,7 +304,10 @@ def perform_checks(input_df):
             if len(subdf.peak_type.unique()) > 1:
                 raise ValueError("The peak type is not the same for all samples with antibody {}. For differential peaks please specify same peak type".format(antibodyItem))
             if subdf.peak_type.unique() == "very-broad":
-                raise ValueError("The differential binding analysis can not be performed on very-broad peaks")
+                raise ValueError(
+                    "The differential binding analysis can not be performed on very-broad peaks.\n"+
+                    "Consider to change peak type or disable the differential binding analysis in the config file!"
+                )
                 
 
 # -------------------- Sample sheet Sanity checks ---------------#
@@ -403,7 +406,7 @@ def input_toget():
         # we add to otputs the different combinations of antibody and contrast
         for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items():
             for contrast in contrasts:
-                path = "{outdir}results/differentialAnalysis/{antibody}/{contrast}_diffPeaks.tsv".format(
+                path = "{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
                     outdir=outdir, antibody=antibody, contrast=contrast
                 )
                 diff_peak_files.append(path)
@@ -570,6 +573,15 @@ def get_normFactor_by_antibody(wildcards):
         "{}results/logs/spike/{{sample}}.normFactor".format(outdir),
         sample=antibody_dict[wildcards.antibody],
     )
+    
+def get_contrasts_by_antibody(wildcards):
+    """Function that returns the contrasts for the antibody for the diff peaks analysis"""
+    return expand(
+            "{}results/differentialAnalysis/{{antibody}}/{{contrast}}_diffPeaks.tsv".format(outdir),
+            antibody=wildcards.antibody,
+            contrast=config["diffPeakAnalysis"]["contrasts"][wildcards.antibody],  
+        )
+
 # --------------------  Rules Functions ---------------#
 def normalization_factor(wildcards):
     """

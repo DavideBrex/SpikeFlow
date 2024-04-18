@@ -159,11 +159,9 @@ rule multiqc:
         tab_epic2=rules.create_qc_table_epic2.  output.tab,
         tab_edd=rules.create_qc_table_edd.output.tab,
         tab_peakAnnot=rules.create_qc_table_peakAnnot.output.tab,
-        plotDiffAnalysis=expand(
-            "{outdir}results/differentialAnalysis/{{antibody}}/{{contrast}}_diffPeaks.tsv".format(outdir=outdir),
-            antibody=config["diffPeakAnalysis"]["contrasts"].keys(),
-            contrast=list(set().union(*config["diffPeakAnalysis"]["contrasts"].values())),  
-        )
+        plotDiffAnalysis=["{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
+            outdir=outdir, antibody=antibody, contrast=contrast
+            ) for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items() for contrast in contrasts]
         if config["diffPeakAnalysis"]["perform_diff_analysis"] 
         else "",
     output:

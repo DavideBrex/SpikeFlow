@@ -6,7 +6,7 @@ rule differential_peaks:
         ),
         logFile=get_normFactor_by_antibody,
     output:
-        diffTab="{outdir}results/differentialAnalysis/{{antibody}}/{{contrast}}_diffPeaks.tsv".format(outdir=outdir),
+        diffTab="{outdir}results/differentialAnalysis/{{antibody}}/{{antibody}}_{{contrast}}_diffPeaks.tsv".format(outdir=outdir),
     params:
         padjCutoff=config["diffPeakAnalysis"]["padjust"],
         log2FCcutoff=config["diffPeakAnalysis"]["log2FCcutoff"],
