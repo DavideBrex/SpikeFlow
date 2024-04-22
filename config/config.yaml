@@ -12,8 +12,8 @@ trimming: true
 
 aligner: bowtie2
 
-#type of normalization to perform to generate the bigwig files (one from RAW, Orlando , RX-Input)
-normalization_type: "Orlando"
+#type of normalization to perform to generate the bigwig files (one from RAW, Orlando , RX-Input, Downsampling, Median)
+normalization_type: "Downsampling"
 
 #choose whether you want to perform differential peaks analysis
 #the group for the samples will be extracted from the sample name (after the last _)
@@ -28,7 +28,7 @@ diffPeakAnalysis:
   #minNumSamples: number indicating in how many samples a peak should be present in order to be kept for the consensus peak set
   minNumSamples: 1 
   #useSpikeIncalledPeaks: if true, the peaks called with spiker (so spike in nornmalised) will be used for the consensus peak set
-  useSpikeinCalledPeaks: true
+  useSpikeinCalledPeaks: false
 
 
 

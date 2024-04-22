@@ -62,9 +62,15 @@ rule create_qc_table_splitBam:
             "{}results/logs/spike/{{id}}.removeSpikeDups".format(outdir),
             id=set(idSamples),
         ),
+        normFactorsFiles=expand(
+            "{}results/logs/spike/{{id}}.normFactor".format(outdir),
+            id=set(idSamples),
+        ),
     output:
         tab="{}results/QC/SplitBam_qc_FULL.tsv".format(outdir),
         tab_multiqc="{}results/QC/SplitBam_Reads_mqc.tsv".format(outdir),
+    params:
+        normType=config["normalization_type"],
     log:
         "{}results/logs/QC/SplitBam_qc.log".format(outdir),
     conda:

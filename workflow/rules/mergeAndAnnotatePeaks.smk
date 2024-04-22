@@ -29,19 +29,25 @@ rule merge_rep_peaks:
 rule consensus_peaks:
     input:
         narrowCalled=expand(
-            "{}results/peakCallingNorm/{{sample}}_narrowpeaks.narrowPeak".format(outdir),
+            "{}results/peakCallingNorm/{{sample}}_narrowpeaks.narrowPeak".format(
+                outdir
+            ),
             sample=narrowSamples,
-        )  if  config["diffPeakAnalysis"]["useSpikeinCalledPeaks"] else expand(
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else expand(
             "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
             sample=narrowSamples,
         ),
         broadCalled=expand(
             "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(outdir),
             sample=broadSamples,
-        ) if  config["diffPeakAnalysis"]["useSpikeinCalledPeaks"] else expand(
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else expand(
             "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(outdir),
             sample=broadSamples,
-        ) ,
+        ),
     output:
         outTab="{}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
             outdir

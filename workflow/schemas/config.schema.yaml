@@ -21,6 +21,8 @@ properties:
         - RAW
         - Orlando
         - RX-Input
+        - Downsampling
+        - Median
   diffPeakAnalysis:
     type: object
     properties:
@@ -37,6 +39,10 @@ properties:
         type: number
       log2FCcutoff:
         type: number
+      minNumSamples:
+        type: integer
+      useSpikeinCalledPeaks:
+        type: boolean
 
   resources:
     type: object
