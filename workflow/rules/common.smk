@@ -2,6 +2,7 @@ import os
 from snakemake.utils import validate
 import pandas as pd
 import numpy as np
+import re
 
 # We start by checking the input files (samples_sheet and config.yaml) to ensure that their format is correct
 
@@ -104,6 +105,8 @@ if veryBroadSamples:
 # since the consensus peaks are divided by antibody, we need to create a dictionary with the samples for each antibody
 antibody_dict = {}  
 for antibody in samples_sheet["antibody"].dropna().unique():
+    if not bool(re.fullmatch("[a-zA-Z0-9]+", antibody)):
+        raise ValueError("The antibody name should contain only letters and numbers (no special characters)")
     antibody_dict[antibody] = [
     "{}-rep{}".format(sample, rep)
     for sample, rep in samples_sheet[samples_sheet["antibody"] == antibody]
@@ -271,10 +274,16 @@ def perform_checks(input_df):
             if antibodyItem not in input_df[['antibody']].values:
                 raise ValueError(
                     "Please indicate a valid antibody in the contrasts (config file) for the differential binding analysis\n"+
-                    "The antibody has to be defined in the samplesheet for each sampel (not input)"
+                    "The antibody has to be defined in the samplesheet for each sample (not input)"
                 )
             subdf = input_df[input_df['antibody'] == antibodyItem]
             sample_groups_antibody =  [sample.rsplit("_",1)[1] for sample in subdf.index.get_level_values("sample").unique().tolist()]
+            #we check that the group defined in the the sample sheet (after _ in the sample name) does not contain special characters
+            if not all([bool(re.fullmatch(r"[a-zA-Z0-9]+", group)) for group in sample_groups_antibody]):
+                raise ValueError(
+                    "The group names in the samplesheet should contain only letters and numbers (no special characters).\n"+
+                    "Please check the group definition in the sample column of sample_sheet.csv. Group has to be defined as 'sampleName_groupA'"
+                )
             #we check that the conditions in the contrast are present in the samplesheet and with right format
             for contrast in contrastsToCheck[antibodyItem]:
                 if "_vs_" in contrast:
@@ -293,6 +302,13 @@ def perform_checks(input_df):
                     if contrastElem[0] == contrastElem[1]:
                         raise ValueError(
                             "The groups in the contrast should be different. Please check the contrast definition in the config file\n"+
+                            "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                        )
+                    if bool(re.match(r"[a-zA-Z0-9]+", contrastElem[0])) and bool(re.match(r"[a-zA-Z0-9]+", contrastElem[1])):
+                        pass
+                    else:
+                        raise ValueError(
+                            "The group names in the contrast should contain only letters and numbers (no special characters). Please check the contrast definition in the config file\n"+
                             "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
                         )
                 else:

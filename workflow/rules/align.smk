@@ -54,7 +54,7 @@ rule split_bam:
         sample_spike_bai="{}results/bam/{{id}}_spike.sorted.bam.bai".format(outdir),
     threads: config["threads"]["samtools"],
     params:
-        outprefix="{}results/bam/{{id}}".format(outdir),
+        outprefix=lambda w, input: input.sample_mixed.split(os.extsep)[0],
         map_qual=config["params"]["bowtie2"]["map_quality"],
     conda:
         "../envs/various.yaml"

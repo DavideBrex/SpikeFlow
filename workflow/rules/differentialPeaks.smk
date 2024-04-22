@@ -11,7 +11,7 @@ rule differential_peaks:
         padjCutoff=config["diffPeakAnalysis"]["padjust"],
         log2FCcutoff=config["diffPeakAnalysis"]["log2FCcutoff"],
         normMethod=config["normalization_type"],
-        outdir='{outdir}results/differentialAnalysis/{{antibody}}/'.format(outdir=outdir),
+        outdir=lambda w, output: os.path.dirname(output["diffTab"])+"/",
     log:
         "{}results/logs/DifferentialAnalysis/{{antibody}}_{{contrast}}_DifferentialAnalysis.log".format(outdir),
     conda:

@@ -64,7 +64,7 @@ rule create_bowtie_index:
             mkdir resources/reference_genome/index/
 
             # add flag to Exogenous genome chromosome names to distinguish from endogenous genome
-            awk '/^>/ {{sub(/^>/, ">EXO_")}} 1' {input.spikeGenome} > resources/spike_genome/exo.tmp.fa
+            awk 'match($0, "^>") {{sub("^>", ">EXO_")}} 1' {input.spikeGenome} > resources/spike_genome/exo.tmp.fa
 
             # merge endogenous and exogenous genomes
             cat {input.refGenome} resources/spike_genome/exo.tmp.fa > resources/reference_genome/mergedGenome.fa

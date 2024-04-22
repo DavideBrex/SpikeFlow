@@ -22,7 +22,7 @@ rule macs2_callNarrowPeak:
         gsize=config["params"]["deeptools"]["effective_genome_length"],
         qval=config["params"]["peakCalling"]["macs2"]["qvalue"],
         otherParams=config["params"]["peakCalling"]["macs2"]["extraOptions"],
-        output_dir="{}results/peakCalling/macs2/".format(outdir),
+        output_dir=lambda w, output: os.path.dirname(output[0]),
     benchmark:
         "{}results/.benchmarks/{{sample}}.macs2.benchmark.txt".format(outdir)
     conda:
@@ -66,7 +66,7 @@ rule macs2_callNormPeaks:
         "{}results/logs/peakCallingNorm/{{sample}}_callNormPeak.log".format(outdir),
     params:
         scaleFactors=lambda wildcards: spiker_normalization_factor(wildcards),
-        output_dir="{}results/peakCallingNorm/{{sample}}".format(outdir),
+        output_prefix=lambda w, output: output[0].split(os.extsep)[0],
         peak_type=lambda wildcards: check_peak_type(wildcards),
         gsize=config["params"]["deeptools"]["effective_genome_length"],
         qvalue=config["params"]["peakCalling"]["macs2"]["qvalue"],
@@ -84,14 +84,14 @@ rule macs2_callNormPeaks:
             --genome-size {params.gsize} \
             --bw  \
             --cleanup \
-            -o {params.output_dir} &> {log}
+            -o {params.output_prefix} &> {log}
 
         #we modify the output peak names in the narrow (first case) or broad (else) files
         if [ -z {params.peak_type} ]    
         then
-            sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Peak\\)\\([0-9]\\)/\\1_\\2/g' {params.output_dir}.narrowPeak 2>> {log}
+            sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Peak\\)\\([0-9]\\)/\\1_\\2/g' {params.output_prefix}.narrowPeak 2>> {log}
         else
-            sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Peak\\)\\([0-9]\\)/\\1_\\2/g' {params.output_dir}.broadPeak 2>> {log}
+            sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Peak\\)\\([0-9]\\)/\\1_\\2/g' {params.output_prefix}.broadPeak 2>> {log}
         fi
         """
 
