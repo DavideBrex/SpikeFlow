@@ -6,14 +6,18 @@ rule differential_peaks:
         ),
         logFile=get_normFactor_by_antibody,
     output:
-        diffTab="{outdir}results/differentialAnalysis/{{antibody}}/{{antibody}}_{{contrast}}_diffPeaks.tsv".format(outdir=outdir),
+        diffTab="{outdir}results/differentialAnalysis/{{antibody}}/{{antibody}}_{{contrast}}_diffPeaks.tsv".format(
+            outdir=outdir
+        ),
     params:
         padjCutoff=config["diffPeakAnalysis"]["padjust"],
         log2FCcutoff=config["diffPeakAnalysis"]["log2FCcutoff"],
         normMethod=config["normalization_type"],
-        outdir=lambda w, output: os.path.dirname(output["diffTab"])+"/",
+        outdir=lambda w, output: os.path.dirname(output["diffTab"]) + "/",
     log:
-        "{}results/logs/DifferentialAnalysis/{{antibody}}_{{contrast}}_DifferentialAnalysis.log".format(outdir),
+        "{}results/logs/DifferentialAnalysis/{{antibody}}_{{contrast}}_DifferentialAnalysis.log".format(
+            outdir
+        ),
     conda:
         "../envs/Renv.yaml"
     script:

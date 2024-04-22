@@ -43,6 +43,7 @@ if config["aligner"] == "bowtie2":
             samtools index {output.bam}
             """
 
+
 rule split_bam:
     input:
         sample_mixed="{}results/bam/{{id}}.tmp.bam".format(outdir),
@@ -52,7 +53,7 @@ rule split_bam:
         sample_spike="{}results/bam/{{id}}_spike.sorted.bam".format(outdir),
         sample_ref_bai="{}results/bam/{{id}}_ref.sorted.bam.bai".format(outdir),
         sample_spike_bai="{}results/bam/{{id}}_spike.sorted.bam.bai".format(outdir),
-    threads: config["threads"]["samtools"],
+    threads: config["threads"]["samtools"]
     params:
         outprefix=lambda w, input: input.sample_mixed.split(os.extsep)[0],
         map_qual=config["params"]["bowtie2"]["map_quality"],
@@ -65,6 +66,3 @@ rule split_bam:
         "{}results/.benchmarks/{{id}}.split_bam.benchmark.txt".format(outdir)
     script:
         "../scripts/split_bam.py"
-
-
-

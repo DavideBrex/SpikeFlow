@@ -77,20 +77,6 @@ rule create_bowtie_index:
         """
 
 
-# Rule priority
-if config["resources"]["ref"]["index"]:
-
-    ruleorder: return_genome_path > create_bowtie_index
-
-else:
-
-    ruleorder: create_bowtie_index > return_genome_path
-
-
-# SPIKE IN RULES
-
-
-
 rule get_spike_genome:
     output:
         faFile="resources/spike_genome/{assemblySpike}.fa",
@@ -106,3 +92,12 @@ rule get_spike_genome:
     script:
         "../scripts/download_genome.py"
 
+
+# Rule priority
+if config["resources"]["ref"]["index"]:
+
+    ruleorder: return_genome_path > create_bowtie_index
+
+else:
+
+    ruleorder: create_bowtie_index > return_genome_path

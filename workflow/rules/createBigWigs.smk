@@ -33,4 +33,3 @@ rule bam2bigwig_general:
                     --outFileFormat bigwig \
                     > {log} 2>&1
         """
-

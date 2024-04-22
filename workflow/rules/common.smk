@@ -103,15 +103,17 @@ if veryBroadSamples:
     }  # we keep only those with more than 1 rep
 
 # since the consensus peaks are divided by antibody, we need to create a dictionary with the samples for each antibody
-antibody_dict = {}  
+antibody_dict = {}
 for antibody in samples_sheet["antibody"].dropna().unique():
     if not bool(re.fullmatch("[a-zA-Z0-9]+", antibody)):
-        raise ValueError("The antibody name should contain only letters and numbers (no special characters)")
+        raise ValueError(
+            "The antibody name should contain only letters and numbers (no special characters)"
+        )
     antibody_dict[antibody] = [
-    "{}-rep{}".format(sample, rep)
-    for sample, rep in samples_sheet[samples_sheet["antibody"] == antibody]
-    .index.unique()
-    .tolist()
+        "{}-rep{}".format(sample, rep)
+        for sample, rep in samples_sheet[samples_sheet["antibody"] == antibody]
+        .index.unique()
+        .tolist()
     ]
 
 # -------------------- wildcard constraints --------------------#
@@ -271,60 +273,76 @@ def perform_checks(input_df):
         # diff bind analysis is performed only on the samples with antibody (and with same antibody value)
         for antibodyItem in contrastsToCheck:
             # we check that the antibody is present in the samplesheet
-            if antibodyItem not in input_df[['antibody']].values:
+            if antibodyItem not in input_df[["antibody"]].values:
                 raise ValueError(
-                    "Please indicate a valid antibody in the contrasts (config file) for the differential binding analysis\n"+
-                    "The antibody has to be defined in the samplesheet for each sample (not input)"
+                    "Please indicate a valid antibody in the contrasts (config file) for the differential binding analysis\n"
+                    + "The antibody has to be defined in the samplesheet for each sample (not input)"
                 )
-            subdf = input_df[input_df['antibody'] == antibodyItem]
-            sample_groups_antibody =  [sample.rsplit("_",1)[1] for sample in subdf.index.get_level_values("sample").unique().tolist()]
-            #we check that the group defined in the the sample sheet (after _ in the sample name) does not contain special characters
-            if not all([bool(re.fullmatch(r"[a-zA-Z0-9]+", group)) for group in sample_groups_antibody]):
+            subdf = input_df[input_df["antibody"] == antibodyItem]
+            sample_groups_antibody = [
+                sample.rsplit("_", 1)[1]
+                for sample in subdf.index.get_level_values("sample").unique().tolist()
+            ]
+            # we check that the group defined in the the sample sheet (after _ in the sample name) does not contain special characters
+            if not all(
+                [
+                    bool(re.fullmatch(r"[a-zA-Z0-9]+", group))
+                    for group in sample_groups_antibody
+                ]
+            ):
                 raise ValueError(
-                    "The group names in the samplesheet should contain only letters and numbers (no special characters).\n"+
-                    "Please check the group definition in the sample column of sample_sheet.csv. Group has to be defined as 'sampleName_groupA'"
+                    "The group names in the samplesheet should contain only letters and numbers (no special characters).\n"
+                    + "Please check the group definition in the sample column of sample_sheet.csv. Group has to be defined as 'sampleName_groupA'"
                 )
-            #we check that the conditions in the contrast are present in the samplesheet and with right format
+            # we check that the conditions in the contrast are present in the samplesheet and with right format
             for contrast in contrastsToCheck[antibodyItem]:
                 if "_vs_" in contrast:
                     contrastElem = contrast.split("_vs_")
                     if len(contrastElem) != 2:
                         raise ValueError(
-                            "The contrast should be defined as 'groupA_vs_groupB'. Please check the contrast definition in the config file\n"+
-                            "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                            "The contrast should be defined as 'groupA_vs_groupB'. Please check the contrast definition in the config file\n"
+                            + "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
                         )
-                    if contrastElem[0] not in sample_groups_antibody or contrastElem[1] not in sample_groups_antibody:
+                    if (
+                        contrastElem[0] not in sample_groups_antibody
+                        or contrastElem[1] not in sample_groups_antibody
+                    ):
                         raise ValueError(
-                            "One of the group in the contrast is not present in the samplesheet. Please check the contrast definition in the config file\n"+
-                            "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
-
+                            "One of the group in the contrast is not present in the samplesheet. Please check the contrast definition in the config file\n"
+                            + "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
                         )
                     if contrastElem[0] == contrastElem[1]:
                         raise ValueError(
-                            "The groups in the contrast should be different. Please check the contrast definition in the config file\n"+
-                            "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                            "The groups in the contrast should be different. Please check the contrast definition in the config file\n"
+                            + "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
                         )
-                    if bool(re.match(r"[a-zA-Z0-9]+", contrastElem[0])) and bool(re.match(r"[a-zA-Z0-9]+", contrastElem[1])):
+                    if bool(re.match(r"[a-zA-Z0-9]+", contrastElem[0])) and bool(
+                        re.match(r"[a-zA-Z0-9]+", contrastElem[1])
+                    ):
                         pass
                     else:
                         raise ValueError(
-                            "The group names in the contrast should contain only letters and numbers (no special characters). Please check the contrast definition in the config file\n"+
-                            "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                            "The group names in the contrast should contain only letters and numbers (no special characters). Please check the contrast definition in the config file\n"
+                            + "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
                         )
                 else:
                     raise ValueError(
-                        "The contrast should be defined as 'groupA_vs_groupB'. Please check the contrast definition in the config file\n"+
-                        "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                        "The contrast should be defined as 'groupA_vs_groupB'. Please check the contrast definition in the config file\n"
+                        + "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
                     )
             # 9. if contrast is okay, we need to check the peak type are the same for all samples
             if len(subdf.peak_type.unique()) > 1:
-                raise ValueError("The peak type is not the same for all samples with antibody {}. For differential peaks please specify same peak type".format(antibodyItem))
+                raise ValueError(
+                    "The peak type is not the same for all samples with antibody {}. For differential peaks please specify same peak type".format(
+                        antibodyItem
+                    )
+                )
             if subdf.peak_type.unique() == "very-broad":
                 raise ValueError(
-                    "The differential binding analysis can not be performed on very-broad peaks.\n"+
-                    "Consider to change peak type or disable the differential binding analysis in the config file!"
+                    "The differential binding analysis can not be performed on very-broad peaks.\n"
+                    + "Consider to change peak type or disable the differential binding analysis in the config file!"
                 )
-                
+
 
 # -------------------- Sample sheet Sanity checks ---------------#
 
@@ -350,12 +368,10 @@ def input_toget():
     if narrowSamples:
         QCfiles.append("{}results/QC/macs2_peaks_mqc.tsv".format(outdir))
         peak_files += expand(
-            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
-                outdir
-            ),
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
             sample=narrowSamples,
         )
-        #for testing Spiker peak calling, we also add those output files
+        # for testing Spiker peak calling, we also add those output files
         peak_files += expand(
             "{}results/peakCallingNorm/{{sample}}.treat.pileup.SpikeIn_scaled.bdg".format(
                 outdir
@@ -372,7 +388,7 @@ def input_toget():
             "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(outdir),
             sample=broadSamples,
         )
-        #for testing Spiker peak calling, we also add those output files
+        # for testing Spiker peak calling, we also add those output files
         peak_files += expand(
             "{}results/peakCallingNorm/{{sample}}.treat.pileup.SpikeIn_scaled.bdg".format(
                 outdir
@@ -427,7 +443,7 @@ def input_toget():
                 )
                 diff_peak_files.append(path)
 
-        return bigWigs + peak_files + QCfiles + annot_files + diff_peak_files  
+        return bigWigs + peak_files + QCfiles + annot_files + diff_peak_files
     else:
         return bigWigs + peak_files + QCfiles + annot_files
 
@@ -544,9 +560,7 @@ def get_replicate_peaks(wildcards):
     """Function that returns the input files to merge replicates (if any) both narrow and broad peaks"""
     if wildcards.unique_rep in reps_dict_narrow:
         return expand(
-            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
-                outdir
-            ),
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
             sample=reps_dict_narrow[wildcards.unique_rep],
         )
     elif wildcards.unique_rep in reps_dict_broad:
@@ -583,20 +597,29 @@ def get_bams_by_antibody(wildcards):
         sample=antibody_dict[wildcards.antibody],
     )
 
+
 def get_normFactor_by_antibody(wildcards):
     """Function that returns the normalization factors for the antibody for the diff peaks analysis"""
     return expand(
         "{}results/logs/spike/{{sample}}.normFactor".format(outdir),
         sample=antibody_dict[wildcards.antibody],
     )
-    
-def get_contrasts_by_antibody(wildcards):
-    """Function that returns the contrasts for the antibody for the diff peaks analysis"""
-    return expand(
-            "{}results/differentialAnalysis/{{antibody}}/{{contrast}}_diffPeaks.tsv".format(outdir),
-            antibody=wildcards.antibody,
-            contrast=config["diffPeakAnalysis"]["contrasts"][wildcards.antibody],  
-        )
+
+
+def get_diffAnalysis_tables(wildcards):
+    """Function that returns the diff peaks tables for the antibody for multiqc input"""
+
+    if config["diffPeakAnalysis"]["perform_diff_analysis"]:
+        return [
+            "{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
+                outdir=outdir, antibody=antibody, contrast=contrast
+            )
+            for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items()
+            for contrast in contrasts
+        ]
+    else:
+        return ""
+
 
 # --------------------  Rules Functions ---------------#
 def normalization_factor(wildcards):
@@ -647,14 +670,19 @@ def normalization_factor(wildcards):
     else:
         return "--scaleFactor {} --extendReads ".format(str(round(alpha, 4)))
 
+
 def spiker_normalization_factor(wildcards):
     """
     Function called by Spiker peak calling
     It returns the normalization factors for treatment and control samples once calculated by the function above
     """
-    treatment_file = "{}results/logs/spike/{}.normFactor".format(outdir, wildcards.sample)
-    #since the peak calling is done only on treatment samples, we need to get the input sample (and it has to have a control)
-    control_file = "{}results/logs/spike/{}.normFactor".format(outdir, sample_to_input[wildcards.sample])
+    treatment_file = "{}results/logs/spike/{}.normFactor".format(
+        outdir, wildcards.sample
+    )
+    # since the peak calling is done only on treatment samples, we need to get the input sample (and it has to have a control)
+    control_file = "{}results/logs/spike/{}.normFactor".format(
+        outdir, sample_to_input[wildcards.sample]
+    )
     with open(treatment_file) as tf, open(control_file) as cf:
         treatment_norm_factor = tf.read().strip().split(":")[-1].strip()
         control_norm_factor = cf.read().strip().split(":")[-1].strip()

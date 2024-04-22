@@ -61,7 +61,7 @@ rule macs2_callNormPeaks:
             ".treat.pileup.bdg",
             ".treat.pileup.SpikeIn_scaled.bdg",
             ".treat.pileup.SpikeIn_scaled.bigWig",
-    ),
+        ),
     log:
         "{}results/logs/peakCallingNorm/{{sample}}_callNormPeak.log".format(outdir),
     params:
@@ -86,15 +86,22 @@ rule macs2_callNormPeaks:
             --cleanup \
             -o {params.output_prefix} &> {log}
 
-        #we modify the output peak names in the narrow (first case) or broad (else) files
+        #we modify the output peak names in the narrow (first case) or broad (else) files to match the naming convention for normal peak calling
         if [ -z {params.peak_type} ]    
         then
             sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Peak\\)\\([0-9]\\)/\\1_\\2/g' {params.output_prefix}.narrowPeak 2>> {log}
         else
             sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Peak\\)\\([0-9]\\)/\\1_\\2/g' {params.output_prefix}.broadPeak 2>> {log}
         fi
-        """
+        #change file names 
+        if [ -z {params.peak_type} ]    
+        then
+            mv {params.output_prefix}.narrowPeak {params.output_prefix}_narrowpeaks.narrowPeak  2>> {log}
+        else
+            mv {params.output_prefix}.broadPeak {params.output_prefix}_broadPeaks.broadPeak 2>> {log}
+        fi
 
+        """
 
 
 rule epic2_callBroadPeaks:

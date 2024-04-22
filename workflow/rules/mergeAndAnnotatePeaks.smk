@@ -25,28 +25,35 @@ rule merge_rep_peaks:
         mv {params.outputPrefix}_all.bed $(dirname {log})
         """
 
+
 rule consensus_peaks:
     input:
         narrowCalled=expand(
-            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
-                outdir
-            ),
-            sample=narrowSamples),
+            "{}results/peakCallingNorm/{{sample}}_narrowpeaks.narrowPeak".format(outdir),
+            sample=narrowSamples,
+        )  if  config["diffPeakAnalysis"]["useSpikeinCalledPeaks"] else expand(
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
+            sample=narrowSamples,
+        ),
         broadCalled=expand(
-            "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(
-                outdir
-            ),
-            sample=broadSamples),
+            "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(outdir),
+            sample=broadSamples,
+        ) if  config["diffPeakAnalysis"]["useSpikeinCalledPeaks"] else expand(
+            "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(outdir),
+            sample=broadSamples,
+        ) ,
     output:
         outTab="{}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
             outdir
-            ),
+        ),
     params:
         min_num_reps=config["diffPeakAnalysis"]["minNumSamples"],
         antibody=lambda w: config["diffPeakAnalysis"]["contrasts"][w.antibody],
         sampleNamesToUse=lambda w: antibody_dict[w.antibody],
     log:
-        "{outdir}results/logs/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.log".format(outdir=outdir),
+        "{outdir}results/logs/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.log".format(
+            outdir=outdir
+        ),
     threads: 1
     benchmark:
         "{}results/.benchmarks/{{antibody}}_consensusPeaks.benchmark.txt".format(outdir)
@@ -59,16 +66,24 @@ rule consensus_peaks:
 rule count_reads_on_peaks:
     input:
         bamFiles=get_bams_by_antibody,
-        consensus_peaks="{outdir}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(outdir=outdir),
+        consensus_peaks="{outdir}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
+            outdir=outdir
+        ),
     output:
-        output_tsv="{outdir}results/peakCalling/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(outdir=outdir),
+        output_tsv="{outdir}results/peakCalling/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
+            outdir=outdir
+        ),
     params:
         joined_bams=lambda w, input: ",".join(input.bamFiles),
         map_qual=config["params"]["bowtie2"]["map_quality"],
     log:
-        "{}results/logs/peakCalling/mergedPeaks/{{antibody}}_countReadsOnPeaks.log".format(outdir),
+        "{}results/logs/peakCalling/mergedPeaks/{{antibody}}_countReadsOnPeaks.log".format(
+            outdir
+        ),
     benchmark:
-        "{}results/.benchmarks/{{antibody}}_countReadsOnPeaks.benchmark.txt".format(outdir)
+        "{}results/.benchmarks/{{antibody}}_countReadsOnPeaks.benchmark.txt".format(
+            outdir
+        )
     conda:
         "../envs/various.yaml"
     shell:
@@ -78,7 +93,6 @@ rule count_reads_on_peaks:
             -o {output.output_tsv} \
             --mapq {params.map_qual} &> {log}
         """
-
 
 
 rule merge_rep_peaks_edd:

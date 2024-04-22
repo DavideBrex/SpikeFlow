@@ -108,9 +108,7 @@ rule create_qc_table_edd:
 rule create_qc_table_macs2:
     input:
         logFile=expand(
-            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
-                outdir
-            ),
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
             sample=narrowSamples,
         ),
     output:
@@ -156,14 +154,10 @@ rule multiqc:
         ),
         tab_spike="{}results/QC/SplitBam_Reads_mqc.tsv".format(outdir),
         tab_macs2=rules.create_qc_table_macs2.output.tab,
-        tab_epic2=rules.create_qc_table_epic2.  output.tab,
+        tab_epic2=rules.create_qc_table_epic2.output.tab,
         tab_edd=rules.create_qc_table_edd.output.tab,
         tab_peakAnnot=rules.create_qc_table_peakAnnot.output.tab,
-        plotDiffAnalysis=["{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
-            outdir=outdir, antibody=antibody, contrast=contrast
-            ) for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items() for contrast in contrasts]
-        if config["diffPeakAnalysis"]["perform_diff_analysis"] 
-        else "",
+        plotDiffAnalysis=get_diffAnalysis_tables,
     output:
         multiqc="{}results/QC/multiqc/SpikeFlow_multiqc_report.html".format(outdir),
     log:
