@@ -29,7 +29,7 @@ rule merge_rep_peaks:
 rule consensus_peaks:
     input:
         narrowCalled=expand(
-            "{}results/peakCallingNorm/{{sample}}_narrowpeaks.narrowPeak".format(
+            "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(
                 outdir
             ),
             sample=narrowSamples,
@@ -49,16 +49,24 @@ rule consensus_peaks:
             sample=broadSamples,
         ),
     output:
-        outTab="{}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
+        "{}results/peakCallingNorm/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
             outdir
-        ),
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else "{}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
+            outdir
+        )
     params:
         min_num_reps=config["diffPeakAnalysis"]["minNumSamples"],
         antibody=lambda w: config["diffPeakAnalysis"]["contrasts"][w.antibody],
         sampleNamesToUse=lambda w: antibody_dict[w.antibody],
     log:
-        "{outdir}results/logs/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.log".format(
-            outdir=outdir
+        "{}results/logs/peakCallingNorm/mergedPeaks/{{antibody}}_consensusPeaks.log".format(
+            outdir
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else "{}results/logs/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.log".format(
+            outdir
         ),
     threads: 1
     benchmark:
@@ -72,18 +80,30 @@ rule consensus_peaks:
 rule count_reads_on_peaks:
     input:
         bamFiles=get_bams_by_antibody,
-        consensus_peaks="{outdir}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
+        consensus_peaks="{outdir}results/peakCallingNorm/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
+            outdir=outdir
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else "{outdir}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
             outdir=outdir
         ),
     output:
-        output_tsv="{outdir}results/peakCalling/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
+        output_tsv="{outdir}results/peakCallingNorm/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
+            outdir=outdir
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else "{outdir}results/peakCalling/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
             outdir=outdir
         ),
     params:
         joined_bams=lambda w, input: ",".join(input.bamFiles),
         map_qual=config["params"]["bowtie2"]["map_quality"],
     log:
-        "{}results/logs/peakCalling/mergedPeaks/{{antibody}}_countReadsOnPeaks.log".format(
+        "{}results/logs/peakCallingNorm/mergedPeaks/{{antibody}}_countReadsOnPeaks.log".format(
+            outdir
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else "{}results/logs/peakCalling/mergedPeaks/{{antibody}}_countReadsOnPeaks.log".format(
             outdir
         ),
     benchmark:

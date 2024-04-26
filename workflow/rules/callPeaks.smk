@@ -5,9 +5,6 @@ rule macs2_callNarrowPeak:
             outdir, sample_to_input[w.sample]
         ),
     output:
-        # all output-files must share the same basename and only differ by it's extension
-        # Usable extensions (and which tools they implicitly call) are listed here:
-        #         https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/macs2/callpeak.html.
         multiext(
             "{}results/peakCalling/macs2/{{sample}}".format(outdir),
             "_peaks.xls",
@@ -40,8 +37,7 @@ rule macs2_callNarrowPeak:
             {params.otherParams} &> {log}
         """
 
-
-rule macs2_callNormPeaks:
+rule macs2_callNormPeaks_narrow:
     input:
         treatment="{}results/bam/{{sample}}_ref.sorted.bam".format(outdir),
         control=lambda w: "{}results/bam/{}_ref.sorted.bam".format(
@@ -61,13 +57,13 @@ rule macs2_callNormPeaks:
             ".treat.pileup.bdg",
             ".treat.pileup.SpikeIn_scaled.bdg",
             ".treat.pileup.SpikeIn_scaled.bigWig",
+            "_narrowPeaks.narrowPeak",
         ),
     log:
-        "{}results/logs/peakCallingNorm/{{sample}}_callNormPeak.log".format(outdir),
+        "{}results/logs/peakCallingNorm/{{sample}}_callNormPeak_narrow.log".format(outdir),
     params:
         scaleFactors=lambda wildcards: spiker_normalization_factor(wildcards),
         output_prefix=lambda w, output: output[0].split(os.extsep)[0],
-        peak_type=lambda wildcards: check_peak_type(wildcards),
         gsize=config["params"]["deeptools"]["effective_genome_length"],
         qvalue=config["params"]["peakCalling"]["macs2"]["qvalue"],
     benchmark:
@@ -79,7 +75,6 @@ rule macs2_callNormPeaks:
         spiker.py -t {input.treatment} \
             -c {input.control} \
             --spikeIn {params.scaleFactors} \
-            {params.peak_type} \
             --q-peak {params.qvalue} \
             --genome-size {params.gsize} \
             --bw  \
@@ -87,20 +82,59 @@ rule macs2_callNormPeaks:
             -o {params.output_prefix} &> {log}
 
         #we modify the output peak names in the narrow (first case) or broad (else) files to match the naming convention for normal peak calling
-        if [ -z {params.peak_type} ]    
-        then
-            sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Peak\\)\\([0-9]\\)/\\1_\\2/g' {params.output_prefix}.narrowPeak 2>> {log}
-        else
-            sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Peak\\)\\([0-9]\\)/\\1_\\2/g' {params.output_prefix}.broadPeak 2>> {log}
-        fi
+        sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Peak\\)\\([0-9]\\)/\\1_\\2/g' {params.output_prefix}.narrowPeak 2>> {log}
         #change file names 
-        if [ -z {params.peak_type} ]    
-        then
-            mv {params.output_prefix}.narrowPeak {params.output_prefix}_narrowpeaks.narrowPeak  2>> {log}
-        else
-            mv {params.output_prefix}.broadPeak {params.output_prefix}_broadPeaks.broadPeak 2>> {log}
-        fi
+        mv {params.output_prefix}.narrowPeak {params.output_prefix}_narrowPeaks.narrowPeak  2>> {log}
+        """
 
+rule macs2_callNormPeaks_broad:
+    input:
+        treatment="{}results/bam/{{sample}}_ref.sorted.bam".format(outdir),
+        control=lambda w: "{}results/bam/{}_ref.sorted.bam".format(
+            outdir, sample_to_input[w.sample]
+        ),
+        logFile="{}results/logs/spike/{{sample}}.normFactor".format(outdir),
+        logFileInput=lambda wildcards: "{}results/logs/spike/{}.normFactor".format(
+            outdir, sample_to_input[wildcards.sample]
+        )
+        if not pd.isna(sample_to_input[wildcards.sample])
+        else "{}results/logs/spike/{{sample}}.normFactor".format(outdir),
+    output:
+        multiext(
+            "{}results/peakCallingNorm/{{sample}}".format(outdir),
+            ".control.pileup.max.bdg",
+            ".control.pileup.max.bigWig",
+            ".treat.pileup.bdg",
+            ".treat.pileup.SpikeIn_scaled.bdg",
+            ".treat.pileup.SpikeIn_scaled.bigWig",
+            "_broadPeaks.broadPeak",
+        ),
+    log:
+        "{}results/logs/peakCallingNorm/{{sample}}_callNormPeak_narrow.log".format(outdir),
+    params:
+        scaleFactors=lambda wildcards: spiker_normalization_factor(wildcards),
+        output_prefix=lambda w, output: output[0].split(os.extsep)[0],
+        gsize=config["params"]["deeptools"]["effective_genome_length"],
+        qvalue=config["params"]["peakCalling"]["macs2"]["qvalue"],
+    benchmark:
+        "{}results/.benchmarks/{{sample}}.spiker.benchmark.txt".format(outdir)
+    conda:
+        "../envs/various.yaml"
+    shell:
+        """
+        spiker.py -t {input.treatment} \
+            -c {input.control} \
+            --spikeIn {params.scaleFactors} \
+            --broad \
+            --q-peak {params.qvalue} \
+            --genome-size {params.gsize} \
+            --bw  \
+            --cleanup \
+            -o {params.output_prefix} &> {log}
+        #we modify the output peak names in the narrow (first case) or broad (else) files to match the naming convention for normal peak calling
+        sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Region\\)\\([0-9]\\)/\\1_\\2/g' {params.output_prefix}.broadPeak 2>> {log}
+        #change file name
+        mv {params.output_prefix}.broadPeak {params.output_prefix}_broadPeaks.broadPeak 2>> {log}
         """
 
 

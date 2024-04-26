@@ -1,12 +1,20 @@
 
 rule differential_peaks:
     input:
-        rawReadsOnPeaks="{outdir}results/peakCalling/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
+        rawReadsOnPeaks="{outdir}results/peakCallingNorm/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
+            outdir=outdir
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else "{outdir}results/peakCalling/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
             outdir=outdir
         ),
         logFile=get_normFactor_by_antibody,
     output:
-        diffTab="{outdir}results/differentialAnalysis/{{antibody}}/{{antibody}}_{{contrast}}_diffPeaks.tsv".format(
+        diffTab="{outdir}results/differentialAnalysis/NormalisedPeaks/{{antibody}}/{{antibody}}_{{contrast}}_diffPeaks.tsv".format(
+            outdir=outdir
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else "{outdir}results/differentialAnalysis/{{antibody}}/{{antibody}}_{{contrast}}_diffPeaks.tsv".format(
             outdir=outdir
         ),
     params:

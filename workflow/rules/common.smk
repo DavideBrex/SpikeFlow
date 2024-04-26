@@ -374,7 +374,7 @@ def input_toget():
         # for testing Spiker peak calling, we also add those output files
         if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
             peak_files += expand(
-                "{}results/peakCallingNorm/{{sample}}.treat.pileup.SpikeIn_scaled.bdg".format(
+                "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(
                     outdir
                 ),
                 sample=narrowSamples,
@@ -393,7 +393,7 @@ def input_toget():
         # for testing Spiker peak calling, we also add those output files
         if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
             peak_files += expand(
-                "{}results/peakCallingNorm/{{sample}}.treat.pileup.SpikeIn_scaled.bdg".format(
+                "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(
                     outdir
                 ),
                 sample=broadSamples,
@@ -442,9 +442,15 @@ def input_toget():
         # we add to otputs the different combinations of antibody and contrast
         for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items():
             for contrast in contrasts:
-                path = "{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
-                    outdir=outdir, antibody=antibody, contrast=contrast
-                )
+                # if we use spikein called peaks, we need to change the path
+                if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
+                    path = "{outdir}results/differentialAnalysis/NormalisedPeaks/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
+                            outdir=outdir, antibody=antibody, contrast=contrast
+                        )
+                else:
+                    path = "{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
+                            outdir=outdir, antibody=antibody, contrast=contrast
+                        )
                 diff_peak_files.append(path)
 
         return bigWigs + peak_files + QCfiles + annot_files + diff_peak_files
@@ -661,10 +667,3 @@ def spiker_normalization_factor(wildcards):
         control_norm_factor = cf.read().strip().split(":")[-1].strip()
     return "--csf {} --tsf {}".format(control_norm_factor, treatment_norm_factor)
 
-
-def check_peak_type(wildcards):
-    """Function to check the peak type of the sample"""
-    if wildcards.sample in narrowSamples:
-        return ""
-    elif wildcards.sample in broadSamples:
-        return "--broad"
