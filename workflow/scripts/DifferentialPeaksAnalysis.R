@@ -6,6 +6,7 @@ sink(log, type = "message")
 suppressPackageStartupMessages(require(DESeq2))
 suppressPackageStartupMessages(require(tidyverse))
 
+
 # Read the params
 antibody_contrastToApply <- gsub("_diffPeaks.tsv", "", basename(snakemake@output[['diffTab']]))
 antibody <-sub("_.*", "", antibody_contrastToApply)
@@ -19,7 +20,13 @@ log2FCcutoff <- snakemake@params[["log2FCcutoff"]]
 outdir <- snakemake@params[["outdir"]]
 normFactorsFiles <- snakemake@input[['logFile']]
 
-print(contrastToApply)
+#we check whether we are dealing with peaks obtained from raw or normalised peak calling
+if (tail(strsplit(outdir, '/')[[1]], n=2)[1] == "NormalisedPeaks"){
+  peak_type="Norm"
+} else{
+  peak_type="Raw"
+}
+  
 # Read the file with raw counts
 cat("Reading raw counts\n")
 countsTab <- read.table(snakemake@input[['rawReadsOnPeaks']], check.names = F, header = TRUE, sep = "\t")
@@ -40,7 +47,12 @@ if (length(colNames) == 0){
   cat("Only one sample found, skipping differential analysis")
   quit(save =  "no",  status=0)
 }
-
+#if the count table is empty, we stop
+if (nrow(countsTab) == 0){
+  write.table(data.frame(), file = snakemake@output[['diffTab']], sep = "\t", quote = F, row.names = F, col.names = T)
+  cat("Count table is empty, skipping differential analysis")
+  quit(save =  "no",  status=0)
+}
 
 # Extract the parameters
 leftContrast <- strsplit(contrastToApply, "_vs_")[[1]][1]
@@ -120,15 +132,25 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
     theme(legend.position = "none") +
     theme_bw(base_size=15)
 
-  
-  print(paste0(outdir, contrastToApply, "_log2_scatterPlot.pdf"))
-  pdf(paste0(outdir, antibody, '_',contrastToApply, "_log2_scatterPlot.pdf"), width = 10, height = 10)
-  print(plotScatter)
-  dev.off()
-  #png for multiqc
-  png(paste0(outdir, antibody, '_', contrastToApply, "_log2_scatterPlot_mqc.png"), , width=800, height=800)
-  print(plotScatter)
-  dev.off()
+  if (peak_type == "Raw"){
+    print(paste0(outdir, contrastToApply, "_log2_scatterPlot.pdf"))
+    pdf(paste0(outdir, antibody, '_',contrastToApply, "_log2_scatterPlot.pdf"), width = 10, height = 10)
+    print(plotScatter)
+    dev.off()
+    #png for multiqc
+    png(paste0(outdir, antibody, '_', contrastToApply, "_log2_scatterPlot_mqc.png"), width=800, height=800)
+    print(plotScatter)
+    dev.off()
+  } else if (peak_type == "Norm"){
+    print(paste0(outdir, contrastToApply, "_log2_scatterPlot.pdf"))
+    pdf(paste0(outdir, antibody, '_',contrastToApply, "_log2_scatterPlot_NormPeaks.pdf"), width = 10, height = 10)
+    print(plotScatter)
+    dev.off()
+    #png for multiqc
+    png(paste0(outdir, antibody, '_', contrastToApply, "_log2_scatterPlot_NormPeaks_mqc.png"), width=800, height=800)
+    print(plotScatter)
+    dev.off()
+  }
   #------------------------------------------------------------------------------#
   #------------------------------------------------------------------------------#
   
@@ -159,13 +181,23 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
     theme_bw(base_size = 17) +
     labs(title = "PCA plot", color='Group')
 
-  pdf(paste0(outdir,antibody, '_', contrastToApply, '_pcaPlot.pdf'), width = 10, height = 10)
-  print(pcaPLot)
-  dev.off()
-  #png for multiqc
-  png(paste0(outdir,antibody, '_', contrastToApply, '_pcaPlot_mqc.png'), width=800, height=800)
-  print(pcaPLot)
-  dev.off()
+  if (peak_type == "Raw"){
+    pdf(paste0(outdir,antibody, '_', contrastToApply, '_pcaPlot.pdf'), width = 10, height = 10)
+    print(pcaPLot)
+    dev.off()
+    #png for multiqc
+    png(paste0(outdir,antibody, '_', contrastToApply, '_pcaPlot_mqc.png'), width=800, height=800)
+    print(pcaPLot)
+    dev.off()
+  } else if (peak_type == "Norm"){
+    pdf(paste0(outdir,antibody, '_', contrastToApply, '_pcaPlot_NormPeaks.pdf'), width = 10, height = 10)
+    print(pcaPLot)
+    dev.off()
+    #png for multiqc
+    png(paste0(outdir,antibody, '_', contrastToApply, '_pcaPlot_NormPeaks_mqc.png'), width=800, height=800)
+    print(pcaPLot)
+    dev.off()
+  }
   #------------------------------------------------------------------------------#
   #------------------------------------------------------------------------------#
   #VOLCANO PLOT
@@ -185,16 +217,26 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
     xlab(expression("log2FC")) + 
     ylab(expression("-log10(p-adjusted)")) +
     scale_color_manual(values = c( "firebrick3","dodgerblue3",  "gray50"))+
-    theme_minimal(base_size = 17)+
+    theme_light(base_size = 17)+
     labs(title = "Volcano plot")
 
-  pdf(paste0(outdir,antibody, '_', contrastToApply,'_volcanoPlot.pdf'), width = 11, height = 10)
-  print(p2)
-  dev.off()
-  #png for multiqc
-  png(paste0(outdir,antibody, '_', contrastToApply,'_volcanoPlot_mqc.png'), width=1000, height=800)
-  print(p2)
-  dev.off()
+  if (peak_type == "Raw"){
+    pdf(paste0(outdir,antibody, '_', contrastToApply,'_volcanoPlot.pdf'), width = 11, height = 10)
+    print(p2)
+    dev.off()
+    #png for multiqc
+    png(paste0(outdir,antibody, '_', contrastToApply,'_volcanoPlot_mqc.png'), width=1000, height=800)
+    print(p2)
+    dev.off()
+  } else if (peak_type == "Norm"){
+    pdf(paste0(outdir,antibody, '_', contrastToApply,'_volcanoPlot_NormPeaks.pdf'), width = 11, height = 10)
+    print(p2)
+    dev.off()
+    #png for multiqc
+    png(paste0(outdir,antibody, '_', contrastToApply,'_volcanoPlot_NormPeaks_mqc.png'), width=1000, height=800)
+    print(p2)
+    dev.off()
+  }
   #------------------------------------------------------------------------------#
   #------------------------------------------------------------------------------#
   #------------------------------------------------------------------------------#

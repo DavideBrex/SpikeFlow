@@ -53,7 +53,8 @@ params:
   fastp-se: ""
   bowtie2: 
     global: "--sensitive"
-    map_quality: 8
+    map_quality: 8 #note: changing this parameter will result in the rerun of the alignment step
+    pe: ""
 
   samtools:
     # Memory used by every core of samtools (GB). Be careful that 

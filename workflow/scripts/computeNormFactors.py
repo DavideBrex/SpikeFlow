@@ -32,9 +32,9 @@ if normType in ['RAW', 'Orlando', 'RX-Input']:
             info_sample = file.read().strip().split("\n")
 
             Nsample = int(
-                info_sample[1].split(":")[-1]
+                info_sample[0].split(":")[-1]
             )  # number of aligned reads in sample
-            Nspike = int(info_sample[2].split(":")[-1])  # number of spike reads in sample
+            Nspike = int(info_sample[1].split(":")[-1])  # number of spike reads in sample
             print("Sample: {} - Nsample: {} - Nspike: {}".format(idSample, Nsample, Nspike))
 
             # we need the information also from the input (if it is not the sample an input itself)
@@ -82,8 +82,8 @@ elif normType in ['Downsampling', 'Median']:
         idName = os.path.basename(idSample).rsplit(".",1)[0]
         with open(idSample, "r") as file:
             info_sample = file.read().strip().split("\n")
-            Nsample = int(info_sample[1].split(":")[-1])
-            Nspike = int(info_sample[2].split(":")[-1])
+            Nsample = int(info_sample[0].split(":")[-1])
+            Nspike = int(info_sample[1].split(":")[-1])
             sampleInfo[idName] = [Nsample, Nspike]
 
     print(sampleInfo)

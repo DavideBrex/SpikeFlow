@@ -279,10 +279,16 @@ def perform_checks(input_df):
                     + "The antibody has to be defined in the samplesheet for each sample (not input)"
                 )
             subdf = input_df[input_df["antibody"] == antibodyItem]
-            sample_groups_antibody = [
-                sample.rsplit("_", 1)[1]
-                for sample in subdf.index.get_level_values("sample").unique().tolist()
-            ]
+            # we get the groups defined in the samplesheet per antibody, if '_' is present in the sample name
+            try:
+                sample_groups_antibody = [
+                    sample.rsplit("_", 1)[1]
+                    for sample in subdf.index.get_level_values("sample").unique().tolist()
+                ]
+            except IndexError:
+                raise ValueError(
+                    "The group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv\n"
+                )
             # we check that the group defined in the the sample sheet (after _ in the sample name) does not contain special characters
             if not all(
                 [
@@ -619,9 +625,17 @@ def get_normFactor_by_antibody(wildcards):
 def get_diffAnalysis_tables(wildcards):
     """Function that returns the diff peaks tables for the antibody for multiqc input"""
 
-    if config["diffPeakAnalysis"]["perform_diff_analysis"]:
+    if config["diffPeakAnalysis"]["perform_diff_analysis"] and not config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
         return [
             "{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
+                outdir=outdir, antibody=antibody, contrast=contrast
+            )
+            for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items()
+            for contrast in contrasts
+        ]
+    elif config["diffPeakAnalysis"]["perform_diff_analysis"] and config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
+        return [
+            "{outdir}results/differentialAnalysis/NormalisedPeaks/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
                 outdir=outdir, antibody=antibody, contrast=contrast
             )
             for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items()

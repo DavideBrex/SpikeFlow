@@ -1,102 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 25 14:00:02 2020
+Created on Tue Apr 30 2024
 
-@author: m102324
+@author: Davide Bressan
 """
 
 import sys,os
-import pysam
-from optparse import OptionParser
 import shutil
 import subprocess
-
-
-__author__ = "Liguo Wang"
-__copyright__ = "Copyleft"
-__credits__ = []
-__license__ = "GPL"
-__version__="1.0.5"
-__maintainer__ = "Liguo Wang"
-__email__ = "wang.liguo@mayo.edu"
-__status__ = "Development"
-
-
-def create_headers(bamfile, ex_chr='',  prog_name='spiker', prog_ver = __version__, co=[]):
-	"""
-	Create BAM headers for human and exogenous BAM files. Note, to distinguish
-	the chromosomes of human and exogenous species, the chrom ID of
-	exogenous chromosomes cannot start with "chr" (in other words, "chr" is
-	reserved only for human chromosomes). For example, prefix "dm6_" was added
-	to the chromosome IDs of Drosophila melanogaster (fruit fly).
-	Parameters
-	----------
-	bamfile : AlignmentFile object
-		a=pysam.AlignmentFile('33_K27Ac-112.sorted.bam','rb')
-	Returns
-	-------
-	None.
-	"""
-	bam_header = bamfile.header #b am header from the composite genome.
-	hs_header = {} # bam header for human genome alignments
-	ex_header = {} # bam header for exogenous genome (such as fly) alignments
-	# update 'SQ'
-	for key in bam_header.keys():
-		if key == 'SQ':
-			if 'SQ' not in hs_header:
-				hs_header['SQ'] = []
-			if 'SQ' not in ex_header:
-				ex_header['SQ'] = []
-			lst = bam_header['SQ']
-			for i in lst:
-				if i['SN'].startswith('chr'):
-					hs_header['SQ'].append(i)
-				elif i['SN'].startswith(ex_chr):
-					ex_header['SQ'].append(i)
-				else:
-					continue
-		else:
-			if key not in hs_header:
-				hs_header[key] = bam_header[key]
-	# update 'PG'
-	if 'PG' in hs_header:
-		hs_header['PG'].append( {'ID':prog_name,'PN':prog_name, 'VN':prog_ver})
-	else:
-		hs_header['PG'] = [{'ID':prog_name,'PN':prog_name, 'VN':prog_ver}]
-	if 'PG' in ex_header:
-		ex_header['PG'].append( {'ID':prog_name,'PN':prog_name, 'VN':prog_ver})
-	else:
-		ex_header['PG'] = [{'ID':prog_name,'PN':prog_name, 'VN':prog_ver}]
-	# update 'CO'
-	for comment in co:
-		if 'CO' in hs_header:
-			hs_header['CO'].append(comment)
-		else:
-			hs_header['CO'] = [comment]
-		if 'CO' in ex_header:
-			ex_header['CO'].append(comment)
-		else:
-			ex_header['CO'] = [comment]
-	return(hs_header, ex_header)
-
-def lookup_refid(hd,chr_name):
-	lst = hd['SQ']
-	for i in range(len(lst)):
-		if chr_name == lst[i]['SN']:
-			return i
-	return None
 
 def sort_bam(bamfile, threads = 1):
 
 	sorted_bam = bamfile.replace('.bam','.sorted.bam')
 	sorted_bam_bai = sorted_bam + '.bai'
-
-	# find samtools command
 	samtools_cmd = shutil.which("samtools")
-	if samtools_cmd is None:
-		sys.exit("\tCannot find the \"samtools\" command!")
-
 
 	# sort BAM file
 	if os.path.exists(sorted_bam) and os.path.getsize(sorted_bam) > 0:
@@ -116,123 +34,114 @@ def sort_bam(bamfile, threads = 1):
 		samtools_index = "%s index %s" % (samtools_cmd, sorted_bam)
 		subprocess.call(samtools_index, shell=True)
 
+	print("Sample %s sorted and indexed." % bamfile)
  	# remove not sorted bam file
 	if os.path.exists(bamfile):
 		os.remove(bamfile)
 
 
-def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='dm6_', threads = 1):
+def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='EXO_', threads = 1):
 
-	unmapped_reads = 0
-	qcfail_reads = 0
-	duplicate_reads = 0
-	secondary_reads = 0
-	low_maq = 0
-	diff_genome = 0	#read pairs mapped to fly and human simutaneously
-	fly_reads = 0
-	human_reads = 0
-	samfile = pysam.AlignmentFile(bam_file,'rb')
-	human_header, ex_header = create_headers(samfile, ex_chr = chr_prefix)
-	OUT = open(outfile + '.report.txt','w')
-	HU = pysam.AlignmentFile(outfile + '_ref.bam', "wb", header=human_header)
-	EX = pysam.AlignmentFile(outfile + '_spike.bam', "wb", header=ex_header)
-	#PE = False
+	low_mapq = 0
+	exo_reads = 0
+	endo_reads = 0
+	total_reads = 0
+	filtered_reads = 0
+
+	ENDO_bam=outfile + '_ref.bam'
+	EXO_bam=outfile + '_spike.bam'
+
+	#first we count reads on the full bam file
+	if os.path.exists(bam_file) and os.path.getsize(bam_file) > 0:
+		print("\t\"%s\" exists and non-empty, proceed with read counting." % bam_file)
+		result=subprocess.run("samtools view -c %s" % bam_file, shell=True, capture_output=True, text=True)
+		total_reads = int(result.stdout.strip())
+	else:
+		sys.exit("\tCannot find (or it is empty) the input BAM file \"%s\"!" % bam_file)
+	 
+	#filter out low mapq reads( Skip alignments with MAPQ smaller than q_cut)
+	if (q_cut > 0):
+		filtered_bam = bam_file.replace('.bam','.filt.bam')
+		subprocess.run("samtools view -b -q %d %s > %s" % (q_cut, bam_file ,filtered_bam), shell=True)
+		#sort and index the filtered bam file and remove the unfiltered one
+		try:
+			sort_bam(bamfile = filtered_bam, threads = threads)
+		except:
+			sys.exit("\tError in sorting the filtered (low mapq) bam file!")
+		filtered_bam = filtered_bam.replace('.bam','.sorted.bam')
+	else:
+		print("\tNo MAPQ filtering applied.")
+		filtered_bam = bam_file
+	
+	#count reads on the filtered bam file
+	if (q_cut > 0):
+		if os.path.exists(filtered_bam) and os.path.getsize(filtered_bam) > 0:
+			print("\t\"%s\" exists and non-empty, proceed with read counting." % filtered_bam)
+			result=subprocess.run("samtools view -c %s" % filtered_bam, shell=True, capture_output=True, text=True)
+			filtered_reads = int(result.stdout.strip())
+		else:
+			print("\tFiltered bam file \"%s\" not found!" % filtered_bam)
+
+		#calculate the number of low mapq reads
+		low_mapq = total_reads - filtered_reads
+		print("\tLow MAPQ reads: %d" % low_mapq)
+	else:
+		low_mapq = 0
+	
+	#Now we split the bam file into endogenous and exogenous bam files
+ 
+	#First we need to extract the chromosome names
+	#first endogenous (humand or mouse usually)
 	try:
-		while(1):
-			aligned_read = next(samfile)
-			if aligned_read.is_unmapped:
-				unmapped_reads += 1
-				continue
-			elif aligned_read.is_qcfail:
-				qcfail_reads += 1
-				continue
-			elif aligned_read.is_duplicate:
-				duplicate_reads += 1
-				continue
-			elif aligned_read.is_secondary:
-				secondary_reads += 1
-				continue
-			elif aligned_read.mapq < q_cut:
-				low_maq += 1
-				continue
-			else:
-				if aligned_read.is_paired:
-					#PE = True
-					read1_chr = samfile.get_reference_name(aligned_read.reference_id)
-					read2_chr = samfile.get_reference_name(aligned_read.next_reference_id)
+		endo_chromNames=subprocess.run("samtools idxstats %s | cut -f 1 | grep '^chr' | sed 's/^/ /'  | tr '\n' ' '" % filtered_bam, shell=True, capture_output=True, text=True)
+		exo_chromNames=subprocess.run("samtools idxstats %s | cut -f 1 | grep '^%s' | sed 's/^/ /'  | tr '\n' ' '" % (filtered_bam, chr_prefix), shell=True, capture_output=True, text=True)
+	except:
+		sys.exit("\tError in extracting chromosome names!")
 
-					if read1_chr.startswith(chr_prefix):
-						# both reads maped to fly
-						if read2_chr.startswith(chr_prefix):
-							if aligned_read.is_read1:
-								aligned_read.reference_id = lookup_refid(ex_header, read1_chr)
-							else:
-								aligned_read.reference_id = lookup_refid(ex_header, read2_chr)
-							EX.write(aligned_read)
-							fly_reads += 1
-						
-						# read-1 mapped to fly, read-2 mapped to human
-						else:
-							if aligned_read.is_read1:
-								aligned_read.reference_id = lookup_refid(ex_header, read1_chr)
-							else:
-								aligned_read.reference_id = lookup_refid(human_header, read2_chr)							
-							diff_genome += 1
-					else:
-						# read-1 mapped to human, read-2 mapped to fly
-						if read2_chr.startswith(chr_prefix):
-							if aligned_read.is_read1:
-								aligned_read.reference_id = lookup_refid(human_header, read1_chr)
-							else:
-								aligned_read.reference_id = lookup_refid(ex_header, read2_chr)	
-							diff_genome += 1
-						
-						# both reads maped to human
-						else:
-							if aligned_read.is_read1:
-								aligned_read.reference_id = lookup_refid(human_header, read1_chr)
-							else:
-								aligned_read.reference_id = lookup_refid(human_header, read2_chr)							
-							HU.write(aligned_read)
-							human_reads += 1
-				else:
-					# single-end reads
-					read_chr = samfile.get_reference_name(aligned_read.reference_id)
-					# reads maped to fly genome
-					if read_chr.startswith(chr_prefix):
-						aligned_read.reference_id = lookup_refid(ex_header, read_chr)
-						EX.write(aligned_read)
-						fly_reads += 1
-					# reads maped to human genome
-					else:
-						aligned_read.reference_id = lookup_refid(human_header, read_chr)
-						HU.write(aligned_read)
-						human_reads += 1
-	except StopIteration:
-		print("Done")
+	print("\tEndogenous chromosomes: %s" % endo_chromNames.stdout.strip())
+	print("\tExogenous chromosomes: %s" % exo_chromNames.stdout.strip())
+	#now we generate the two bam files
+	try:
+		subprocess.run("samtools view -b %s %s > %s" % (filtered_bam, endo_chromNames.stdout.strip(), ENDO_bam), shell=True)
+	except:
+		sys.exit("\tError in creating the endogenous bam file!")
+	try:
+		subprocess.run("samtools view -b %s %s > %s" % (filtered_bam, exo_chromNames.stdout.strip(), EXO_bam), shell=True)
+	except:
+		sys.exit("\tError in creating the exogenous bam file!")
 
-	HU.close()
-	EX.close()
+	#count reads on the endogenous bam file
+	if os.path.exists(ENDO_bam) and os.path.getsize(ENDO_bam) > 0:
+		print("\t\"%s\" exists and non-empty, proceed with read counting." % ENDO_bam)
+		result=subprocess.run("samtools view -c %s" % ENDO_bam, shell=True, capture_output=True, text=True)
+		endo_reads = int(result.stdout.strip())
+	else:
+		sys.exit("\tCannot find (or it is empty) the endogenous BAM file \"%s\"!" % ENDO_bam)
+	
+	#count reads on the exogenous bam file
+	if os.path.exists(EXO_bam) and os.path.getsize(EXO_bam) > 0:
+		print("\t\"%s\" exists and non-empty, proceed with read counting." % EXO_bam)
+		result=subprocess.run("samtools view -c %s" % EXO_bam, shell=True, capture_output=True, text=True)
+		exo_reads = int(result.stdout.strip())
+	else:
+		sys.exit("\tCannot find (or it is empty) the exogenous BAM file \"%s\"!" % EXO_bam)
 
+	#if qc filtering was applied we remove the filtered bam file
+	if (q_cut > 0):
+		os.remove(filtered_bam)
+		os.remove(filtered_bam + '.bai')
 
 	readInfo = open(snakemake.log["readsInfo"], 'w')
-	readInfo.write("Ref-spike_commonReads:%s\n" % diff_genome)
-	readInfo.write("NSampleReads:%s\n" % human_reads)
-	readInfo.write("NSpikeReads:%s\n" % fly_reads)
-	readInfo.write("UnmappedReads:%s\n" % unmapped_reads)
-	readInfo.write("QCFailReads:%s\n" % qcfail_reads)
-	readInfo.write("SecondaryReads:%s\n" % secondary_reads)
-	readInfo.write("LowMapQReads:%s\n" % low_maq)
+	readInfo.write("NSampleReads:%s\n" % endo_reads)
+	readInfo.write("NSpikeReads:%s\n" % exo_reads)
+	readInfo.write("LowMapQReads:%s\n" % low_mapq)
 	readInfo.close()
-
 
 	for i in ((outfile + '_ref.bam'), (outfile + '_spike.bam')):
 		sort_bam(bamfile = i, threads = threads)
 
+	print("Sample %s succesfully divided into endogenous and exogenous bam files" % bam_file)
 
-	print("Sample\tn_unmapped\tn_qcFail\tn_duplicate\tn_secondary\tn_low_mapq\tn_both\tn_sample\tn_exogenous", file = OUT)
-	print("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d" % (os.path.basename(bam_file),unmapped_reads, qcfail_reads, duplicate_reads, secondary_reads, low_maq, diff_genome, human_reads, fly_reads), file=OUT)
-	OUT.close()
 
 def main():
 
@@ -246,7 +155,12 @@ def main():
 	map_qual = snakemake.params.map_qual
 	n_thread = snakemake.threads
 	
-	
+	# find samtools command
+	samtools_cmd = shutil.which("samtools")
+	if samtools_cmd is None:
+		sys.exit("\tCannot find the \"samtools\" command!")
+
+	#split bam into two separate bams (endo and exo) and sort 
 	divided_bam(bam_file = bam_file, outfile = out_prefix, q_cut= map_qual, chr_prefix= chr_prefix, threads = n_thread)
 
 if __name__=='__main__':

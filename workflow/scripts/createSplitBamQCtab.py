@@ -22,15 +22,11 @@ for f in snakemake.input["logFile"]:
             list_splitBam_values.append(int(i.split(":")[-1]))
 
         dict_allsamp[idName] = [
-            (list_splitBam_values[1] + list_splitBam_values[2]),
+            (list_splitBam_values[0] + list_splitBam_values[1]),
+            list_splitBam_values[0],
             list_splitBam_values[1],
             list_splitBam_values[2],
-            list_splitBam_values[0],
-            list_splitBam_values[3],
-            list_splitBam_values[4],
-            list_splitBam_values[5],
-            list_splitBam_values[6],
-            ((list_splitBam_values[2] / (list_splitBam_values[1] + list_splitBam_values[2])) * 100),
+            ((list_splitBam_values[1] / (list_splitBam_values[0] + list_splitBam_values[1])) * 100),
             norm_factor,
         ]
 
@@ -42,10 +38,6 @@ if df_info.empty:
         "Tot. mapped Reads",
         "Tot. Sample Reads",
         "Tot. spikeIn Reads",
-        "Tot. Common Reads",
-        "Tot. unmapped Reads",
-        "Tot. QC fail Reads",
-        "Tot. secondary Reads",
         "Tot. low mapQ Reads",
         "Percentage spikeIn",
         "Normalization factor",
@@ -55,12 +47,8 @@ else:
         "Tot. mapped Reads",
         "Tot. Sample Reads",
         "Tot. spikeIn Reads",
-        "Tot. Common Reads",
-        "Tot. unmapped Reads",
-        "Tot. QC fail Reads",
-        "Tot. secondary Reads",
         "Tot. low mapQ Reads",
-        "spikeIn %",
+        "Percentage spikeIn",
         "Normalization factor",
     ]
     #if some columns only contain zeros, we remove them
