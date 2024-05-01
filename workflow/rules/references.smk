@@ -8,13 +8,34 @@ rule return_genome_path:
         "{}results/logs/ref/return_genome_path.log".format(outdir),
     params:
         genome_path=config["resources"]["ref"]["index"],
+    conda:
+        "../envs/bowtie2.yaml"
     shell:
         """
         if [ -n "{params.genome_path}" ]; then
             mkdir resources/reference_genome/index/
             prefix=$(basename {params.genome_path})
             directory=$(dirname {params.genome_path})
-            ln -s $directory/*  {output.genome}
+            ln -s $directory/*  {output.genome} 2>&1
+            
+            # check if bowtie2-inspect is installed
+            if ! command -v bowtie2-inspect &> /dev/null; then
+                echo "bowtie2-inspect could not be found. Please install bowtie2."
+                exit 1
+            fi
+            # check if the index is the union of endogenous and exogenous genomes
+            INSPECT_OUTPUT=$(bowtie2-inspect -n {params.genome_path})
+
+            # Check if at least one sequence name starts with 'EXO_'
+            if ! echo "$INSPECT_OUTPUT" | grep -q '^EXO_'; then
+                echo "Error in the Index: At least one index sequence must start with 'EXO_'. Please check the documentation" >&2
+                exit 1
+            fi
+            # Check if any sequence name does not start with 'chr' or 'EXO_'
+            if echo "$INSPECT_OUTPUT" | grep -vqE '^(chr|EXO_)'; then
+                echo "Error in the Index: All index sequences must start with either 'chr' or 'EXO_'." >&2
+                exit 1
+            fi
         fi
         """
 

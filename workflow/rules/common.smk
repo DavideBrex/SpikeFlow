@@ -167,9 +167,17 @@ def perform_checks(input_df):
         if missing_files:
             raise FileNotFoundError(
                 """It appears that the genome index folder you provided is missing one/more indexing files.
-                \nPlease check that the index prefix is correct and the index files are present in {}""".format(
+                \nMake sure to append the index files prefix (e.g. prefix.1.bt2) after the folder path in the config file.
+                \nAlso please check that the 6 index files are present in {}""".format(
                     folder_path
                 )
+            )
+        # since the folder resources/reference_genome/index/ is created by the rule return_genome_path,
+        # we do not allow the user to set the same path in the config file
+        if folder_path == "resources/reference_genome/index/":
+            raise ValueError(
+                """Please use another folder to store your index files (change in config file in the resources section)
+                \nThe folder resources/reference_genome/index/ is reserved for the pipeline"""
             )
 
     # config file header
