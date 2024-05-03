@@ -55,7 +55,7 @@ rule consensus_peaks:
         if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
         else "{}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
             outdir
-        )
+        ),
     params:
         min_num_reps=config["diffPeakAnalysis"]["minNumSamples"],
         antibody=lambda w: config["diffPeakAnalysis"]["contrasts"][w.antibody],

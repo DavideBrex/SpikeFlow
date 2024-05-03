@@ -37,6 +37,7 @@ rule macs2_callNarrowPeak:
             {params.otherParams} &> {log}
         """
 
+
 rule macs2_callNormPeaks_narrow:
     input:
         treatment="{}results/bam/{{sample}}_ref.sorted.bam".format(outdir),
@@ -60,7 +61,9 @@ rule macs2_callNormPeaks_narrow:
             "_narrowPeaks.narrowPeak",
         ),
     log:
-        "{}results/logs/peakCallingNorm/{{sample}}_callNormPeak_narrow.log".format(outdir),
+        "{}results/logs/peakCallingNorm/{{sample}}_callNormPeak_narrow.log".format(
+            outdir
+        ),
     params:
         scaleFactors=lambda wildcards: spiker_normalization_factor(wildcards),
         output_prefix=lambda w, output: output[0].split(os.extsep)[0],
@@ -87,6 +90,7 @@ rule macs2_callNormPeaks_narrow:
         mv {params.output_prefix}.narrowPeak {params.output_prefix}_narrowPeaks.narrowPeak  2>> {log}
         """
 
+
 rule macs2_callNormPeaks_broad:
     input:
         treatment="{}results/bam/{{sample}}_ref.sorted.bam".format(outdir),
@@ -110,7 +114,9 @@ rule macs2_callNormPeaks_broad:
             "_broadPeaks.broadPeak",
         ),
     log:
-        "{}results/logs/peakCallingNorm/{{sample}}_callNormPeak_narrow.log".format(outdir),
+        "{}results/logs/peakCallingNorm/{{sample}}_callNormPeak_narrow.log".format(
+            outdir
+        ),
     params:
         scaleFactors=lambda wildcards: spiker_normalization_factor(wildcards),
         output_prefix=lambda w, output: output[0].split(os.extsep)[0],

@@ -92,8 +92,9 @@ elif normType in ['Downsampling', 'Median']:
     for antibody in dictAntibody:
         print("Computing scaling factors for antibody: {}\n".format(antibody))
         samples = dictAntibody[antibody]
-        
-        spikeInReads = [elem[1] for elem in [sampleInfo[sampleName] for sampleName in samples]]
+        inputSamples = [dictToMatchInput[sampleName] for sampleName in samples]
+
+        spikeInReads = [elem[1] for elem in [sampleInfo[sampleName] for sampleName in samples+inputSamples]]
         if normType == "Median":
             commonNorm = sum(spikeInReads) / len(spikeInReads)
             print("Median spike reads: {}".format(commonNorm))
@@ -107,18 +108,23 @@ elif normType in ['Downsampling', 'Median']:
     for idSample in logFiles:
         
         idName = os.path.basename(idSample).rsplit(".",1)[0]
-        
-        inputSamp = dictToMatchInput[idName]
-        if pd.isna(inputSamp):
-            #if the sample is an input, we use RAW normalization
-            Nsample = sampleInfo[idName][0]
-            alpha = (1 / Nsample) * 1000000  # RPM
+
+        if pd.isna(dictToMatchInput[idName]):
+            #if the sample is an input itself we use the same normalization factor for its treatment sample
+            for antibody in dictAntibody:
+                for elem in dictAntibody[antibody]:
+                    if dictToMatchInput[elem] == idName:
+                        commonNormFactor = perAntibodyScale[antibody]             
         else:
+            #if the sample is not an input we simpy get the antibody normalization factor
             antibody = [key for key, value in dictAntibody.items() if idName in value][0]
             commonNormFactor = perAntibodyScale[antibody]
-            Nspike = sampleInfo[idName][1]            
-            alpha = (commonNorm / Nspike) 
-        
+            
+        Nspike = sampleInfo[idName][1]            
+        alpha = (commonNorm / Nspike)
+        if alpha == 1:
+            alpha = 1.001
+    
         with open(idSample.replace('.removeSpikeDups','.normFactor'), "w") as file:
             file.write("Normalization factor:{}\n".format(round(alpha, 4)))
 

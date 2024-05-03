@@ -58,7 +58,7 @@ rule split_bam:
         outprefix=lambda w, input: input.sample_mixed.split(os.extsep)[0],
         map_qual=config["params"]["bowtie2"]["map_quality"],
     conda:
-        "../envs/various.yaml"
+        "../envs/bowtie2.yaml"
     log:
         readsInfo="{}results/logs/spike/{{id}}.removeSpikeDups".format(outdir),
         otherLog="{}results/logs/spike/{{id}}.split_bam.log".format(outdir),

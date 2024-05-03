@@ -172,9 +172,9 @@ def perform_checks(input_df):
                     folder_path
                 )
             )
-        # since the folder resources/reference_genome/index/ is created by the rule return_genome_path,
+        # since the folder resources/reference_genome/index is created by the rule return_genome_path,
         # we do not allow the user to set the same path in the config file
-        if folder_path == "resources/reference_genome/index/":
+        if folder_path == "resources/reference_genome/index":
             raise ValueError(
                 """Please use another folder to store your index files (change in config file in the resources section)
                 \nThe folder resources/reference_genome/index/ is reserved for the pipeline"""
@@ -291,7 +291,9 @@ def perform_checks(input_df):
             try:
                 sample_groups_antibody = [
                     sample.rsplit("_", 1)[1]
-                    for sample in subdf.index.get_level_values("sample").unique().tolist()
+                    for sample in subdf.index.get_level_values("sample")
+                    .unique()
+                    .tolist()
                 ]
             except IndexError:
                 raise ValueError(
@@ -459,12 +461,12 @@ def input_toget():
                 # if we use spikein called peaks, we need to change the path
                 if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
                     path = "{outdir}results/differentialAnalysis/NormalisedPeaks/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
-                            outdir=outdir, antibody=antibody, contrast=contrast
-                        )
+                        outdir=outdir, antibody=antibody, contrast=contrast
+                    )
                 else:
                     path = "{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
-                            outdir=outdir, antibody=antibody, contrast=contrast
-                        )
+                        outdir=outdir, antibody=antibody, contrast=contrast
+                    )
                 diff_peak_files.append(path)
 
         return bigWigs + peak_files + QCfiles + annot_files + diff_peak_files
@@ -633,7 +635,10 @@ def get_normFactor_by_antibody(wildcards):
 def get_diffAnalysis_tables(wildcards):
     """Function that returns the diff peaks tables for the antibody for multiqc input"""
 
-    if config["diffPeakAnalysis"]["perform_diff_analysis"] and not config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
+    if (
+        config["diffPeakAnalysis"]["perform_diff_analysis"]
+        and not config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+    ):
         return [
             "{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
                 outdir=outdir, antibody=antibody, contrast=contrast
@@ -641,7 +646,10 @@ def get_diffAnalysis_tables(wildcards):
             for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items()
             for contrast in contrasts
         ]
-    elif config["diffPeakAnalysis"]["perform_diff_analysis"] and config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
+    elif (
+        config["diffPeakAnalysis"]["perform_diff_analysis"]
+        and config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+    ):
         return [
             "{outdir}results/differentialAnalysis/NormalisedPeaks/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
                 outdir=outdir, antibody=antibody, contrast=contrast
@@ -688,4 +696,3 @@ def spiker_normalization_factor(wildcards):
         treatment_norm_factor = tf.read().strip().split(":")[-1].strip()
         control_norm_factor = cf.read().strip().split(":")[-1].strip()
     return "--csf {} --tsf {}".format(control_norm_factor, treatment_norm_factor)
-
