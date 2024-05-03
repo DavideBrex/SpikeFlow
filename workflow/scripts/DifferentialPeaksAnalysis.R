@@ -182,21 +182,31 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
     labs(title = "PCA plot", color='Group')
 
   if (peak_type == "Raw"){
-    pdf(paste0(outdir,antibody, '_', contrastToApply, '_pcaPlot.pdf'), width = 10, height = 10)
-    print(pcaPLot)
-    dev.off()
-    #png for multiqc
-    png(paste0(outdir,antibody, '_', contrastToApply, '_pcaPlot_mqc.png'), width=800, height=800)
-    print(pcaPLot)
-    dev.off()
+    #check if the pca plot already exists
+    if (file.exists(paste0(outdir,antibody, '_pcaPlot.pdf'))){
+      cat("PCA plot for this antibody already exists, skipping\n")
+    } else {     
+      pdf(paste0(outdir,antibody, '_pcaPlot.pdf'), width = 10, height = 10)
+      print(pcaPLot)
+      dev.off()
+      #png for multiqc
+      png(paste0(outdir,antibody, '_pcaPlot_mqc.png'), width=800, height=800)
+      print(pcaPLot)
+      dev.off()
+    }
+
   } else if (peak_type == "Norm"){
-    pdf(paste0(outdir,antibody, '_', contrastToApply, '_pcaPlot_NormPeaks.pdf'), width = 10, height = 10)
-    print(pcaPLot)
-    dev.off()
-    #png for multiqc
-    png(paste0(outdir,antibody, '_', contrastToApply, '_pcaPlot_NormPeaks_mqc.png'), width=800, height=800)
-    print(pcaPLot)
-    dev.off()
+    if (file.exists(paste0(outdir,antibody, '_pcaPlot_NormPeaks.pdf'))){
+      cat("PCA plot for this antibody already exists, skipping\n")
+    } else {
+      pdf(paste0(outdir,antibody, '_pcaPlot_NormPeaks.pdf'), width = 10, height = 10)
+      print(pcaPLot)
+      dev.off()
+      #png for multiqc
+      png(paste0(outdir,antibody, '_pcaPlot_NormPeaks_mqc.png'), width=800, height=800)
+      print(pcaPLot)
+      dev.off()
+    }
   }
   #------------------------------------------------------------------------------#
   #------------------------------------------------------------------------------#
@@ -208,15 +218,21 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
     as.data.frame() %>%
     mutate(
       Levels = case_when(log2FoldChange >= log2FCcutoff & padj <= padjCutoff ~ paste0("Increased-binding in ", leftContrast),
-                        log2FoldChange <= -log2FCcutoff & padj <= padjCutoff ~ paste0("Increased-binding in", rightContrast) ,
+                        log2FoldChange <= -log2FCcutoff & padj <= padjCutoff ~ paste0("Decreased-binding in ", leftContrast) ,
                         TRUE ~ "Unchanged")
     )
 
+  colors_value <- setNames(
+    c("firebrick3", "dodgerblue3", "gray50"),
+    c(paste0("Increased-binding in ", leftContrast),
+      paste0("Decreased-binding in ", leftContrast),
+      "Unchanged")
+  )
   p2 <- ggplot(resultsToPlot, aes(log2FoldChange, -log(padj,10))) +
     geom_point(aes(color = Levels)) +
     xlab(expression("log2FC")) + 
     ylab(expression("-log10(p-adjusted)")) +
-    scale_color_manual(values = c( "firebrick3","dodgerblue3",  "gray50"))+
+    scale_color_manual(values = colors_value)+
     theme_light(base_size = 17)+
     labs(title = "Volcano plot")
 
