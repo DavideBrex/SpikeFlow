@@ -56,6 +56,7 @@ def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='EXO_', threads = 1):
 		print("\t\"%s\" exists and non-empty, proceed with read counting." % bam_file)
 		result=subprocess.run("samtools view -c %s" % bam_file, shell=True, capture_output=True, text=True)
 		total_reads = int(result.stdout.strip())
+		print("\tTotal reads: %d" % total_reads)
 	else:
 		sys.exit("\tCannot find (or it is empty) the input BAM file \"%s\"!" % bam_file)
 	 
@@ -85,13 +86,16 @@ def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='EXO_', threads = 1):
 		#calculate the number of low mapq reads
 		low_mapq = total_reads - filtered_reads
 		print("\tLow MAPQ reads: %d" % low_mapq)
+		#if no reads are left after filtering we exit
+		if (total_reads == filtered_reads):
+			sys.exit("\tNo reads left after filtering out low MAPQ reads! Consider lowering the MAPQ threshold.")
 	else:
 		low_mapq = 0
 	
 	#Now we split the bam file into endogenous and exogenous bam files
  
 	#First we need to extract the chromosome names
-	#first endogenous (humand or mouse usually)
+	#first endogenous (human or mouse usually)
 	try:
 		endo_chromNames=subprocess.run("samtools idxstats %s | cut -f 1 | grep '^chr' | sed 's/^/ /'  | tr '\n' ' '" % filtered_bam, shell=True, capture_output=True, text=True)
 		exo_chromNames=subprocess.run("samtools idxstats %s | cut -f 1 | grep '^%s' | sed 's/^/ /'  | tr '\n' ' '" % (filtered_bam, chr_prefix), shell=True, capture_output=True, text=True)

@@ -395,6 +395,10 @@ def input_toget():
                 ),
                 sample=narrowSamples,
             )
+            annot_files += expand(
+                "{}results/peakCallingNorm/peakAnnot/{{sample}}_annot.txt".format(outdir),
+                sample=narrowSamples,
+            )
         # perform annotation of peaks
         annot_files += expand(
             "{}results/peakCalling/peakAnnot/{{sample}}_annot.txt".format(outdir),
@@ -414,6 +418,10 @@ def input_toget():
                 ),
                 sample=broadSamples,
             )
+            annot_files += expand(
+                "{}results/peakCallingNorm/peakAnnot/{{sample}}_annot.txt".format(outdir),
+                sample=broadSamples,
+            )
         # perform annotation of peaks
         annot_files += expand(
             "{}results/peakCalling/peakAnnot/{{sample}}_annot.txt".format(outdir),
@@ -425,32 +433,6 @@ def input_toget():
             "{}results/peakCalling/edd/{{sample}}/{{sample}}_peaks.bed".format(outdir),
             sample=veryBroadSamples,
         )
-
-    # if there are reps, we need to add to the peak files the merged samples
-    if narrowSamples or broadSamples:
-        merged_dicts = reps_dict_narrow | reps_dict_broad  # merge dicts
-        if merged_dicts:
-            peak_files += expand(
-                "{}results/peakCalling/mergedPeaks/{{unique_rep}}_merged_optimal.bed".format(
-                    outdir
-                ),
-                unique_rep=list(merged_dicts.keys()),
-            )
-            annot_files += expand(
-                "{}results/peakCalling/peakAnnot/{{unique_rep}}_annot.txt".format(
-                    outdir
-                ),
-                unique_rep=list(merged_dicts.keys()),
-            )
-    # for very broad peaks we shall use only intersect, whereas for narrow and broad we shall use chip-r
-    if veryBroadSamples:
-        if reps_dict_verybroad:
-            peak_files += expand(
-                "{}results/peakCalling/mergedPeaks/{{unique_rep}}_merged_intersected.bed".format(
-                    outdir
-                ),
-                unique_rep=list(reps_dict_verybroad.keys()),
-            )
 
     # we need the consensus peaks for the differential analysis
     if config["diffPeakAnalysis"]["perform_diff_analysis"]:
@@ -581,30 +563,7 @@ def get_reads(wildcards):
                     else [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
                 )
 
-
-def get_replicate_peaks(wildcards):
-    """Function that returns the input files to merge replicates (if any) both narrow and broad peaks"""
-    if wildcards.unique_rep in reps_dict_narrow:
-        return expand(
-            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
-            sample=reps_dict_narrow[wildcards.unique_rep],
-        )
-    elif wildcards.unique_rep in reps_dict_broad:
-        return expand(
-            "{}results/logs/peakCalling/epic2/{{sample}}.bed".format(outdir),
-            sample=reps_dict_broad[wildcards.unique_rep],
-        )
-
-
-def get_replicate_peaks_edd(wildcards):
-    """Function that returns the input files to merge replicates (if any) for very broad  peaks"""
-    return expand(
-        "{}results/peakCalling/edd/{{sample}}/{{sample}}_peaks.bed".format(outdir),
-        sample=reps_dict_verybroad[wildcards.unique_rep],
-    )
-
-
-def get_singelRep_peaks(wildcards):
+def get_singleRep_peaks(wildcards):
     """Function that returns the input files to annot single sample peak files both narrow and broad peaks"""
     if wildcards.sample in narrowSamples:
         return "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
@@ -612,6 +571,17 @@ def get_singelRep_peaks(wildcards):
         )
     elif wildcards.sample in broadSamples:
         return "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(
+            outdir, sample=wildcards.sample
+        )
+
+def get_singleRep_peaksnorm(wildcards):
+    """Function that returns the input files to annot single sample norm peak files both narrow and broad peaks"""
+    if wildcards.sample in narrowSamples:
+        return "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(
+            outdir, sample=wildcards.sample
+        )
+    elif wildcards.sample in broadSamples:
+        return "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(
             outdir, sample=wildcards.sample
         )
 

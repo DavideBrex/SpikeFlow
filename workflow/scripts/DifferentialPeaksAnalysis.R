@@ -18,6 +18,8 @@ print(contrastToApply)
 padjCutoff <- snakemake@params[["padjCutoff"]]
 log2FCcutoff <- snakemake@params[["log2FCcutoff"]]
 outdir <- snakemake@params[["outdir"]]
+normMethod <- snakemake@params[['normMethod']]
+
 normFactorsFiles <- snakemake@input[['logFile']]
 
 #we check whether we are dealing with peaks obtained from raw or normalised peak calling
@@ -142,12 +144,12 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
     print(plotScatter)
     dev.off()
   } else if (peak_type == "Norm"){
-    print(paste0(outdir, contrastToApply, "_log2_scatterPlot.pdf"))
-    pdf(paste0(outdir, antibody, '_',contrastToApply, "_log2_scatterPlot_NormPeaks.pdf"), width = 10, height = 10)
+    print(paste0(outdir, contrastToApply,'_',normMethod, "_log2_scatterPlot.pdf"))
+    pdf(paste0(outdir, antibody, '_',contrastToApply, '_',normMethod, "_log2_scatterPlot_NormPeaks.pdf"), width = 10, height = 10)
     print(plotScatter)
     dev.off()
     #png for multiqc
-    png(paste0(outdir, antibody, '_', contrastToApply, "_log2_scatterPlot_NormPeaks_mqc.png"), width=800, height=800)
+    png(paste0(outdir, antibody, '_', contrastToApply,'_',normMethod,  "_log2_scatterPlot_NormPeaks_mqc.png"), width=800, height=800)
     print(plotScatter)
     dev.off()
   }
@@ -196,14 +198,14 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
     }
 
   } else if (peak_type == "Norm"){
-    if (file.exists(paste0(outdir,antibody, '_pcaPlot_NormPeaks.pdf'))){
+    if (file.exists(paste0(outdir,antibody, '_pcaPlot_', normMethod,'_NormPeaks.pdf'))){
       cat("PCA plot for this antibody already exists, skipping\n")
     } else {
-      pdf(paste0(outdir,antibody, '_pcaPlot_NormPeaks.pdf'), width = 10, height = 10)
+      pdf(paste0(outdir,antibody, '_pcaPlot_', normMethod,'_NormPeaks.pdf'), width = 10, height = 10)
       print(pcaPLot)
       dev.off()
       #png for multiqc
-      png(paste0(outdir,antibody, '_pcaPlot_NormPeaks_mqc.png'), width=800, height=800)
+      png(paste0(outdir,antibody, '_pcaPlot_', normMethod,'_NormPeaks_mqc.png'), width=800, height=800)
       print(pcaPLot)
       dev.off()
     }
@@ -245,11 +247,11 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
     print(p2)
     dev.off()
   } else if (peak_type == "Norm"){
-    pdf(paste0(outdir,antibody, '_', contrastToApply,'_volcanoPlot_NormPeaks.pdf'), width = 11, height = 10)
+    pdf(paste0(outdir,antibody, '_', contrastToApply,'_',normMethod, '_volcanoPlot_NormPeaks.pdf'), width = 11, height = 10)
     print(p2)
     dev.off()
     #png for multiqc
-    png(paste0(outdir,antibody, '_', contrastToApply,'_volcanoPlot_NormPeaks_mqc.png'), width=1000, height=800)
+    png(paste0(outdir,antibody, '_', contrastToApply,'_', normMethod, '_volcanoPlot_NormPeaks_mqc.png'), width=1000, height=800)
     print(p2)
     dev.off()
   }
@@ -261,12 +263,15 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
 
   results <- results %>%
               data.frame %>% 
-              round(3) %>% 
+              mutate(
+                baseMean = round(baseMean, 2),
+                log2FoldChange = round(log2FoldChange, 3),
+                lfcSE = round(lfcSE, 3),
+                stat = round(stat, 3),
+              ) %>% 
               rownames_to_column(var = "region")
 
   write.table(results, file = snakemake@output[['diffTab']], sep = "\t", quote = F, row.names = F, col.names = T)
-
-
 }
 
 cat("Done\n")

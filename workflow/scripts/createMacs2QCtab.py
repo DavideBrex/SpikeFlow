@@ -3,8 +3,12 @@ import os
 
 dict_allsamp = {}
 # for each sample, we read the  file and extract the number of called peaks
-for f in snakemake.input["logFile"]:
-    idName = os.path.basename(f).split(".")[0]
+for f in snakemake.input:
+    #check if the peakCallingNorm is in the path of file, then we attach "PeakNorm" to the idName
+    if "peakCallingNorm" in f:
+        idName = os.path.basename(f).split("_narrowPeaks.narrowPeak")[0] + "_PeakNorm"
+    else:
+        idName = os.path.basename(f).split(".")[0]
     with open(f, "r") as file:
         calledPeaks = len(file.readlines())
         dict_allsamp[idName] = [calledPeaks]

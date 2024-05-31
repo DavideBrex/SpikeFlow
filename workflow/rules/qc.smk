@@ -113,7 +113,20 @@ rule create_qc_table_edd:
 
 rule create_qc_table_macs2:
     input:
-        logFile=expand(
+        expand(
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
+            sample=narrowSamples,
+        )+
+        expand(
+            "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(outdir),
+            sample=narrowSamples,
+        )+
+        expand(
+            "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(outdir),
+            sample=broadSamples,
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else expand(
             "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
             sample=narrowSamples,
         ),
@@ -129,7 +142,20 @@ rule create_qc_table_macs2:
 
 rule create_qc_table_peakAnnot:
     input:
-        logFile=expand(
+        expand(
+            "{}results/logs/peakCallingNorm/peakAnnot/{{sample}}_annotInfo.txt".format(
+                outdir
+            ),
+            sample=narrowSamples + broadSamples,
+        ) +
+        expand(
+            "{}results/logs/peakCalling/peakAnnot/{{sample}}_annotInfo.txt".format(
+                outdir
+            ),
+            sample=narrowSamples + broadSamples,
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else expand(
             "{}results/logs/peakCalling/peakAnnot/{{sample}}_annotInfo.txt".format(
                 outdir
             ),

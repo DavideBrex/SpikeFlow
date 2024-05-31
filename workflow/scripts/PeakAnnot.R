@@ -18,9 +18,9 @@ Peak_Annot <- function(infile, tssRegion = c(-2500, 2500), TxDb, annoDb) {
   # read file and annotate peaks
   df <- readPeakFile(infile)
   #just for the testing of the pipeline, do not mind this
-  if(as.character(seqnames(df))[1] == "chr10:14000000-25000000"){
+  if(as.character(seqnames(df))[1] == "chr10_14000000_25000000"){
     newname <- c("chr10")
-    names(newname) <- "chr10:14000000-25000000"
+    names(newname) <- "chr10_14000000_25000000"
     df <- renameSeqlevels(df, newname)
   }
 

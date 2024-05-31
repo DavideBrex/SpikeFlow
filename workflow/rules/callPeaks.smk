@@ -53,10 +53,6 @@ rule macs2_callNormPeaks_narrow:
     output:
         multiext(
             "{}results/peakCallingNorm/{{sample}}".format(outdir),
-            ".control.pileup.max.bdg",
-            ".control.pileup.max.bigWig",
-            ".treat.pileup.bdg",
-            ".treat.pileup.SpikeIn_scaled.bdg",
             ".treat.pileup.SpikeIn_scaled.bigWig",
             "_narrowPeaks.narrowPeak",
         ),
@@ -88,6 +84,9 @@ rule macs2_callNormPeaks_narrow:
         sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Peak\\)\\([0-9]\\)/\\1_\\2/g' {params.output_prefix}.narrowPeak 2>> {log}
         #change file names 
         mv {params.output_prefix}.narrowPeak {params.output_prefix}_narrowPeaks.narrowPeak  2>> {log}
+        #we remove other files that are not needed
+        rm {params.output_prefix}.control.*   {params.output_prefix}.treat.pileup.bdg \
+        {params.output_prefix}.treat.pileup.SpikeIn_scaled.bdg {params.output_prefix}.treat.predict_d.r 2>> {log}
         """
 
 
@@ -106,10 +105,6 @@ rule macs2_callNormPeaks_broad:
     output:
         multiext(
             "{}results/peakCallingNorm/{{sample}}".format(outdir),
-            ".control.pileup.max.bdg",
-            ".control.pileup.max.bigWig",
-            ".treat.pileup.bdg",
-            ".treat.pileup.SpikeIn_scaled.bdg",
             ".treat.pileup.SpikeIn_scaled.bigWig",
             "_broadPeaks.broadPeak",
         ),
@@ -141,6 +136,9 @@ rule macs2_callNormPeaks_broad:
         sed -i -e 's_results/peakCallingNorm/__' -e 's/\\(Region\\)\\([0-9]\\)/\\1_\\2/g' {params.output_prefix}.broadPeak 2>> {log}
         #change file name
         mv {params.output_prefix}.broadPeak {params.output_prefix}_broadPeaks.broadPeak 2>> {log}
+        #we remove other files that are not needed
+        rm {params.output_prefix}.control.*   {params.output_prefix}.treat.pileup.bdg \
+        {params.output_prefix}.treat.pileup.SpikeIn_scaled.bdg {params.output_prefix}.treat.predict_d.r 2>> {log}
         """
 
 

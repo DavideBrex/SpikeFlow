@@ -7,7 +7,6 @@ dependencies:
   - pysam
   - pandas
   - bedtools
-  - chip-r
   - fastp
   - macs2
   - deeptoolsintervals

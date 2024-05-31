@@ -121,7 +121,7 @@ elif normType in ['Downsampling', 'Median']:
             commonNormFactor = perAntibodyScale[antibody]
             
         Nspike = sampleInfo[idName][1]            
-        alpha = (commonNorm / Nspike)
+        alpha = (commonNormFactor / Nspike)
         if alpha == 1:
             alpha = 1.001
     
