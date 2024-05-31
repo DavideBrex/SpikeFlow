@@ -396,7 +396,9 @@ def input_toget():
                 sample=narrowSamples,
             )
             annot_files += expand(
-                "{}results/peakCallingNorm/peakAnnot/{{sample}}_annot.txt".format(outdir),
+                "{}results/peakCallingNorm/peakAnnot/{{sample}}_annot.txt".format(
+                    outdir
+                ),
                 sample=narrowSamples,
             )
         # perform annotation of peaks
@@ -419,7 +421,9 @@ def input_toget():
                 sample=broadSamples,
             )
             annot_files += expand(
-                "{}results/peakCallingNorm/peakAnnot/{{sample}}_annot.txt".format(outdir),
+                "{}results/peakCallingNorm/peakAnnot/{{sample}}_annot.txt".format(
+                    outdir
+                ),
                 sample=broadSamples,
             )
         # perform annotation of peaks
@@ -563,6 +567,7 @@ def get_reads(wildcards):
                     else [u.fastq_1.tolist()[0], u.fastq_2.tolist()[0]]
                 )
 
+
 def get_singleRep_peaks(wildcards):
     """Function that returns the input files to annot single sample peak files both narrow and broad peaks"""
     if wildcards.sample in narrowSamples:
@@ -573,6 +578,7 @@ def get_singleRep_peaks(wildcards):
         return "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(
             outdir, sample=wildcards.sample
         )
+
 
 def get_singleRep_peaksnorm(wildcards):
     """Function that returns the input files to annot single sample norm peak files both narrow and broad peaks"""

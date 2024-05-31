@@ -116,12 +116,14 @@ rule create_qc_table_macs2:
         expand(
             "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
             sample=narrowSamples,
-        )+
-        expand(
-            "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(outdir),
+        )
+        + expand(
+            "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(
+                outdir
+            ),
             sample=narrowSamples,
-        )+
-        expand(
+        )
+        + expand(
             "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(outdir),
             sample=broadSamples,
         )
@@ -147,8 +149,8 @@ rule create_qc_table_peakAnnot:
                 outdir
             ),
             sample=narrowSamples + broadSamples,
-        ) +
-        expand(
+        )
+        + expand(
             "{}results/logs/peakCalling/peakAnnot/{{sample}}_annotInfo.txt".format(
                 outdir
             ),

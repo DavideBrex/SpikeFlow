@@ -94,7 +94,6 @@ rule count_reads_on_peaks:
         """
 
 
-
 rule peakAnnot_singleRep:
     input:
         peaks=get_singleRep_peaks,
