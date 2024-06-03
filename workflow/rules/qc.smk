@@ -19,7 +19,8 @@ rule fastqc:
 
 rule plotFingerprint:
     input:
-        "{}results/bam/{{id}}_ref.sorted.bam".format(outdir),
+        bamFile="{}results/bam/{{id}}_ref.sorted.bam".format(outdir),
+        bamFileIndex="{}results/bam/{{id}}_ref.sorted.bam.bai".format(outdir),
     output:
         qualMetrics="{}results/QC/fingerPrint/{{id}}.qualityMetrics.tsv".format(outdir),
         raw_counts="{}results/QC/fingerPrint/{{id}}.rawcounts.tsv".format(outdir),
@@ -31,7 +32,7 @@ rule plotFingerprint:
     threads: config["threads"]["qc"]
     shell:
         """
-        plotFingerprint -b {input} \
+        plotFingerprint -b {input.bamFile} \
         -p {threads} \
         --outQualityMetrics {output.qualMetrics} \
         --outRawCounts {output.raw_counts} \
