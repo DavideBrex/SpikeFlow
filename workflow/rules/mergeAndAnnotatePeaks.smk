@@ -85,13 +85,8 @@ rule count_reads_on_peaks:
         )
     conda:
         "../envs/various.yaml"
-    shell:
-        """
-        python3 workflow/scripts/frag_count.py -b {input.consensus_peaks} \
-            -i {params.joined_bams} \
-            -o {output.output_tsv} \
-            --mapq {params.map_qual} &> {log}
-        """
+    script:
+        "../scripts/frag_count.py"
 
 
 rule peakAnnot_singleRep:

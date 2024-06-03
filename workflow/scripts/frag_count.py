@@ -18,13 +18,7 @@ if sys.version_info[0] != 3:
 import pandas as pd
 import glob
 import pysam
-from optparse import OptionParser
 from time import strftime
-
-#import third-party modules
-#from bx.bitset import *
-#from bx.bitset_builders import *
-#from bx.intervals import *
 
 
 __author__ = "Liguo Wang"
@@ -43,32 +37,32 @@ def overlap(a_start, a_end, b_start, b_end):
 
 
 def main():
-        usage="%prog [options]" + '\n' + __doc__ + "\n"
-        parser = OptionParser(usage,version="%prog " + __version__)
-        parser.add_option("-i","--bam",action="store",type="string",dest="bam_files", help="comma separated BAM file(s). [required]")
-        parser.add_option("-o","--out-prefix",action="store",type="string",dest="output", help="Output counts file. [required]")
-        parser.add_option("-b","--bed",action="store",type="string",dest="peak_bed", help="Peak file in bed format (at least 3 columns). [required]")
-        parser.add_option("-u","--skip-multi-hits",action="store_true",dest="skip_multi", help="How to deal with multiple hit reads. Presence this option renders program to skip multiple hits reads.")
-        parser.add_option("-q","--mapq",action="store",type="int",dest="map_qual",default=30, help="The minimum mapping quality (phred scaled). default=%default")
-        parser.add_option("--leng",action="store",type="int",dest="overlap_len",default=1, help="The minimum *ChIP fragment (or read) length* required to overlap with a peak. default=%default")
-        parser.add_option("--frac",action="store",type="float",dest="overlap_frac",default=0.0, help="The minimum *fraction of ChIP fragment (or read)* required to overlap with a peak. default=%default")
+        sys.stdout = open(snakemake.log[0], 'w')
+        sys.stderr = sys.stdout
 
-        (options,args)=parser.parse_args()
+        bam_filesInput = snakemake.params.joined_bams
+        outputDest = snakemake.output.output_tsv
+        peak_bed = snakemake.input.consensus_peaks
+        map_qual = snakemake.params.map_qual
+        overlap_len = 1
+        overlap_frac = 0.0
+        skip_multi = False
 
-        if not (options.output and options.bam_files and options.peak_bed):
+
+        if not (outputDest and bam_filesInput and peak_bed):
                 parser.print_help()
                 sys.exit(0)
 
-        if not os.path.exists(options.peak_bed):
-                print(options.peak_bed + " does NOT exists" + '\n', file=sys.stderr)
+        if not os.path.exists(peak_bed):
+                print(peak_bed + " does NOT exists" + '\n', file=sys.stderr)
                 sys.exit(0)
 
         #get all bam files
         bam_files = []
-        if ',' in options.bam_files:
-                bam_files = options.bam_files.replace(' ','').split(',')
+        if ',' in bam_filesInput:
+                bam_files = bam_filesInput.replace(' ','').split(',')
         else:
-                bam_files = glob.glob(options.bam_files)
+                bam_files = glob.glob(bam_filesInput)
         bam_files = sorted(bam_files)
 
         for file in bam_files:
@@ -85,7 +79,7 @@ def main():
         chromosomes_all = []
         start_all = []
         end_all = []
-        for line in open(options.peak_bed,'r'):
+        for line in open(peak_bed,'r'):
                 if line.startswith(('#','track','browser')):
                         continue
                 fields = line.split()
@@ -123,12 +117,12 @@ def main():
                                 frag_counts.append(0)
                                 continue
                         for aligned_read in alignedReads:
-                                if aligned_read.is_qcfail:continue                      #skip low quanlity
+                                if aligned_read.is_qcfail:continue                      #skip low quality reads
                                 if aligned_read.is_duplicate:continue           #skip duplicate read
                                 if aligned_read.is_secondary:continue           #skip non primary hit
                                 if aligned_read.is_supplementary:continue
-                                if options.skip_multi:
-                                        if aligned_read.mapq < options.map_qual:
+                                if skip_multi:
+                                        if aligned_read.mapq < map_qual:
                                                 continue
                                 # pair-end sequencing
                                 if aligned_read.is_paired:
@@ -144,7 +138,7 @@ def main():
                                         if frag_length <= 0:
                                                 continue
                                         overlap_length = overlap(start, end, frag_start, frag_end)
-                                        if  (overlap_length >= options.overlap_len) and (overlap_length/overlap_length >= options.overlap_frac):
+                                        if  (overlap_length >= overlap_len) and (overlap_length/overlap_length >= overlap_frac):
                                                 frag_count += 1
                                 #single-end sequencing
                                 else:
@@ -154,7 +148,7 @@ def main():
                                         read_start = aligned_read.reference_start
                                         read_end = read_start + read_length
                                         overlap_length = overlap(start, end, read_start, read_end)
-                                        if  (overlap_length >= options.overlap_len) and (overlap_length/read_length >= options.overlap_frac):
+                                        if  (overlap_length >= overlap_len) and (overlap_length/read_length >= overlap_frac):
                                                 frag_count += 1
                         frag_counts.append(frag_count)
                 counts_dict[sample_name] = frag_counts
@@ -163,8 +157,8 @@ def main():
         counts_df.insert(0, 'chr', chromosomes_all)
         counts_df.insert(1, 'start', start_all)
         counts_df.insert(2, 'end', end_all)
-        print ("writing counts to %s" % options.output, file=sys.stderr)
-        counts_df.to_csv(options.output, sep="\t", index_label='region')
+        print ("writing counts to %s" % outputDest, file=sys.stderr)
+        counts_df.to_csv(outputDest, sep="\t", index_label='region')
 
 if __name__ == '__main__':
         main()
