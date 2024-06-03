@@ -25,6 +25,7 @@ rule calculate_norm_factors:
 rule bam2bigwig_general:
     input:
         bam="{}results/bam/{{id}}_ref.sorted.bam".format(outdir),
+        bamIndex="{}results/bam/{{id}}_ref.sorted.bam.bai".format(outdir),
         logFile="{}results/logs/spike/{{id}}.normFactor".format(outdir),
         blacklist=config["resources"]["ref"]["blacklist"],
     output:
