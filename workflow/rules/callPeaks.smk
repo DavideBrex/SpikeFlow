@@ -41,7 +41,11 @@ rule macs2_callNarrowPeak:
 rule macs2_callNormPeaks_narrow:
     input:
         treatment="{}results/bam/{{sample}}_ref.sorted.bam".format(outdir),
+        treatmentIndex="{}results/bam/{{sample}}_ref.sorted.bam.bai".format(outdir),
         control=lambda w: "{}results/bam/{}_ref.sorted.bam".format(
+            outdir, sample_to_input[w.sample]
+        ),
+        controlIndex=lambda w: "{}results/bam/{}_ref.sorted.bam.bai".format(
             outdir, sample_to_input[w.sample]
         ),
         logFile="{}results/logs/spike/{{sample}}.normFactor".format(outdir),
