@@ -80,6 +80,8 @@ params:
     promoter:
       upstream: 2500
       downstream: 2500
+  multiqc:
+    "config/multiqc_config.yaml"
 
 threads:
   fastp:
