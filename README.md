@@ -56,7 +56,7 @@ If you do not already have Conda installed on your machine/server, install a Con
 
 > **_⚠️ NOTE:_** Conda (or Mamba) is needed to run SpikeFlow.
 
-### Step 1 - Install Snakemake
+### Step 2 - Install Snakemake
 To run this pipeline, you'll need to install **Snakemake** (version >= 6.3.0).
 Please check the Snakemake documentation on [how to install](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
 Once you have *conda* installed, you can simply create a new environment and install Snakemake with:
@@ -81,21 +81,21 @@ or
 mamba activate snakemake
 ```
 
-### Step 2 - Install Singularity (recommended)
+### Step 3 - Install Singularity (recommended)
 
 For a fast installation of the workflow, it is recommended to use **Singularity** (compatible with version 3.9.5). This bypasses the need for *Conda* to set up required environments, as these are already present within the container that will be pulled from [dockerhub](https://hub.docker.com/r/davidebrex/spikeflow) with the use of the ```--use-singularity``` flag.
 
 To install singularity check [its website](https://docs.sylabs.io/guides/3.0/user-guide/installation.html).
 
-### Step 3 - Download SpikeFlow
+### Step 4 - Download SpikeFlow
 
 To obtain SpikeFlow, you can:
 
-1.  Download the source code as zip file from the latest [version](https://github.com/DavideBrex/SpikeFlow/releases/latest).
+-  Download the source code as zip file from the latest [version](https://github.com/DavideBrex/SpikeFlow/releases/latest).
 
-2.  Clone the repository on your local machine. See [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the instructions.
+-  Clone the repository on your local machine. See [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the instructions.
 
-### Step 4 - Test the workflow
+### Step 5 - Test the workflow
 
 Once you obtained the latest version of SpikeFlow, the ```config.yaml```  and the ```samples_sheet.csv```  files are already set to run an installation test. 
 You can open them to have an idea about their structure. 
@@ -204,10 +204,11 @@ In this field you can choose the type of normalization to perform on the samples
 
 - **RX-Input** (default): RX-Input is a modified version of the Orlando normalization that accounts for the total number of reads mapped to the spike-in in both the ChIP and input samples. This approach allows for more accurate normalization by accounting for variations in both immunoprecipitation efficiency and background noise (as represented by the input). See [Fursova et al 2019](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6561741/#bib42) for further details.
 
-- **Downsampling**: The sample with the minimum umber of spike-in reads can be used as the reference. Sample reads from all other samples can be downsampled to the same level as this reference sample. This approach is applicable to datasets where the numbers of reads are similar.
+- **Downsampling**: The sample with the minimum umber of spike-in reads is used as the reference. Sample reads from all other samples are downsampled to the same level as this reference sample. This approach is applicable to datasets where the numbers of reads are similar. See [Wu et al. 2021](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8313745/) for further details. 
 
-- **Median Normalization**: Normalize to the median. All samples can be normalized to the median value of spike-in reads. This method is not suited for integrating datasets from different sources.
+- **Median Normalization**: Normalize to the median. All samples can be normalized to the median value of spike-in reads. This method is not suited for integrating datasets from different sources. See [Wu et al. 2021](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8313745/) for further details. 
 
+Example:
 ```yaml
 normalization_type: "Orlando"
 ```

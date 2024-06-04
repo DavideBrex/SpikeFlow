@@ -49,27 +49,37 @@ The last step before running the workflow is to adjust the parameters in the con
 
 #### *Reference and exogenous (spike-in) genomes*
 
-To execute the pipeline, it's essential to specify both *endogenous* and *exogenous* species; for example, use Drosophila (dm16) as the exogenous and Human (hg38) as the endogenous species.
-If bowtie v1 genome indexes are already available, you should input their paths (ending with the index files prefix) in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data. **PLEASE NOTE**, the index must be created with bowtie  v1.3.0.
+To execute the pipeline, it's essential to specify both *endogenous* and *exogenous* species in the assembly field; for example, use Drosophila (dm16) as the exogenous and Human (hg38) as the endogenous species. You can find the the genome assembly on the [UCSC Genome Browser](https://genome-euro.ucsc.edu/cgi-bin/hgGateway).
 
+If a bowtie2 genome index is already available for the merged genomes (e.g. hg38 + dm16), you should input the path (ending with the index files prefix) in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data. **_⚠️ NOTE:_** The index must be created with bowtie2 v2.5.3.
 
 ```yaml
 resources:
     ref:
-        index: /path/to/hg38.bowtie.index/indexFilesPrefix
+        index: "/path/to/hg38_dm16_merged.bowtie2.index/indexFilesPrefix"
+        # ucsc genome name (e.g. hg38, mm10, etc)
+        assembly: hg38
         #blacklist regions 
         blacklist: ".test/data/hg38-blacklist.v2.bed"
 
     ref_spike:
-        index: /path/to/dm16.bowtie.index/indexFilesPrefix
+        # ucsc genome name (e.g. dm6, mm10, etc)
+        spike_assembly: dm6
 ```
 
-If you don't have the bowtie genome indexes readily available, the pipeline can generate them for you. To facilitate this, you'll need to specify the ucsc genome name (e.g. hg38, mm10, etc) for both the reference and spike-in species. You can find the the genome assembly on the [UCSC Genome Browser](https://genome-euro.ucsc.edu/cgi-bin/hgGateway).
+If you don't have the bowtie2 index readily available, the pipeline will generate it for you. To do so, leave empty the index field in the resources section (see below):
 
 ```yaml
+resources:
     ref:
+        index: ""
+        # ucsc genome name (e.g. hg38, mm10, etc)
         assembly: hg38
+        #blacklist regions 
+        blacklist: ".test/data/hg38-blacklist.v2.bed"
+
     ref_spike:
+        # ucsc genome name (e.g. hg38, mm10, etc)
         spike_assembly: dm6
 ```
 
@@ -86,11 +96,37 @@ In this field you can choose the type of normalization to perform on the samples
 
 - **RX-Input** (default): RX-Input is a modified version of the Orlando normalization that accounts for the total number of reads mapped to the spike-in in both the ChIP and input samples. This approach allows for more accurate normalization by accounting for variations in both immunoprecipitation efficiency and background noise (as represented by the input). See [Fursova et al 2019](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6561741/#bib42) for further details.
 
+- **Downsampling**: The sample with the minimum umber of spike-in reads is used as the reference. Sample reads from all other samples are downsampled to the same level as this reference sample. This approach is applicable to datasets where the numbers of reads are similar. See [Wu et al. 2021](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8313745/) for further details. 
 
+- **Median Normalization**: Normalize to the median. All samples can be normalized to the median value of spike-in reads. This method is not suited for integrating datasets from different sources. See [Wu et al. 2021](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8313745/) for further details. 
+
+Example:
 ```yaml
-normalization_type: "RX-Input"
+normalization_type: "Orlando"
 ```
 
+#### *Differential Peak analysis*
+
+SpikeFlow allows you to perform differential peaks analysis. In this case, the grouping variable for the samples will be extracted from the sample name in the *sample_sheet.csv* (after the last '\_'). Also, if ```perform_diff_analysis: true```, you will need to specify the contrasts (per antibody), meaning the groups that you want to compare. Please also specify the log2 fold change (log2FCcutoff) and adjusted p-value (padjust) thresholds for differential analysis. 
+
+> **_⚠️ NOTE:_**  Ensure that the group names for the differential peaks analysis and the contrast names do not contain any additional underscores ('\_'), and that the antibody names do not contain any underscores ('\_'). 
+
+When differential peak analysis is enabled, SpikeFlow will create a consensus peak set per antibody and count reads on those peaks. The default behavior to build the consensus regions is to use all the peaks from all the samples (i.e., minNumSamples: 0). However, you can change this to specify the minimum number of samples a peak should be present in to be kept for the consensus peak set (minNumSamples).
+
+> **_⚠️ NOTE:_**  If ```useSpikeinCalledPeaks: true```, spike-normalized peak calling will be executed in addition to the standard peak calling. The resulting regions from the spike-normalized peak calling will be used for consensus peak set generation and differential analysis.
+
+```yaml
+
+diffPeakAnalysis:
+  perform_diff_analysis: true
+  contrasts:
+    H3K4me3:
+      - "EGF_vs_untreated"
+  padjust: 0.01
+  log2FCcutoff: 1.5
+  minNumSamples: 1
+  useSpikeinCalledPeaks: false
+```
 
 #### *Required options*
 
@@ -105,14 +141,14 @@ When configuring your pipeline based on the chosen reference/endogenous genome (
 
 -  To direct Snakemake to save all outputs in a specific directory, add the desired path in the config file: ```output_path: "path/to/directory"```.
 
+- While splitting the BAM file into two separate ones (one endogenous and one spike-in), reads with a mapping quality below 8 are discarded. You can adjust this behavior using the bowtie2 ```map_quality``` field. If no filtering is needed, set this value to 0; otherwise, adjust it from 0 to 30 as needed. For more information on Bowtie2 MAPQ scores, see [here](http://biofinysics.blogspot.com/2014/05/how-does-bowtie2-assign-mapq-scores.html).
+
 - **Broad Peak Calling:** For samples requiring broad peak calling, adjust the effective genome fraction as per the guidelines on this [page]( https://github.com/biocore-ntnu/epic2/blob/master/epic2/effective_sizes/hg38_50.txt). The *'effective genome size'* mentioned on the GitHub page depends on the read length of your samples.
 
 - **Very Broad Peak Callling:** If you have samples that will undergo very-broad peak calling, please check the log files produced by EDD. This because the tool might fail if it can not accurately estimate the parameters for the peak calling. In this case, you can tweak the parameters in the EDD config file, which is in the config directory (```config/edd_parameters.conf```). For more information about EDD parameters tuning see the [documentation](https://github.com/CollasLab/edd).
 
 - **Trimming Option:** Trimming can be skipped by setting the respective flag to false.
 
-- **P-Value Adjustment for Peak Calling:** Modify the p-values for peak calling in the config file. This applies to different peak calling methods: narrow (macs2), broad (epic2), or very-broad (edd).
-
-- **Peak Merging from Replicates:** While merging peaks from replicates, the size can be adjusted as described [here](https://github.com/rhysnewell/ChIP-R))
+- **P-Value Adjustment for Peak Calling:** Modify the q-values for peak calling in the config file. This applies to different peak calling methods: narrow (macs2), broad (epic2), or very-broad (edd).
 
 - **Peak Annotation Threshold:** The default setting annotates a peak within ±2500 bp around the promoter region.
