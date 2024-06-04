@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/DavideBrex/SpikeFlow/compare/v1.1.0...v1.2.0) (2024-06-04)
+
+
+### Features
+
+* BREAKING CHANGE added diff peak analysis  ([#15](https://github.com/DavideBrex/SpikeFlow/issues/15)) ([a9390b5](https://github.com/DavideBrex/SpikeFlow/commit/a9390b546fc4c87efe6d3f82753417dc1056e74a))
+
+
+### Bug Fixes
+
+* fixed typo in the readme files ([7ac8a76](https://github.com/DavideBrex/SpikeFlow/commit/7ac8a76c279e3858109cb735e9136b7808a419f5))
+
 ## [1.1.0](https://github.com/DavideBrex/SpikeFlow/compare/v1.0.2...v1.1.0) (2024-02-21)
 
 
