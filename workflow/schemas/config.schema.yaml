@@ -14,13 +14,35 @@ properties:
   aligner:
     type: string
     enum:
-        - 'bowtie'
+        - 'bowtie2'
   normalization_type:
     type: string
     enum: 
         - RAW
         - Orlando
         - RX-Input
+        - Downsampling
+        - Median
+  diffPeakAnalysis:
+    type: object
+    properties:
+      perform_diff_analysis:
+        type: boolean
+      contrasts:
+        type: object
+        additionalProperties:
+          type: array
+          items:
+            type: string
+            minItems : 1
+      padjust:
+        type: number
+      log2FCcutoff:
+        type: number
+      minNumSamples:
+        type: integer
+      useSpikeinCalledPeaks:
+        type: boolean
 
   resources:
     type: object
@@ -28,6 +50,8 @@ properties:
       ref:
         type: object
         properties:
+          index:
+            type: string
           assembly:
             type: string
             enum:

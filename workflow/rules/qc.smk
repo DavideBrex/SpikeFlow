@@ -19,7 +19,8 @@ rule fastqc:
 
 rule plotFingerprint:
     input:
-        "{}results/bam/{{id}}.clean.bam".format(outdir),
+        bamFile="{}results/bam/{{id}}_ref.sorted.bam".format(outdir),
+        bamFileIndex="{}results/bam/{{id}}_ref.sorted.bam.bai".format(outdir),
     output:
         qualMetrics="{}results/QC/fingerPrint/{{id}}.qualityMetrics.tsv".format(outdir),
         raw_counts="{}results/QC/fingerPrint/{{id}}.rawcounts.tsv".format(outdir),
@@ -31,7 +32,7 @@ rule plotFingerprint:
     threads: config["threads"]["qc"]
     shell:
         """
-        plotFingerprint -b {input} \
+        plotFingerprint -b {input.bamFile} \
         -p {threads} \
         --outQualityMetrics {output.qualMetrics} \
         --outRawCounts {output.raw_counts} \
@@ -42,7 +43,7 @@ rule plotFingerprint:
 
 rule phantom_peak_qual:
     input:
-        "{}results/bam/{{id}}.clean.bam".format(outdir),
+        "{}results/bam/{{id}}_ref.sorted.bam".format(outdir),
     output:
         spp="{}results/QC/phantompeakqual/{{id}}.spp.out".format(outdir),
     log:
@@ -56,21 +57,27 @@ rule phantom_peak_qual:
         "../scripts/run_spp_nodups.R"
 
 
-rule create_qc_table_spike:
+rule create_qc_table_splitBam:
     input:
         logFile=expand(
             "{}results/logs/spike/{{id}}.removeSpikeDups".format(outdir),
             id=set(idSamples),
         ),
+        normFactorsFiles=expand(
+            "{}results/logs/spike/{{id}}.normFactor".format(outdir),
+            id=set(idSamples),
+        ),
     output:
-        tab="{}results/QC/Spikein_qc_FULL.tsv".format(outdir),
-        tab_multiqc="{}results/QC/Spike-in_Reads_mqc.tsv".format(outdir),
+        tab="{}results/QC/SplitBam_qc_FULL.tsv".format(outdir),
+        tab_multiqc="{}results/QC/SplitBam_Reads_mqc.tsv".format(outdir),
+    params:
+        normType=config["normalization_type"],
     log:
-        "{}results/logs/QC/Spike_in_qc.log".format(outdir),
+        "{}results/logs/QC/SplitBam_qc.log".format(outdir),
     conda:
         "../envs/qc.yaml"
     script:
-        "../scripts/createSpikeQCtab.py"
+        "../scripts/createSplitBamQCtab.py"
 
 
 rule create_qc_table_epic2:
@@ -107,10 +114,23 @@ rule create_qc_table_edd:
 
 rule create_qc_table_macs2:
     input:
-        logFile=expand(
-            "{}results/peakCalling/macs2_ref/{{sample}}_peaks.narrowPeak".format(
+        expand(
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
+            sample=narrowSamples,
+        )
+        + expand(
+            "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(
                 outdir
             ),
+            sample=narrowSamples,
+        )
+        + expand(
+            "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(outdir),
+            sample=broadSamples,
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else expand(
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
             sample=narrowSamples,
         ),
     output:
@@ -125,7 +145,20 @@ rule create_qc_table_macs2:
 
 rule create_qc_table_peakAnnot:
     input:
-        logFile=expand(
+        expand(
+            "{}results/logs/peakCallingNorm/peakAnnot/{{sample}}_annotInfo.txt".format(
+                outdir
+            ),
+            sample=narrowSamples + broadSamples,
+        )
+        + expand(
+            "{}results/logs/peakCalling/peakAnnot/{{sample}}_annotInfo.txt".format(
+                outdir
+            ),
+            sample=narrowSamples + broadSamples,
+        )
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+        else expand(
             "{}results/logs/peakCalling/peakAnnot/{{sample}}_annotInfo.txt".format(
                 outdir
             ),
@@ -154,13 +187,14 @@ rule multiqc:
             "{}results/QC/fingerPrint/{{id}}.plot.pdf".format(outdir),
             id=set(idSamples),
         ),
-        tab_spike="{}results/QC/Spike-in_Reads_mqc.tsv".format(outdir),
+        tab_spike="{}results/QC/SplitBam_Reads_mqc.tsv".format(outdir),
         tab_macs2=rules.create_qc_table_macs2.output.tab,
         tab_epic2=rules.create_qc_table_epic2.output.tab,
         tab_edd=rules.create_qc_table_edd.output.tab,
         tab_peakAnnot=rules.create_qc_table_peakAnnot.output.tab,
+        plotDiffAnalysis=get_diffAnalysis_tables,
     output:
-        multiqc="{}results/QC/multiqc/multiqc_report.html".format(outdir),
+        multiqc="{}results/QC/multiqc/SpikeFlow_multiqc_report.html".format(outdir),
     log:
         "{}results/logs/QC/multiqc/multiqc.log".format(outdir),
     conda:
@@ -168,6 +202,7 @@ rule multiqc:
     params:
         out_dir=lambda w, output: os.path.dirname(output.multiqc),
         whereTofind=lambda w, input: Path(input.tab_spike).parents[1],
+        configFile=config["params"]["multiqc"],
     shell:
         """ 
         multiqc {params.whereTofind} \
@@ -175,6 +210,7 @@ rule multiqc:
         --exclude macs2 \
         --ignore-samples *spike \
         --force \
+        --config {params.configFile} \
         2> {log}
         """
 

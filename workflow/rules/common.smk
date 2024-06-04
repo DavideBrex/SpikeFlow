@@ -2,6 +2,7 @@ import os
 from snakemake.utils import validate
 import pandas as pd
 import numpy as np
+import re
 
 # We start by checking the input files (samples_sheet and config.yaml) to ensure that their format is correct
 
@@ -101,6 +102,20 @@ if veryBroadSamples:
         key: value for key, value in reps_dict_verybroad.items() if len(value) > 1
     }  # we keep only those with more than 1 rep
 
+# since the consensus peaks are divided by antibody, we need to create a dictionary with the samples for each antibody
+antibody_dict = {}
+for antibody in samples_sheet["antibody"].dropna().unique():
+    if not bool(re.fullmatch("[a-zA-Z0-9]+", antibody)):
+        raise ValueError(
+            "The antibody name should contain only letters and numbers (no special characters)"
+        )
+    antibody_dict[antibody] = [
+        "{}-rep{}".format(sample, rep)
+        for sample, rep in samples_sheet[samples_sheet["antibody"] == antibody]
+        .index.unique()
+        .tolist()
+    ]
+
 # -------------------- wildcard constraints --------------------#
 
 
@@ -127,12 +142,12 @@ def perform_checks(input_df):
     def check_index_files(folder_path, prefix):
         # Expected filenames
         expected_files = [
-            "{}.1.ebwt",
-            "{}.2.ebwt",
-            "{}.3.ebwt",
-            "{}.4.ebwt",
-            "{}.rev.1.ebwt",
-            "{}.rev.2.ebwt",
+            "{}.1.bt2",
+            "{}.2.bt2",
+            "{}.3.bt2",
+            "{}.4.bt2",
+            "{}.rev.1.bt2",
+            "{}.rev.2.bt2",
         ]
         # Check if the folder exists
         if not os.path.exists(folder_path):
@@ -152,9 +167,17 @@ def perform_checks(input_df):
         if missing_files:
             raise FileNotFoundError(
                 """It appears that the genome index folder you provided is missing one/more indexing files.
-                \nPlease check that the index prefix is correct and the index files are present in {}""".format(
+                \nMake sure to append the index files prefix (e.g. prefix.1.bt2) after the folder path in the config file.
+                \nAlso please check that the 6 index files are present in {}""".format(
                     folder_path
                 )
+            )
+        # since the folder resources/reference_genome/index is created by the rule return_genome_path,
+        # we do not allow the user to set the same path in the config file
+        if folder_path == "resources/reference_genome/index":
+            raise ValueError(
+                """Please use another folder to store your index files (change in config file in the resources section)
+                \nThe folder resources/reference_genome/index/ is reserved for the pipeline"""
             )
 
     # config file header
@@ -241,12 +264,7 @@ def perform_checks(input_df):
             os.path.dirname(config["resources"]["ref"]["index"]),
             os.path.basename(config["resources"]["ref"]["index"]),
         )
-    # same for spike
-    if config["resources"]["ref_spike"]["index_spike"] != "":
-        check_index_files(
-            os.path.dirname(config["resources"]["ref_spike"]["index_spike"]),
-            os.path.basename(config["resources"]["ref_spike"]["index_spike"]),
-        )
+
     # 7. check if the chromsome sizes file exists and if the blacklist file exists
     if not os.path.exists(config["params"]["peakCalling"]["chrom_sizes"]):
         raise FileNotFoundError(
@@ -256,6 +274,90 @@ def perform_checks(input_df):
         raise FileNotFoundError(
             "The provided path to the blacklist file does not exist. \nPlease check that the file is present"
         )
+
+    # 8. check if the contrast is correctly defined
+    if config["diffPeakAnalysis"]["perform_diff_analysis"]:
+        contrastsToCheck = config["diffPeakAnalysis"]["contrasts"]
+        # diff bind analysis is performed only on the samples with antibody (and with same antibody value)
+        for antibodyItem in contrastsToCheck:
+            # we check that the antibody is present in the samplesheet
+            if antibodyItem not in input_df[["antibody"]].values:
+                raise ValueError(
+                    "Please indicate a valid antibody in the contrasts (config file) for the differential binding analysis\n"
+                    + "The antibody has to be defined in the samplesheet for each sample (not input)"
+                )
+            subdf = input_df[input_df["antibody"] == antibodyItem]
+            # we get the groups defined in the samplesheet per antibody, if '_' is present in the sample name
+            try:
+                sample_groups_antibody = [
+                    sample.rsplit("_", 1)[1]
+                    for sample in subdf.index.get_level_values("sample")
+                    .unique()
+                    .tolist()
+                ]
+            except IndexError:
+                raise ValueError(
+                    "The group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv\n"
+                )
+            # we check that the group defined in the the sample sheet (after _ in the sample name) does not contain special characters
+            if not all(
+                [
+                    bool(re.fullmatch(r"[a-zA-Z0-9]+", group))
+                    for group in sample_groups_antibody
+                ]
+            ):
+                raise ValueError(
+                    "The group names in the samplesheet should contain only letters and numbers (no special characters).\n"
+                    + "Please check the group definition in the sample column of sample_sheet.csv. Group has to be defined as 'sampleName_groupA'"
+                )
+            # we check that the conditions in the contrast are present in the samplesheet and with right format
+            for contrast in contrastsToCheck[antibodyItem]:
+                if "_vs_" in contrast:
+                    contrastElem = contrast.split("_vs_")
+                    if len(contrastElem) != 2:
+                        raise ValueError(
+                            "The contrast should be defined as 'groupA_vs_groupB'. Please check the contrast definition in the config file\n"
+                            + "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                        )
+                    if (
+                        contrastElem[0] not in sample_groups_antibody
+                        or contrastElem[1] not in sample_groups_antibody
+                    ):
+                        raise ValueError(
+                            "One of the group in the contrast is not present in the samplesheet. Please check the contrast definition in the config file\n"
+                            + "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                        )
+                    if contrastElem[0] == contrastElem[1]:
+                        raise ValueError(
+                            "The groups in the contrast should be different. Please check the contrast definition in the config file\n"
+                            + "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                        )
+                    if bool(re.match(r"[a-zA-Z0-9]+", contrastElem[0])) and bool(
+                        re.match(r"[a-zA-Z0-9]+", contrastElem[1])
+                    ):
+                        pass
+                    else:
+                        raise ValueError(
+                            "The group names in the contrast should contain only letters and numbers (no special characters). Please check the contrast definition in the config file\n"
+                            + "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                        )
+                else:
+                    raise ValueError(
+                        "The contrast should be defined as 'groupA_vs_groupB'. Please check the contrast definition in the config file\n"
+                        + "Group has to be defined as 'sampleName_groupA' in the sample column of sample_sheet.csv"
+                    )
+            # 9. if contrast is okay, we need to check the peak type are the same for all samples
+            if len(subdf.peak_type.unique()) > 1:
+                raise ValueError(
+                    "The peak type is not the same for all samples with antibody {}. For differential peaks please specify same peak type".format(
+                        antibodyItem
+                    )
+                )
+            if subdf.peak_type.unique() == "very-broad":
+                raise ValueError(
+                    "The differential binding analysis can not be performed on very-broad peaks.\n"
+                    + "Consider to change peak type or disable the differential binding analysis in the config file!"
+                )
 
 
 # -------------------- Sample sheet Sanity checks ---------------#
@@ -273,7 +375,7 @@ def input_toget():
 
     # qc and peak calling
     QCfiles = [
-        "{}results/QC/multiqc/multiqc_report.html".format(outdir),
+        "{}results/QC/multiqc/SpikeFlow_multiqc_report.html".format(outdir),
         "{}results/QC/peaks_annotation_mqc.tsv".format(outdir),
     ]
     peak_files = []
@@ -282,11 +384,24 @@ def input_toget():
     if narrowSamples:
         QCfiles.append("{}results/QC/macs2_peaks_mqc.tsv".format(outdir))
         peak_files += expand(
-            "{}results/peakCalling/macs2_ref/{{sample}}_peaks.narrowPeak".format(
-                outdir
-            ),
+            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
             sample=narrowSamples,
         )
+        # for testing Spiker peak calling, we also add those output files
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
+            peak_files += expand(
+                "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(
+                    outdir
+                ),
+                sample=narrowSamples,
+            )
+            annot_files += expand(
+                "{}results/peakCallingNorm/peakAnnot/{{sample}}_annot.txt".format(
+                    outdir
+                ),
+                sample=narrowSamples,
+            )
+        # perform annotation of peaks
         annot_files += expand(
             "{}results/peakCalling/peakAnnot/{{sample}}_annot.txt".format(outdir),
             sample=narrowSamples,
@@ -297,6 +412,21 @@ def input_toget():
             "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(outdir),
             sample=broadSamples,
         )
+        # for testing Spiker peak calling, we also add those output files
+        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
+            peak_files += expand(
+                "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(
+                    outdir
+                ),
+                sample=broadSamples,
+            )
+            annot_files += expand(
+                "{}results/peakCallingNorm/peakAnnot/{{sample}}_annot.txt".format(
+                    outdir
+                ),
+                sample=broadSamples,
+            )
+        # perform annotation of peaks
         annot_files += expand(
             "{}results/peakCalling/peakAnnot/{{sample}}_annot.txt".format(outdir),
             sample=broadSamples,
@@ -308,33 +438,26 @@ def input_toget():
             sample=veryBroadSamples,
         )
 
-    # if there are reps, we need to add to the peak files the merged samples
-    if narrowSamples or broadSamples:
-        merged_dicts = reps_dict_narrow | reps_dict_broad  # merge dicts
-        if merged_dicts:
-            peak_files += expand(
-                "{}results/peakCalling/mergedPeaks/{{unique_rep}}_merged_optimal.bed".format(
-                    outdir
-                ),
-                unique_rep=list(merged_dicts.keys()),
-            )
-            annot_files += expand(
-                "{}results/peakCalling/peakAnnot/{{unique_rep}}_annot.txt".format(
-                    outdir
-                ),
-                unique_rep=list(merged_dicts.keys()),
-            )
-    # for very broad peaks we shall use only intersect, whereas for narrow and broad we shall use chip-r
-    if veryBroadSamples:
-        if reps_dict_verybroad:
-            peak_files += expand(
-                "{}results/peakCalling/mergedPeaks/{{unique_rep}}_merged_intersected.bed".format(
-                    outdir
-                ),
-                unique_rep=list(reps_dict_verybroad.keys()),
-            )
+    # we need the consensus peaks for the differential analysis
+    if config["diffPeakAnalysis"]["perform_diff_analysis"]:
+        diff_peak_files = []
+        # we add to otputs the different combinations of antibody and contrast
+        for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items():
+            for contrast in contrasts:
+                # if we use spikein called peaks, we need to change the path
+                if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]:
+                    path = "{outdir}results/differentialAnalysis/NormalisedPeaks/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
+                        outdir=outdir, antibody=antibody, contrast=contrast
+                    )
+                else:
+                    path = "{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
+                        outdir=outdir, antibody=antibody, contrast=contrast
+                    )
+                diff_peak_files.append(path)
 
-    return bigWigs + peak_files + QCfiles + annot_files
+        return bigWigs + peak_files + QCfiles + annot_files + diff_peak_files
+    else:
+        return bigWigs + peak_files + QCfiles + annot_files
 
 
 # -------------------- Other helpers functions ---------------#
@@ -345,7 +468,7 @@ def is_single_end(id):
     check = pd.isnull(samples_sheet.loc[(samp, rep), "fastq_2"])
     # in case a sample has multiple lanes, we get a series instead of str
     if isinstance(check, pd.Series):
-        return check[0]
+        return check.iloc[0]
     return check
 
 
@@ -445,34 +568,10 @@ def get_reads(wildcards):
                 )
 
 
-def get_replicate_peaks(wildcards):
-    """Function that returns the input files to merge replicates (if any) both narrow and broad peaks"""
-    if wildcards.unique_rep in reps_dict_narrow:
-        return expand(
-            "{}results/peakCalling/macs2_ref/{{sample}}_peaks.narrowPeak".format(
-                outdir
-            ),
-            sample=reps_dict_narrow[wildcards.unique_rep],
-        )
-    elif wildcards.unique_rep in reps_dict_broad:
-        return expand(
-            "{}results/logs/peakCalling/epic2/{{sample}}.bed".format(outdir),
-            sample=reps_dict_broad[wildcards.unique_rep],
-        )
-
-
-def get_replicate_peaks_edd(wildcards):
-    """Function that returns the input files to merge replicates (if any) for very broad  peaks"""
-    return expand(
-        "{}results/peakCalling/edd/{{sample}}/{{sample}}_peaks.bed".format(outdir),
-        sample=reps_dict_verybroad[wildcards.unique_rep],
-    )
-
-
-def get_singelRep_peaks(wildcards):
+def get_singleRep_peaks(wildcards):
     """Function that returns the input files to annot single sample peak files both narrow and broad peaks"""
     if wildcards.sample in narrowSamples:
-        return "{}results/peakCalling/macs2_ref/{{sample}}_peaks.narrowPeak".format(
+        return "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
             outdir, sample=wildcards.sample
         )
     elif wildcards.sample in broadSamples:
@@ -481,51 +580,95 @@ def get_singelRep_peaks(wildcards):
         )
 
 
+def get_singleRep_peaksnorm(wildcards):
+    """Function that returns the input files to annot single sample norm peak files both narrow and broad peaks"""
+    if wildcards.sample in narrowSamples:
+        return "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(
+            outdir, sample=wildcards.sample
+        )
+    elif wildcards.sample in broadSamples:
+        return "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(
+            outdir, sample=wildcards.sample
+        )
+
+
+def get_bams_by_antibody(wildcards):
+    """Function that returns the bam files for the antibody for the consensus peaks"""
+    return expand(
+        "{}results/bam/{{sample}}_ref.sorted.bam".format(outdir),
+        sample=antibody_dict[wildcards.antibody],
+    )
+
+
+def get_normFactor_by_antibody(wildcards):
+    """Function that returns the normalization factors for the antibody for the diff peaks analysis"""
+    return expand(
+        "{}results/logs/spike/{{sample}}.normFactor".format(outdir),
+        sample=antibody_dict[wildcards.antibody],
+    )
+
+
+def get_diffAnalysis_tables(wildcards):
+    """Function that returns the diff peaks tables for the antibody for multiqc input"""
+
+    if (
+        config["diffPeakAnalysis"]["perform_diff_analysis"]
+        and not config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+    ):
+        return [
+            "{outdir}results/differentialAnalysis/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
+                outdir=outdir, antibody=antibody, contrast=contrast
+            )
+            for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items()
+            for contrast in contrasts
+        ]
+    elif (
+        config["diffPeakAnalysis"]["perform_diff_analysis"]
+        and config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+    ):
+        return [
+            "{outdir}results/differentialAnalysis/NormalisedPeaks/{antibody}/{antibody}_{contrast}_diffPeaks.tsv".format(
+                outdir=outdir, antibody=antibody, contrast=contrast
+            )
+            for antibody, contrasts in config["diffPeakAnalysis"]["contrasts"].items()
+            for contrast in contrasts
+        ]
+    else:
+        return ""
+
+
 # --------------------  Rules Functions ---------------#
-def normalization_factor(wildcards):
+def normalization_factor(wildcards, inputSamp):
     """
-    Read the log message from the cleaning of bam files and compute normalization factor
-    By using the log file we avoid to read the bam file with pysam just to get # of aligned reads
+    Read and return norm factor for the sample.
     """
-    norm_type = config["normalization_type"]
     # open sample log file
-    samp = wildcards.id
-    with open(
-        "{}results/logs/spike/{}.removeSpikeDups".format(outdir, samp), "r"
-    ) as file:
-        info_sample = file.read().strip().split("\n")
-
-        Nsample = int(
-            info_sample[1].split(":")[-1]
-        )  # number of aligned reads in sample
-        Nspike = int(info_sample[2].split(":")[-1])  # number of spike reads in sample
-
-        # we need the information also from the input (if it is not the sample an input itself)
-        inputSamp = sample_to_input[wildcards.id]
-        if pd.isna(inputSamp) or norm_type != "RX-Input":
-            if norm_type == "Orlando":
-                alpha = (1 / Nspike) * 1000000  # From Orlando et. al 2014 (RRPM)
-            else:
-                alpha = (1 / Nsample) * 1000000  # RPM
-        else:
-            # open input log file
-            with open(
-                "{}results/logs/spike/{}.removeSpikeDups".format(outdir, inputSamp), "r"
-            ) as input_file:
-                info_input = input_file.read().strip().split("\n")
-
-                gamma = int(info_input[2].split(":")[-1]) / int(
-                    info_input[1].split(":")[-1]
-                )  # ratio spike/samples in input
-                alpha = gamma / Nspike * 1000000  # normalization factor
-
-        # TO DO: add log file with the norm factors stored
-    with open("{}results/logs/spike/{}.normFactor".format(outdir, samp), "w") as file:
-        file.write("Normalization factor: {} \n".format(round(alpha, 4)))
+    with open(inputSamp, "r") as file:
+        info_sample = file.read().strip()
+        normFactor = float(info_sample.split(":")[-1])
 
     if is_single_end(wildcards.id):
         return "--scaleFactor {} --extendReads {}".format(
-            str(round(alpha, 4)), str(config["params"]["deeptools"]["read_extension"])
+            str(round(normFactor, 4)),
+            str(config["params"]["deeptools"]["read_extension"]),
         )
     else:
-        return "--scaleFactor {} --extendReads ".format(str(round(alpha, 4)))
+        return "--scaleFactor {} --extendReads ".format(str(round(normFactor, 4)))
+
+
+def spiker_normalization_factor(wildcards):
+    """
+    Function called by Spiker peak calling
+    It returns the normalization factors for treatment and control samples once calculated by the function above
+    """
+    treatment_file = "{}results/logs/spike/{}.normFactor".format(
+        outdir, wildcards.sample
+    )
+    # since the peak calling is done only on treatment samples, we need to get the input sample (and it has to have a control)
+    control_file = "{}results/logs/spike/{}.normFactor".format(
+        outdir, sample_to_input[wildcards.sample]
+    )
+    with open(treatment_file) as tf, open(control_file) as cf:
+        treatment_norm_factor = tf.read().strip().split(":")[-1].strip()
+        control_norm_factor = cf.read().strip().split(":")[-1].strip()
+    return "--csf {} --tsf {}".format(control_norm_factor, treatment_norm_factor)

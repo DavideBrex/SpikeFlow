@@ -5,7 +5,13 @@ channels:
 dependencies:
   - epic2
   - pysam
-  - chromap
+  - pandas
   - bedtools
-  - chip-r
+  - fastp
+  - macs2
+  - deeptoolsintervals
+  - py2bit
+  - pip
+  - pip:
+    - spiker
 

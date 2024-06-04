@@ -10,35 +10,51 @@ output_path: ""
 # to set desired trimming parameters
 trimming: true
 
-aligner: bowtie
+aligner: bowtie2
 
-#type of normalization to perform to generate the bigwig files (one from RAW, Orlando , RX-Input)
-normalization_type: "RX-Input"
+#type of normalization to perform to generate the bigwig files (one from RAW, Orlando , RX-Input, Downsampling, Median)
+normalization_type: "Downsampling"
+
+#choose whether you want to perform differential peaks analysis
+#the group for the samples will be extracted from the sample name (after the last _)
+diffPeakAnalysis:
+  perform_diff_analysis: true
+  contrasts:
+    H3K4me3:
+      - "EGF_vs_untreated"
+  padjust: 0.01
+  log2FCcutoff: 1.5
+
+  #minNumSamples: number indicating in how many samples a peak should be present in order to be kept for the consensus peak set
+  minNumSamples: 0
+  #useSpikeIncalledPeaks: if true, the peaks called with spiker (so spike in normalised) will be used for the consensus peak set
+  useSpikeinCalledPeaks: false
+
+
 
 resources:
   ref: 
     #if bowtie index is not available leave only "" , it will be created
     #otherwise provide the path to the folder containing bowtie index (and add the name of the index after the path)
-    #PLEASE NOTE: the index must be created with the same version of bowtie as the one installed in the conda environment (1.3.0)
-    index: ".test/data/subset_GRCh38_bowtieIndex/subset_GRCh38_bowtieIndex" #THIS IS A TEST INDEX, do not use it for a real dataset
+    #PLEASE NOTE: the index must be created with the same version of bowtie2 as the one installed in the conda environment (2.5.3)
+    index: ".test/data/subset_hg38_dm6_index/index_ref" #THIS IS A TEST INDEX, do not use it for a real dataset
     # ucsc genome name (e.g. hg38, mm10, etc)
     assembly: hg38
     #blacklist regions (from https://github.com/Boyle-Lab/Blacklist/tree/master/lists)
     blacklist: ".test/data/hg38-blacklist.v2.bed"
 
   ref_spike:
-    #if bowtie index is not avialable leave only "" , it will be created
-    #otherwise provide the path to the folder containing bowtie index (and add the name of the index after the path)
-    index_spike: ".test/data/dm6_index/bowtie1_dm6_index"
     # ucsc genome name (e.g. hg38, mm10, etc)
     spike_assembly: dm6
 
 params:
+  #trimming parameters. If needed, add the parameters for the fastp below here
   fastp-pe: ""
   fastp-se: ""
-  bowtie: 
-    global: "--chunkmbs 1024 -m 1 --best -S --no-unal -q"
-    pe: "-I 10 -X 1000"
+  bowtie2: 
+    global: "--sensitive"
+    map_quality: 8 #note: changing this parameter will result in the rerun of the alignment step
+    pe: ""
 
   samtools:
     # Memory used by every core of samtools (GB). Be careful that 
@@ -52,7 +68,8 @@ params:
   peakCalling:
     chrom_sizes: ".test/data/hg38.chromsizes" #THIS IS A TEST FILE, do not use it for a real dataset
     macs2:
-      pvalue: 0.05
+      qvalue: 0.01
+      extraOptions: ""
     epic2:
       #effective genome fraction, change this according to https://github.com/biocore-ntnu/epic2/blob/master/epic2/effective_sizes/hg38_50.txt
       # in the github it is indicated as Effective genome size, and you need to know the read length in  order to set it
@@ -61,25 +78,24 @@ params:
     edd:
       fdr: 0.05
       extraParameters: "config/edd_parameters.conf"
-  peakMerge:
-    chipr:
-      size: 30 
   peaksAnnotation:
     promoter:
       upstream: 2500
       downstream: 2500
+  multiqc:
+    "config/multiqc_config.yaml"
 
 threads:
   fastp:
     5
-  bowtie: 
+  bowtie2: 
     10
-  bowtie_spike:
-    5
   generateBigWig:
     5
   qc:
     5
   edd:
     2
+  samtools:
+    10
   

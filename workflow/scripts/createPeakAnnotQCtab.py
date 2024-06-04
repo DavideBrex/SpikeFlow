@@ -4,8 +4,12 @@ import os
 
 dict_allsamp = {}
 # for each sample, we read the log file and extract the annotations
-for f in snakemake.input["logFile"]:
-    idName = os.path.basename(f).split("_annotInfo.")[0]
+for f in snakemake.input:
+    #check if the peakCallingNorm is in the path of file, then we attach "PeakNorm" to the idName
+    if "peakCallingNorm" in f:
+        idName = os.path.basename(f).split("_annotInfo.")[0] + "_PeakNorm"
+    else:
+        idName = os.path.basename(f).split("_annotInfo.")[0]
     with open(f, "r") as file:
         headerRow = file.readline()
         annotRow = file.readline()

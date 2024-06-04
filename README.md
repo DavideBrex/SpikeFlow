@@ -18,13 +18,15 @@ If you use this workflow in a paper, don't forget to give credits to the authors
  
 **Key Features**:
 
-- **Diverse Normalization Techniques**: This workflow implements three normalization methods,to accommodate varying experimental designs and enhance data comparability.
+- **Diverse Normalization Techniques**: This workflow implements five normalization methods,to accommodate varying experimental designs and enhance data comparability. These are: RPM, RRPM, Rx-Input, Downsampling, and Median.
 
 - **Quality Control**:  Spike-in quality control, to ensure a proper comparison between different experimental conditions
 
-- **Peak Calling**: The workflow incorporates three  algorithms for peak identification, crucial for delineating protein-DNA interaction sites. The user can choose the type of peak to be called: narrow (macs2), broad (epic2), or very-broad (edd). Moreover, the pipeline will merge the called peaks from the replicates and perform peak annotation.
+- **Peak Calling**: The workflow incorporates three algorithms for peak identification, crucial for delineating protein-DNA interaction sites. The user can choose the type of peak to be called: narrow (macs2), broad (epic2), or very-broad (edd). Moreover, the pipeline allows to call spike-in normalised peaks (only narrow and broad modes).
 
-- **BigWig Generation for Visualization**: Normalised BigWig files are generaate for genome-wide visualization, compatible with standard genomic browsers, thus facilitating detailed chromatin feature analyses.
+- **BigWig Generation for Visualization**: Normalised BigWig files are generated for genome-wide visualization, compatible with standard genomic browsers, thus facilitating detailed chromatin feature analyses.
+
+- **Differential Peak Analysis**: If needed, the user can enable spike-in normalized differential peak analysis. The pipeline will generate PCA and Volcano plots to facilitate the interpretation of the results.
 
 - **Scalability**: Leveraging Snakemake, the workflow ensures an automated, error-minimized pipeline adaptable to both small and large-scale genomic datasets.
 
@@ -48,10 +50,16 @@ If you use this workflow in a paper, don't forget to give credits to the authors
 
 <a name="install"></a>
 ## Installation 
+### Step 1 - Install a Conda-based Python3 distribution
+
+If you do not already have Conda installed on your machine/server, install a Conda-based Python3 distribution. We recommend [Mambaforge](https://github.com/conda-forge/miniforge#mambaforge), which includes Mamba, a fast and robust replacement for the Conda package manager. Mamba is preferred over the default Conda solver due to its speed and reliability.
+
+> **_⚠️ NOTE:_** Conda (or Mamba) is needed to run SpikeFlow.
+
 ### Step 1 - Install Snakemake
-To run this pipeline, you'll first need to install **Snakemake** (version >= 6.3.0).
+To run this pipeline, you'll need to install **Snakemake** (version >= 6.3.0).
 Please check the Snakemake documentation on [how to install](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
-If you already have *conda* installed, you can simply create a new environment and install Snakemake with:
+Once you have *conda* installed, you can simply create a new environment and install Snakemake with:
 
 ```
 conda create -c bioconda -c conda-forge -n snakemake snakemake
@@ -75,7 +83,7 @@ mamba activate snakemake
 
 ### Step 2 - Install Singularity (recommended)
 
-For a fast installation of the workflow, it is recommended to use **Singularity** (compatible with version 3.9.5). This bypasses the need for *Conda* to set up required environments, as these are already present within the container that will be pulled from [dockerhub](https://hub.docker.com/repository/docker/davidebrex/spikeflow/general) with the use of the ```--use-singularity``` flag.
+For a fast installation of the workflow, it is recommended to use **Singularity** (compatible with version 3.9.5). This bypasses the need for *Conda* to set up required environments, as these are already present within the container that will be pulled from [dockerhub](https://hub.docker.com/r/davidebrex/spikeflow) with the use of the ```--use-singularity``` flag.
 
 To install singularity check [its website](https://docs.sylabs.io/guides/3.0/user-guide/installation.html).
 
@@ -149,27 +157,37 @@ The last step before running the workflow is to adjust the parameters in the con
 
 #### *Reference and exogenous (spike-in) genomes*
 
-To execute the pipeline, it's essential to specify both *endogenous* and *exogenous* species; for example, use Drosophila (dm16) as the exogenous and Human (hg38) as the endogenous species.
-If bowtie v1 genome indexes are already available, you should input their paths (ending with the index files prefix) in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data. **PLEASE NOTE**, the index must be created with bowtie  v1.3.0.
+To execute the pipeline, it's essential to specify both *endogenous* and *exogenous* species in the assembly field; for example, use Drosophila (dm16) as the exogenous and Human (hg38) as the endogenous species. You can find the the genome assembly on the [UCSC Genome Browser](https://genome-euro.ucsc.edu/cgi-bin/hgGateway).
 
+If a bowtie2 genome index is already available for the merged genomes (e.g. hg38 + dm16), you should input the path (ending with the index files prefix) in the 'resources' section of the pipeline configuration. This setup ensures proper alignment and processing of your genomic data. **_⚠️ NOTE:_** The index must be created with bowtie2 v2.5.3.
 
 ```yaml
 resources:
     ref:
-        index: /path/to/hg38.bowtie.index/indexFilesPrefix
+        index: "/path/to/hg38_dm16_merged.bowtie2.index/indexFilesPrefix"
+        # ucsc genome name (e.g. hg38, mm10, etc)
+        assembly: hg38
         #blacklist regions 
         blacklist: ".test/data/hg38-blacklist.v2.bed"
 
     ref_spike:
-        index: /path/to/dm16.bowtie.index/indexFilesPrefix
+        # ucsc genome name (e.g. dm6, mm10, etc)
+        spike_assembly: dm6
 ```
 
-If you don't have the bowtie genome indexes readily available, the pipeline can generate them for you. To facilitate this, you'll need to specify the ucsc genome name (e.g. hg38, mm10, etc) for both the reference and spike-in species. You can find the the genome assembly on the [UCSC Genome Browser](https://genome-euro.ucsc.edu/cgi-bin/hgGateway).
+If you don't have the bowtie2 index readily available, the pipeline will generate it for you. To do so, leave empty the index field in the resources section (see below):
 
 ```yaml
+resources:
     ref:
+        index: ""
+        # ucsc genome name (e.g. hg38, mm10, etc)
         assembly: hg38
+        #blacklist regions 
+        blacklist: ".test/data/hg38-blacklist.v2.bed"
+
     ref_spike:
+        # ucsc genome name (e.g. hg38, mm10, etc)
         spike_assembly: dm6
 ```
 
@@ -186,11 +204,36 @@ In this field you can choose the type of normalization to perform on the samples
 
 - **RX-Input** (default): RX-Input is a modified version of the Orlando normalization that accounts for the total number of reads mapped to the spike-in in both the ChIP and input samples. This approach allows for more accurate normalization by accounting for variations in both immunoprecipitation efficiency and background noise (as represented by the input). See [Fursova et al 2019](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6561741/#bib42) for further details.
 
+- **Downsampling**: The sample with the minimum umber of spike-in reads can be used as the reference. Sample reads from all other samples can be downsampled to the same level as this reference sample. This approach is applicable to datasets where the numbers of reads are similar.
+
+- **Median Normalization**: Normalize to the median. All samples can be normalized to the median value of spike-in reads. This method is not suited for integrating datasets from different sources.
 
 ```yaml
-normalization_type: "RX-Input"
+normalization_type: "Orlando"
 ```
 
+#### *Differential Peak analysis*
+
+SpikeFlow allows you to perform differential peaks analysis. In this case, the grouping variable for the samples will be extracted from the sample name in the *sample_sheet.csv* (after the last '\_'). Also, if ```perform_diff_analysis: true```, you will need to specify the contrasts (per antibody), meaning the groups that you want to compare. Please also specify the log2 fold change (log2FCcutoff) and adjusted p-value (padjust) thresholds for differential analysis. 
+
+> **_⚠️ NOTE:_**  Ensure that the group names for the differential peaks analysis and the contrast names do not contain any additional underscores ('\_'), and that the antibody names do not contain any underscores ('\_'). 
+
+When differential peak analysis is enabled, SpikeFlow will create a consensus peak set per antibody and count reads on those peaks. The default behavior to build the consensus regions is to use all the peaks from all the samples (i.e., minNumSamples: 0). However, you can change this to specify the minimum number of samples a peak should be present in to be kept for the consensus peak set (minNumSamples).
+
+> **_⚠️ NOTE:_**  If ```useSpikeinCalledPeaks: true```, spike-normalized peak calling will be executed in addition to the standard peak calling. The resulting regions from the spike-normalized peak calling will be used for consensus peak set generation and differential analysis.
+
+```yaml
+
+diffPeakAnalysis:
+  perform_diff_analysis: true
+  contrasts:
+    H3K4me3:
+      - "EGF_vs_untreated"
+  padjust: 0.01
+  log2FCcutoff: 1.5
+  minNumSamples: 1
+  useSpikeinCalledPeaks: false
+```
 
 #### *Required options*
 
@@ -205,15 +248,15 @@ When configuring your pipeline based on the chosen reference/endogenous genome (
 
 -  To direct Snakemake to save all outputs in a specific directory, add the desired path in the config file: ```output_path: "path/to/directory"```.
 
+- While splitting the BAM file into two separate ones (one endogenous and one spike-in), reads with a mapping quality below 8 are discarded. You can adjust this behavior using the bowtie2 ```map_quality``` field. If no filtering is needed, set this value to 0; otherwise, adjust it from 0 to 30 as needed. For more information on Bowtie2 MAPQ scores, see [here](http://biofinysics.blogspot.com/2014/05/how-does-bowtie2-assign-mapq-scores.html).
+
 - **Broad Peak Calling:** For samples requiring broad peak calling, adjust the effective genome fraction as per the guidelines on this [page]( https://github.com/biocore-ntnu/epic2/blob/master/epic2/effective_sizes/hg38_50.txt). The *'effective genome size'* mentioned on the GitHub page depends on the read length of your samples.
 
 - **Very Broad Peak Callling:** If you have samples that will undergo very-broad peak calling, please check the log files produced by EDD. This because the tool might fail if it can not accurately estimate the parameters for the peak calling. In this case, you can tweak the parameters in the EDD config file, which is in the config directory (```config/edd_parameters.conf```). For more information about EDD parameters tuning see the [documentation](https://github.com/CollasLab/edd).
 
 - **Trimming Option:** Trimming can be skipped by setting the respective flag to false.
 
-- **P-Value Adjustment for Peak Calling:** Modify the p-values for peak calling in the config file. This applies to different peak calling methods: narrow (macs2), broad (epic2), or very-broad (edd).
-
-- **Peak Merging from Replicates:** While merging peaks from replicates, the size can be adjusted as described [here](https://github.com/rhysnewell/ChIP-R))
+- **P-Value Adjustment for Peak Calling:** Modify the q-values for peak calling in the config file. This applies to different peak calling methods: narrow (macs2), broad (epic2), or very-broad (edd).
 
 - **Peak Annotation Threshold:** The default setting annotates a peak within ±2500 bp around the promoter region.
 
@@ -229,7 +272,7 @@ The ```config``` and ```sample_sheet``` files come pre-configured for a test run
 #### Conda and Singularity (recommended)
 
 ```bash
-snakemake --cores 10 --use-conda --use-singularity
+snakemake --cores 10 --software-deployment-method conda apptainer
 ```
 
 First, the singularity container will be pulled from DockerHub and then the workflow will be executed. To install sigularity, see the [installation](#install) section.
@@ -237,7 +280,7 @@ First, the singularity container will be pulled from DockerHub and then the work
 #### Conda only
 
 ```bash
-snakemake --cores 10 --use-conda 
+snakemake --cores 10 --software-deployment-method conda
 ```
 This will install all the required conda envs (it might take a while, just for the first execution).
 
@@ -245,17 +288,11 @@ This will install all the required conda envs (it might take a while, just for t
 
 - ```--cores```: adjust this number (here set to 10) based on your machine configuration
 - ```-n```: add this flag  to the command line for a "dry run," which allows Snakemake to display the rules that it would execute, without actually running them. 
-- ```--singularity-args "-B /shares,/home -e"```: only with ```--use-singularity``` and if you are running SpikeFlow from a server that mounts /shares and /home disks (where you have your working dir and files).
+- ```--singularity-args "-B /shares,/home -e"```: only with ```--software-deployment-method conda apptainer``` and if you are running SpikeFlow from a server that mounts /shares and /home disks (where you have your working dir and files).
 
 To execute the pipeline on a HPC cluster, please follow [these guidelines](https://snakemake.readthedocs.io/en/stable/tutorial/additional_features.html#cluster-execution).
 
-If you are using **Snakemake version $\ge$ 8**, the command line arguments have [different names](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#containerization-of-conda-based-workflows). In this case, run the workflow with:
 
-```bash
-snakemake --cores --software-deployment-method conda apptainer
-# or the shorthand version
-snakemake --cores 10 --sdm conda apptainer
-```
 <a name="output"></a>
 ## Output files
 
@@ -267,14 +304,24 @@ The main outputs of the workflow are:
 
 - **MultiQC Report** 
 
-    Consolidates various quality control (QC) metrics:
+    - If the differential peaks analysis was activated, you will find scatter plots/volcano and PCA plots in the report. 
+    - Peak Calling Data: Displays the number of peaks called per sample for each method (MACS2, EPIC2, EDD).
+    - Peaks annotation
+    - Reads Table: Per sample reference and spike-in calculated with the normalisation set by the user.
     - Basic QC with FastQC: Evaluates basic quality metrics of the sequencing data.
     - Phantom Peak Qual Tools: Provides NSC and RSC values, indicating the quality and reproducibility of ChIP samples. NSC measures signal-to-noise ratio, while RSC assesses enrichment strength.
     - Fingerprint Plots: Visual representation of the sample quality, showing how reads are distributed across the genome.
-    - Spike-in QC: Reveals the number of reads aligned to both the endogenous and exogenous genomes, crucial for evaluating spike-in normalization effectiveness.
-    - Peak Calling Data: Displays the number of peaks called per sample for each method (MACS2, EPIC2, EDD).
 
      ```results/QC/multiqc/multiqc_report.html```
+
+- **Peaks Differential Analysis**
+    - In this folder, you will find the differential peak regions and the volcano/scatter/pca plots for each antibody and contrast.
+
+    ``results/differentialAnalysis``
+
+    If spike-in normalised peak calling was activated, you will find the results of the differential analysis in:
+
+    ``results/differentialAnalysis/NormalisedPeaks``
 
 - **Normalized BigWig Files**: 
     - Essential for visualizing read distribution and creating detailed heatmaps.
@@ -282,10 +329,15 @@ The main outputs of the workflow are:
     ```results/bigWigs/```
 
 -  **Peak Files and Annotation**:
-    - Provides called peaks for each peak calling method, along with merged peaks for replicate samples.
-    - Peak annotation using ChIPseeker, resulting in two files for promoter and distal peaks for each sample
+    - Provides called peaks for each peak calling method.  Consensus regions bed files are in ```/results/peakCalling/mergedPeaks```
+    - Peak annotation using ChIPseeker, resulting in two files for promoter and distal peaks for each sample  ```/results/peakCalling/peakAnnot```
 
-    ```/results/peakCalling/```
+    - Standard peak calling: ```/results/peakCalling/``` 
+
+    - Spike-in normalised peak calling: ```/results/peakCallingNorm/``` 
+
+
+
 
 
 <a name="troubleshooting"></a>
@@ -294,6 +346,10 @@ The main outputs of the workflow are:
 1. When you run SpikeFlow with Singularity ( ```--use-singularity```), you might get an error if you set the  ```-n``` flag. This happens ONLY at the first execution of the workflow. Remove the flag and it should work.
 
 2. The ``` --use-singularity```  option temporary requires about 7 GB of disk space to build the image from Docker Hub. If your ```/tmp``` directory is full, you'll encounter a ```No space left on device``` error. To avoid this, change the Singularity temp directory to a different disk by setting the ```SINGULARITY_TMPDIR``` environment variable. More details are available in the [Singularity guide on temporary folders](https://docs.sylabs.io/guides/latest/user-guide/build_env.html#temporary-folders).
+
+3. In case of errors during the execution, please make sure to check the log files of the failing snakemake rule in the log folders
+
+4. For the R scripts execution in SpikeFlow, the env variable R_LIBS_SITE has to be empty otherwise snakemake will look in that folder for R libraries. To avoid this you can use ```unset R_LIBS_SITE```. 
 
 <a name="citation"></a>
 ## Citation

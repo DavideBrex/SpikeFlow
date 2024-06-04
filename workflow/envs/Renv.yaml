@@ -4,7 +4,7 @@ channels:
   - bioconda
   - nodefaults  ## block user/system channels
 dependencies:
-  - r-base=4.1.0
+  - r-base=4.3.3
   - r-spp
   - r-tidyverse
   - bioconductor-org.hs.eg.db
@@ -14,5 +14,6 @@ dependencies:
   - bioconductor-txdb.mmusculus.ucsc.mm10.knowngene
   - bioconductor-txdb.hsapiens.ucsc.hg19.knowngene
   - bioconductor-txdb.hsapiens.ucsc.hg38.knowngene
+  - bioconductor-DESeq2
   - samtools
   - gawk
