@@ -202,7 +202,7 @@ rule multiqc:
     params:
         out_dir=lambda w, output: os.path.dirname(output.multiqc),
         whereTofind=lambda w, input: Path(input.tab_spike).parents[1],
-        configFile='config/multiqc_config.yaml',
+        configFile="config/multiqc_config.yaml",
     shell:
         """ 
         multiqc {params.whereTofind} \
