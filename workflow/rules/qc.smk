@@ -202,6 +202,7 @@ rule multiqc:
     params:
         out_dir=lambda w, output: os.path.dirname(output.multiqc),
         whereTofind=lambda w, input: Path(input.tab_spike).parents[1],
+        configFile='config/multiqc_config.yaml',
     shell:
         """ 
         multiqc {params.whereTofind} \
@@ -209,7 +210,7 @@ rule multiqc:
         --exclude macs2 \
         --ignore-samples *spike \
         --force \
-        --config config/multiqc_config.yaml \
+        --config {params.configFile} \
         2> {log}
         """
 
