@@ -14,7 +14,7 @@ If you use this workflow in a paper, don't forget to give credits to the authors
 
 ## About
 
-**SpikeFlow** is a Snakemake-based workflow designed for the analysis of ChIP-seq data with spike-in normalization (i.e. ChIP-Rx). Spike-in controls are used to provide a reference for normalizing sample-to-sample variation. These controls are typically DNA from a different species added to each ChIP and input sample in consistent amounts. This workflow facilitates accurate and reproducible chromatin immunoprecipitation studies by integrating state-of-the-art computational methodologies.
+**SpikeFlow** is a Snakemake-based workflow designed to analyze ChIP-seq data with spike-in normalization (i.e. ChIP-Rx). Spike-in controls are used to provide a reference for normalizing sample-to-sample variation. These controls are typically DNA from a different species added to each ChIP and input sample in consistent amounts. This workflow facilitates accurate and reproducible chromatin immunoprecipitation studies by integrating state-of-the-art computational methodologies.
  
 **Key Features**:
 
@@ -57,9 +57,12 @@ If you do not already have Conda installed on your machine/server, install a Con
 > **_⚠️ NOTE:_** Conda (or Mamba) is needed to run SpikeFlow.
 
 ### Step 2 - Install Snakemake
-To run this pipeline, you'll need to install **Snakemake** (version >= 6.3.0).
-Please check the Snakemake documentation on [how to install](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
-Once you have *conda* installed, you can simply create a new environment and install Snakemake with:
+To run this pipeline, you'll need to install **Snakemake**.
+
+If you already have it installed in a conda environment, please check with the command ```snakemake --version``` and ensure a version **>= 7.17.0**. 
+Otherwise, please follow the instructions below.
+
+Once you have *conda* installed, you can create a new environment and install Snakemake with:
 
 ```
 conda create -c bioconda -c conda-forge -n snakemake snakemake
@@ -81,17 +84,20 @@ or
 mamba activate snakemake
 ```
 
+For further information please check the Snakemake documentation on [how to install](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
+
+
 ### Step 3 - Install Singularity (recommended)
 
-For a fast installation of the workflow, it is recommended to use **Singularity** (compatible with version 3.9.5). This bypasses the need for *Conda* to set up required environments, as these are already present within the container that will be pulled from [dockerhub](https://hub.docker.com/r/davidebrex/spikeflow) with the use of the ```--use-singularity``` flag.
+For a fast workflow installation, it is recommended to use **Singularity** (compatible with version 3.9.5). This bypasses the need for *Conda* to set up required environments, as these are already present within the container that will be pulled from [dockerhub](https://hub.docker.com/r/davidebrex/spikeflow) with the use of the ```--software-deployment-method conda apptainer``` flag.
 
 To install singularity check [its website](https://docs.sylabs.io/guides/3.0/user-guide/installation.html).
 
 ### Step 4 - Download SpikeFlow
 
-To obtain SpikeFlow, you can:
+To obtain SpikeFlow, you have two options:
 
--  Download the source code as zip file from the latest [version](https://github.com/DavideBrex/SpikeFlow/releases/latest).
+-  Download the source code as zip file from the latest [version](https://github.com/DavideBrex/SpikeFlow/releases/latest). For example: ```wget https://github.com/DavideBrex/SpikeFlow/archive/refs/tags/v1.2.0.zip``` will download a zip file. Unzip it and move to the Spikeflow-1.2.0 folder.
 
 -  Clone the repository on your local machine. See [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the instructions.
 
@@ -100,7 +106,8 @@ To obtain SpikeFlow, you can:
 Once you obtained the latest version of SpikeFlow, the ```config.yaml```  and the ```samples_sheet.csv```  files are already set to run an installation test. 
 You can open them to have an idea about their structure. 
 All the files needed for the test are in the ```.test``` folder (on ubuntu, type *ctrl + h* to see hidden files and folders).
-To test whether SpikeFlow is working properly, jump directly to the [Run the workflow](#run) section of the documentation.
+
+**To test whether SpikeFlow is working properly, jump directly to the [Run the workflow](#run) section of the documentation.**
 
 
 The usage of this workflow is also described in the [Snakemake Workflow Catalog](https://snakemake.github.io/snakemake-workflow-catalog/?usage=DavideBrex%2FSpikeFlow).
@@ -110,7 +117,7 @@ The usage of this workflow is also described in the [Snakemake Workflow Catalog]
 
 ### 1. **Sample Sheet Input Requirements**
 
-Prior to executing the pipeline, you need to prepare a sample sheet containing detailed information about the samples to analyse. You can find an example of this file under ```config/samples_sheet.csv```.
+Before executing the pipeline, you need to prepare a sample sheet containing detailed information about the samples to analyze. You can find an example of this file under ```config/samples_sheet.csv```.
 The required format is a comma-separated values (CSV) file, consisting of eight columns and including a header row.
 For each sample (row), you need to specify:
 
@@ -125,7 +132,7 @@ For each sample (row), you need to specify:
 | fastq_1           	| Path to the fastq file of the sample (if paired-end, here goes the forward mate, i.e. R1)                	|
 | fastq_2           	| ONLY for paired-end, otherwise leave empty. Path to the fastq file of the reverse mate (i.e. R2)         	|
 
-For the input samples, leave empty the values of the all the columns except for sample, replicate and fastq path(s).
+For the input samples, leave empty the values of all the columns except for sample, replicate and fastq path(s).
 
 #### Example 1 (single end)
 
@@ -153,7 +160,7 @@ For the input samples, leave empty the values of the all the columns except for 
 
 ### 2. **Config file**
 
-The last step before running the workflow is to adjust the parameters in the config file (```config/config.yaml```). The file is written in YAML (Yet Another Markup Language), which is a human-readable data serialization format. It contains key-value pairs that can be nested to multiple leves.
+The last step before running the workflow is adjusting the config file parameters (```config/config.yaml```). The file is written in YAML (Yet Another Markup Language), a human-readable data serialization format. It contains key-value pairs that can be nested to multiple leves.
 
 #### *Reference and exogenous (spike-in) genomes*
 
@@ -191,7 +198,7 @@ resources:
         spike_assembly: dm6
 ```
 
-> **_⚠️ NOTE:_**  For the endogenous genome,  it's important to also include the path to blacklisted regions.  These regions, often associated with sequencing artifacts or other anomalies, can be downloaded from the Boyle Lab's Blacklist repository on GitHub. You can access these blacklisted region files [here](https://github.com/Boyle-Lab/Blacklist/tree/master/lists)
+> **_⚠️ NOTE:_**  For the endogenous genome,  it's important also to include the path to blacklisted regions.  These regions, often associated with sequencing artifacts or other anomalies, can be downloaded from the Boyle Lab's Blacklist repository on GitHub. You can access these blacklisted region files [here](https://github.com/Boyle-Lab/Blacklist/tree/master/lists)
 
 
 #### *Normalization*
@@ -271,25 +278,40 @@ After obtaining a copy of the workflow on your machine, you can verify its prope
 The ```config``` and ```sample_sheet``` files come pre-configured for a test run.
 
 #### Conda and Singularity (recommended)
+Snakemake versions >= 8:
 
 ```bash
 snakemake --cores 10 --software-deployment-method conda apptainer
 ```
 
+Snakemake versions >= 7.17 and < 8:
+
+```bash
+snakemake -j 10 --use-conda --use-singularity
+```
+
 First, the singularity container will be pulled from DockerHub and then the workflow will be executed. To install sigularity, see the [installation](#install) section.
 
 #### Conda only
+Snakemake versions >= 8:
 
 ```bash
 snakemake --cores 10 --software-deployment-method conda
 ```
+
+Snakemake versions >= 7.17 and < 8:
+
+```bash
+snakemake -j 10 --use-conda
+```
+
 This will install all the required conda envs (it might take a while, just for the first execution).
 
 #### Snakemake flags
 
-- ```--cores```: adjust this number (here set to 10) based on your machine configuration
+- ```--cores``` or ```-j```: indicates the number of cores. Adjust this number (here set to 10) based on your machine configuration
 - ```-n```: add this flag  to the command line for a "dry run," which allows Snakemake to display the rules that it would execute, without actually running them. 
-- ```--singularity-args "-B /shares,/home -e"```: only with ```--software-deployment-method conda apptainer``` and if you are running SpikeFlow from a server that mounts /shares and /home disks (where you have your working dir and files).
+- ```--singularity-args "-B /shares,/home -e"```: add this flag only with ```--software-deployment-method conda apptainer``` or ```--use-conda --use-singularity```. It will allow singularity to mount the specified disks (/shares and /home), in this case should be where you have your working dir and files.
 
 To execute the pipeline on a HPC cluster, please follow [these guidelines](https://snakemake.readthedocs.io/en/stable/tutorial/additional_features.html#cluster-execution).
 
@@ -344,9 +366,9 @@ The main outputs of the workflow are:
 <a name="troubleshooting"></a>
 ## Troubleshooting
 
-1. When you run SpikeFlow with Singularity ( ```--use-singularity```), you might get an error if you set the  ```-n``` flag. This happens ONLY at the first execution of the workflow. Remove the flag and it should work.
+1. When you run SpikeFlow with Singularity ( ```--software-deployment-method conda apptainer```), you might get an error if you set the  ```-n``` flag. This happens ONLY at the first execution of the workflow. Remove the flag and it should work.
 
-2. The ``` --use-singularity```  option temporary requires about 7 GB of disk space to build the image from Docker Hub. If your ```/tmp``` directory is full, you'll encounter a ```No space left on device``` error. To avoid this, change the Singularity temp directory to a different disk by setting the ```SINGULARITY_TMPDIR``` environment variable. More details are available in the [Singularity guide on temporary folders](https://docs.sylabs.io/guides/latest/user-guide/build_env.html#temporary-folders).
+2. The ```--software-deployment-method conda apptainer```  option temporary requires about 7 GB of disk space to build the image from Docker Hub. If your ```/tmp``` directory is full, you'll encounter a ```No space left on device``` error. To avoid this, change the Singularity temp directory to a different disk by setting the ```SINGULARITY_TMPDIR``` environment variable. More details are available in the [Singularity guide on temporary folders](https://docs.sylabs.io/guides/latest/user-guide/build_env.html#temporary-folders).
 
 3. In case of errors during the execution, please make sure to check the log files of the failing snakemake rule in the log folders
 
