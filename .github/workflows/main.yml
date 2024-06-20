@@ -44,7 +44,8 @@ jobs:
       with:
         directory: .test
         snakefile: workflow/Snakefile
-        args: "--use-conda --show-failed-logs --latency-wait 240 --cores 3 --conda-cleanup-pkgs cache --conda-frontend mamba --all-temp"
+        stagein: "conda config --set channel_priority strict"
+        args: "--use-conda --show-failed-logs --latency-wait 15 --cores 3 --conda-cleanup-pkgs cache --conda-frontend mamba --all-temp"
 
     - name: Test report
       uses: snakemake/snakemake-github-action@v1.24.0
