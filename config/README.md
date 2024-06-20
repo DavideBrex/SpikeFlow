@@ -1,3 +1,66 @@
+## Installation 
+### Step 1 - Install a Conda-based Python3 distribution
+
+If you do not already have Conda installed on your machine/server, install a Conda-based Python3 distribution. We recommend [Mambaforge](https://github.com/conda-forge/miniforge#mambaforge), which includes Mamba, a fast and robust replacement for the Conda package manager. Mamba is preferred over the default Conda solver due to its speed and reliability.
+
+> **_⚠️ NOTE:_** Conda (or Mamba) is needed to run SpikeFlow.
+
+### Step 2 - Install Snakemake
+To run this pipeline, you'll need to install **Snakemake**.
+
+If you already have it installed in a conda environment, please check with the command ```snakemake --version``` and ensure a version **>= 7.17.0**. 
+Otherwise, please follow the instructions below.
+
+Once you have *conda* installed, you can create a new environment and install Snakemake with:
+
+```
+conda create -c bioconda -c conda-forge -n snakemake snakemake
+```
+
+For mamba, use the following code:
+
+```
+ mamba create -c conda-forge -c bioconda -n snakemake snakemake
+```
+
+
+Once the environment is created, activate it with:
+```
+conda activate snakemake
+```
+or
+```
+mamba activate snakemake
+```
+
+For further information please check the Snakemake documentation on [how to install](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
+
+
+### Step 3 - Install Singularity (recommended)
+
+For a fast workflow installation, it is recommended to use **Singularity** (compatible with version 3.9.5). This bypasses the need for *Conda* to set up required environments, as these are already present within the container that will be pulled from [dockerhub](https://hub.docker.com/r/davidebrex/spikeflow) with the use of the ```--software-deployment-method conda apptainer``` flag.
+
+To install singularity check [its website](https://docs.sylabs.io/guides/3.0/user-guide/installation.html).
+
+### Step 4 - Download SpikeFlow
+
+To obtain SpikeFlow, you have two options:
+
+-  Download the source code as zip file from the latest [version](https://github.com/DavideBrex/SpikeFlow/releases/latest). For example: ```wget https://github.com/DavideBrex/SpikeFlow/archive/refs/tags/v1.2.0.zip``` will download a zip file. Unzip it and move to the Spikeflow-1.2.0 folder.
+
+-  Clone the repository on your local machine. See [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the instructions.
+
+### Step 5 - Test the workflow
+
+Once you obtained the latest version of SpikeFlow, the ```config.yaml```  and the ```samples_sheet.csv```  files are already set to run an installation test. 
+You can open them to have an idea about their structure. 
+All the files needed for the test are in the ```.test``` folder (on ubuntu, type *ctrl + h* to see hidden files and folders).
+
+**To test whether SpikeFlow is working properly, jump directly to the [Run the workflow](#run) section of the documentation.**
+
+
+The usage of this workflow is also described in the [Snakemake Workflow Catalog](https://snakemake.github.io/snakemake-workflow-catalog/?usage=DavideBrex%2FSpikeFlow).
+
 ## Configuration
 
 ### 1. **Sample Sheet Input Requirements**
@@ -152,3 +215,114 @@ When configuring your pipeline based on the chosen reference/endogenous genome (
 - **P-Value Adjustment for Peak Calling:** Modify the q-values for peak calling in the config file. This applies to different peak calling methods: narrow (macs2), broad (epic2), or very-broad (edd).
 
 - **Peak Annotation Threshold:** The default setting annotates a peak within ±2500 bp around the promoter region.
+
+
+
+## Run the workflow
+
+To execute the pipeline, make sure to be in the main  **Snakemake working directory**, which includes subfolders like 'workflow', 'resources', and 'config'. 
+
+The workflow can be operated in two ways: using Conda alone, or a combination of Conda and Singularity (**recommended**). 
+After obtaining a copy of the workflow on your machine, you can verify its proper functioning by executing one of the two commands below. 
+The ```config``` and ```sample_sheet``` files come pre-configured for a test run.
+
+#### Conda and Singularity (recommended)
+Snakemake versions >= 8:
+
+```bash
+snakemake --cores 10 --software-deployment-method conda apptainer
+```
+
+Snakemake versions >= 7.17 and < 8:
+
+```bash
+snakemake -j 10 --use-conda --use-singularity
+```
+
+First, the singularity container will be pulled from DockerHub and then the workflow will be executed. To install sigularity, see the [installation](#install) section.
+
+#### Conda only
+Snakemake versions >= 8:
+
+```bash
+snakemake --cores 10 --software-deployment-method conda
+```
+
+Snakemake versions >= 7.17 and < 8:
+
+```bash
+snakemake -j 10 --use-conda
+```
+
+This will install all the required conda envs (it might take a while, just for the first execution).
+
+#### Snakemake flags
+
+- ```--cores``` or ```-j```: indicates the number of cores. Adjust this number (here set to 10) based on your machine configuration
+- ```-n```: add this flag  to the command line for a "dry run," which allows Snakemake to display the rules that it would execute, without actually running them. 
+- ```--singularity-args "-B /shares,/home -e"```: add this flag only with ```--software-deployment-method conda apptainer``` or ```--use-conda --use-singularity```. It will allow singularity to mount the specified disks (/shares and /home), in this case should be where you have your working dir and files.
+
+To execute the pipeline on a HPC cluster, please follow [these guidelines](https://snakemake.readthedocs.io/en/stable/tutorial/additional_features.html#cluster-execution).
+
+## Output files
+
+
+All the outputs of the workflow are stored in the ```results``` folder. Additionally, in case of any errors during the workflow execution, the log files are stored within the ```results/logs``` directory.
+
+
+The main outputs of the workflow are:
+
+- **MultiQC Report** 
+
+    - If the differential peaks analysis was activated, you will find scatter plots/volcano and PCA plots in the report. 
+    - Peak Calling Data: Displays the number of peaks called per sample for each method (MACS2, EPIC2, EDD).
+    - Peaks annotation
+    - Reads Table: Per sample reference and spike-in calculated with the normalisation set by the user.
+    - Basic QC with FastQC: Evaluates basic quality metrics of the sequencing data.
+    - Phantom Peak Qual Tools: Provides NSC and RSC values, indicating the quality and reproducibility of ChIP samples. NSC measures signal-to-noise ratio, while RSC assesses enrichment strength.
+    - Fingerprint Plots: Visual representation of the sample quality, showing how reads are distributed across the genome.
+
+     ```results/QC/multiqc/multiqc_report.html```
+
+- **Peaks Differential Analysis**
+    - In this folder, you will find the differential peak regions and the volcano/scatter/pca plots for each antibody and contrast.
+
+    ``results/differentialAnalysis``
+
+    If spike-in normalised peak calling was activated, you will find the results of the differential analysis in:
+
+    ``results/differentialAnalysis/NormalisedPeaks``
+
+- **Normalized BigWig Files**: 
+    - Essential for visualizing read distribution and creating detailed heatmaps.
+
+    ```results/bigWigs/```
+
+-  **Peak Files and Annotation**:
+    - Provides called peaks for each peak calling method.  Consensus regions bed files are in ```/results/peakCalling/mergedPeaks```
+    - Peak annotation using ChIPseeker, resulting in two files for promoter and distal peaks for each sample  ```/results/peakCalling/peakAnnot```
+
+    - Standard peak calling: ```/results/peakCalling/``` 
+
+    - Spike-in normalised peak calling: ```/results/peakCallingNorm/``` 
+
+
+
+## Troubleshooting
+
+1. When you run SpikeFlow with Singularity ( ```--software-deployment-method conda apptainer```), you might get an error if you set the  ```-n``` flag. This happens ONLY at the first execution of the workflow. Remove the flag and it should work.
+
+2. The ```--software-deployment-method conda apptainer```  option temporary requires about 7 GB of disk space to build the image from Docker Hub. If your ```/tmp``` directory is full, you'll encounter a ```No space left on device``` error. To avoid this, change the Singularity temp directory to a different disk by setting the ```SINGULARITY_TMPDIR``` environment variable. More details are available in the [Singularity guide on temporary folders](https://docs.sylabs.io/guides/latest/user-guide/build_env.html#temporary-folders).
+
+3. In case of errors during the execution, please make sure to check the log files of the failing snakemake rule in the log folders
+
+4. For the R scripts execution in SpikeFlow, the env variable R_LIBS_SITE has to be empty otherwise snakemake will look in that folder for R libraries. To avoid this you can use ```unset R_LIBS_SITE```. 
+
+## Citation
+
+If you use this workflow in a paper, don't forget to give credits to the authors by citing the URL of this (original) repository:
+https://github.com/DavideBrex/SpikeFlow
+
+**Author**:
+- Davide Bressan ([@DavideBrex](https://twitter.com/BrexDavide))
+
