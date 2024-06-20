@@ -194,7 +194,7 @@ rule multiqc:
         tab_peakAnnot=rules.create_qc_table_peakAnnot.output.tab,
         plotDiffAnalysis=get_diffAnalysis_tables,
     output:
-        multiqc="{}results/QC/multiqc/multiqc_report.html".format(outdir),
+        multiqc="{}results/QC/multiqc/SpikeFlow_multiqc_report.html".format(outdir),
     log:
         "{}results/logs/QC/multiqc/multiqc.log".format(outdir),
     conda:
@@ -208,6 +208,7 @@ rule multiqc:
         multiqc {params.whereTofind} \
         --outdir {params.out_dir} \
         --exclude macs2 \
+        --filename SpikeFlow_multiqc_report \
         --ignore-samples *spike \
         --force \
         --config {params.configFile} \
