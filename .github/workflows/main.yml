@@ -44,7 +44,7 @@ jobs:
       with:
         directory: .test
         snakefile: workflow/Snakefile
-        args: "--use-conda --show-failed-logs --latency-wait 30 --cores 3 --conda-cleanup-pkgs cache --conda-frontend mamba --all-temp"
+        args: "--use-conda --use-singularity --show-failed-logs --latency-wait 30 --cores 3 --conda-cleanup-pkgs cache --conda-frontend mamba --all-temp"
 
     - name: Test report
       uses: snakemake/snakemake-github-action@v1.24.0
