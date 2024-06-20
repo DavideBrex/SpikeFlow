@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/DavideBrex/SpikeFlow/compare/v1.2.0...v1.2.1) (2024-06-20)
+
+
+### Bug Fixes
+
+* changed config readme ([#17](https://github.com/DavideBrex/SpikeFlow/issues/17)) ([b80b0a3](https://github.com/DavideBrex/SpikeFlow/commit/b80b0a3cc923062dfbd476e501108eddead90d80))
+
 ## [1.2.0](https://github.com/DavideBrex/SpikeFlow/compare/v1.1.0...v1.2.0) (2024-06-04)
 
 
