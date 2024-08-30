@@ -377,8 +377,26 @@ The main outputs of the workflow are:
 <a name="citation"></a>
 ## Citation
 
-If you use this workflow in a paper, don't forget to give credits to the authors by citing the URL of this (original) repository:
-https://github.com/DavideBrex/SpikeFlow
+If you use this workflow in a paper, please cite:
+
+Davide Bressan, Daniel Fernández-Pérez, Alessandro Romanel, Fulvio Chiacchiera, SpikeFlow: automated and flexible analysis of ChIP-Seq data with spike-in control, NAR Genomics and Bioinformatics, Volume 6, Issue 3, September 2024, lqae118, https://doi.org/10.1093/nargab/lqae118
+
+```
+@article{10.1093/nargab/lqae118,
+    author = {Bressan, Davide and Fernández-Pérez, Daniel and Romanel, Alessandro and Chiacchiera, Fulvio},
+    title = "{SpikeFlow: automated and flexible analysis of ChIP-Seq data with spike-in control}",
+    journal = {NAR Genomics and Bioinformatics},
+    volume = {6},
+    number = {3},
+    pages = {lqae118},
+    year = {2024},
+    month = {08},
+    issn = {2631-9268},
+    doi = {10.1093/nargab/lqae118},
+    url = {https://doi.org/10.1093/nargab/lqae118},
+    eprint = {https://academic.oup.com/nargab/article-pdf/6/3/lqae118/58962277/lqae118.pdf},
+}
+```
 
 **Author**:
 - Davide Bressan ([@DavideBrex](https://twitter.com/BrexDavide))
