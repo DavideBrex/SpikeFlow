@@ -2,7 +2,9 @@
 # Visit https://bit.ly/cffinit to generate yours today!
 
 cff-version: 1.2.0
-title: SpikeFlow
+title: >-
+  SpikeFlow: automated and flexible analysis of ChIP-Seq
+  data with spike-in control 
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
@@ -15,9 +17,38 @@ authors:
     affiliation: University of Trento - Italy
 identifiers:
   - type: doi
+    value: 10.1093/nargab/lqae118
+    description: Journal Article
+  - type: doi
     value: 10.5281/zenodo.10686980
 repository-code: 'https://github.com/DavideBrex/SpikeFlow'
-abstract: A snakemake pipeline for the analysis of ChIP-Rx data
+abstract: >-
+  ChIP with reference exogenous genome (ChIP-Rx) is widely
+  used to study histone modification changes across
+  different biological conditions. A key step in the
+  bioinformatics analysis of this data is calculating the
+  normalization factors, which vary from the standard
+  ChIP-seq pipelines. Choosing and applying the appropriate
+  normalization method is crucial for interpreting the
+  biological results. However, a comprehensive pipeline for
+  complete ChIP-Rx data analysis is lacking. To address
+  these challenges, we introduce SpikeFlow, an integrated
+  Snakemake workflow that combines features from various
+  existing tools to streamline ChIP-Rx data processing and
+  enhance usability. SpikeFlow automates spike-in data
+  scaling and provides multiple normalization options. It
+  also performs peak calling and differential analysis with
+  distinct modalities, enabling the detection of enrichment
+  regions for histone modifications and transcription factor
+  binding. Our workflow runs in-depth quality control at all
+  the processing steps and generates an analysis report with
+  tables and graphs to facilitate results interpretation. We
+  validated the pipeline by performing a comparative
+  analysis with DiffBind and SpikChIP, demonstrating robust
+  performances in various biological models. By combining
+  diverse functionalities into a single platform, SpikeFlow
+  aims to simplify ChIP-Rx data analysis for the research
+  community.
 keywords:
   - ChIP-seq
   - Normalisation
