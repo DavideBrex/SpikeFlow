@@ -51,8 +51,8 @@ if normType in ['RAW', 'Orlando', 'RX-Input']:
                 ) as input_file:
                     info_input = input_file.read().strip().split("\n")
 
-                    gamma = int(info_input[2].split(":")[-1]) / int(
-                        info_input[1].split(":")[-1]
+                    gamma = int(info_input[1].split(":")[-1]) / int(
+                        info_input[0].split(":")[-1]
                     )  # ratio spike/samples in input
                     alpha = gamma / Nspike * 1000000  # normalization factor
 

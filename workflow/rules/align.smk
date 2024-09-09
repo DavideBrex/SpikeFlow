@@ -9,21 +9,27 @@ if config["aligner"] == "bowtie2":
             index=temp("{}results/bam/{{id}}.tmp.bam.bai".format(outdir)),
         threads: config["threads"]["bowtie2"]
         params:
-            index=config["resources"]["ref"]["index"]
-            if config["resources"]["ref"]["index"] != ""
-            else "resources/reference_genome/index/index_ref",
+            index=(
+                config["resources"]["ref"]["index"]
+                if config["resources"]["ref"]["index"] != ""
+                else "resources/reference_genome/index/index_ref"
+            ),
             bowtie2=config["params"]["bowtie2"]["global"],
             samtools_mem=config["params"]["samtools"]["memory"],
             inputsel=(
-                lambda wildcards, input: " -U {0} ".format(input.reads)
-                if len(input.reads) == 1
-                else config["params"]["bowtie2"]["pe"]
-                + " -1 {0} -2 {1}".format(*input.reads)
+                lambda wildcards, input: (
+                    " -U {0} ".format(input.reads)
+                    if len(input.reads) == 1
+                    else config["params"]["bowtie2"]["pe"]
+                    + " -1 {0} -2 {1}".format(*input.reads)
+                )
             ),
             forSamblaster=(
-                lambda wildcards, input: " --ignoreUnmated ".format(input.reads)
-                if len(input.reads) == 1
-                else ""
+                lambda wildcards, input: (
+                    " --ignoreUnmated ".format(input.reads)
+                    if len(input.reads) == 1
+                    else ""
+                )
             ),
         message:
             "Aligning {input} with parameters {params.bowtie2}"
