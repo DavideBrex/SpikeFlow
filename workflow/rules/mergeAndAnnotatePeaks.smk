@@ -1,25 +1,33 @@
 
 rule consensus_peaks:
     input:
-        narrowCalled=expand(
-            "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(
-                outdir
-            ),
-            sample=narrowSamples,
-        )
-        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
-        else expand(
-            "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(outdir),
-            sample=narrowSamples,
+        narrowCalled=(
+            expand(
+                "{}results/peakCallingNorm/{{sample}}_narrowPeaks.narrowPeak".format(
+                    outdir
+                ),
+                sample=narrowSamples,
+            )
+            if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+            else expand(
+                "{}results/peakCalling/macs2/{{sample}}_peaks.narrowPeak".format(
+                    outdir
+                ),
+                sample=narrowSamples,
+            )
         ),
-        broadCalled=expand(
-            "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(outdir),
-            sample=broadSamples,
-        )
-        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
-        else expand(
-            "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(outdir),
-            sample=broadSamples,
+        broadCalled=(
+            expand(
+                "{}results/peakCallingNorm/{{sample}}_broadPeaks.broadPeak".format(
+                    outdir
+                ),
+                sample=broadSamples,
+            )
+            if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+            else expand(
+                "{}results/peakCalling/epic2/{{sample}}_broadPeaks.bed".format(outdir),
+                sample=broadSamples,
+            )
         ),
     output:
         "{}results/peakCallingNorm/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
@@ -53,20 +61,24 @@ rule consensus_peaks:
 rule count_reads_on_peaks:
     input:
         bamFiles=get_bams_by_antibody,
-        consensus_peaks="{outdir}results/peakCallingNorm/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
-            outdir=outdir
-        )
-        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
-        else "{outdir}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
-            outdir=outdir
+        consensus_peaks=(
+            "{outdir}results/peakCallingNorm/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
+                outdir=outdir
+            )
+            if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+            else "{outdir}results/peakCalling/mergedPeaks/{{antibody}}_consensusPeaks.bed".format(
+                outdir=outdir
+            )
         ),
     output:
-        output_tsv="{outdir}results/peakCallingNorm/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
-            outdir=outdir
-        )
-        if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
-        else "{outdir}results/peakCalling/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
-            outdir=outdir
+        output_tsv=(
+            "{outdir}results/peakCallingNorm/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
+                outdir=outdir
+            )
+            if config["diffPeakAnalysis"]["useSpikeinCalledPeaks"]
+            else "{outdir}results/peakCalling/mergedPeaks/{{antibody}}_readsOnConsensusPeaks.tsv".format(
+                outdir=outdir
+            )
         ),
     params:
         joined_bams=lambda w, input: ",".join(input.bamFiles),

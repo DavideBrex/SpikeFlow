@@ -13,9 +13,9 @@ rule macs2_callNarrowPeak:
     log:
         "{}results/logs/peakCalling/macs2/{{sample}}_callpeak.log".format(outdir),
     params:
-        isPairedEnd=lambda w: "--format BAM --nomodel"
-        if is_single_end(w.sample)
-        else "--format BAMPE",
+        isPairedEnd=lambda w: (
+            "--format BAM --nomodel" if is_single_end(w.sample) else "--format BAMPE"
+        ),
         gsize=config["params"]["deeptools"]["effective_genome_length"],
         qval=config["params"]["peakCalling"]["macs2"]["qvalue"],
         otherParams=config["params"]["peakCalling"]["macs2"]["extraOptions"],
@@ -49,11 +49,13 @@ rule macs2_callNormPeaks_narrow:
             outdir, sample_to_input[w.sample]
         ),
         logFile="{}results/logs/spike/{{sample}}.normFactor".format(outdir),
-        logFileInput=lambda wildcards: "{}results/logs/spike/{}.normFactor".format(
-            outdir, sample_to_input[wildcards.sample]
-        )
-        if not pd.isna(sample_to_input[wildcards.sample])
-        else "{}results/logs/spike/{{sample}}.normFactor".format(outdir),
+        logFileInput=lambda wildcards: (
+            "{}results/logs/spike/{}.normFactor".format(
+                outdir, sample_to_input[wildcards.sample]
+            )
+            if not pd.isna(sample_to_input[wildcards.sample])
+            else "{}results/logs/spike/{{sample}}.normFactor".format(outdir)
+        ),
     output:
         multiext(
             "{}results/peakCallingNorm/{{sample}}".format(outdir),
@@ -101,11 +103,13 @@ rule macs2_callNormPeaks_broad:
             outdir, sample_to_input[w.sample]
         ),
         logFile="{}results/logs/spike/{{sample}}.normFactor".format(outdir),
-        logFileInput=lambda wildcards: "{}results/logs/spike/{}.normFactor".format(
-            outdir, sample_to_input[wildcards.sample]
-        )
-        if not pd.isna(sample_to_input[wildcards.sample])
-        else "{}results/logs/spike/{{sample}}.normFactor".format(outdir),
+        logFileInput=lambda wildcards: (
+            "{}results/logs/spike/{}.normFactor".format(
+                outdir, sample_to_input[wildcards.sample]
+            )
+            if not pd.isna(sample_to_input[wildcards.sample])
+            else "{}results/logs/spike/{{sample}}.normFactor".format(outdir)
+        ),
     output:
         multiext(
             "{}results/peakCallingNorm/{{sample}}".format(outdir),
