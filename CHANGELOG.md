@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/DavideBrex/SpikeFlow/compare/v1.2.1...v1.3.0) (2024-09-09)
+
+
+### Features
+
+* fixed bug in ChIP-rx formula ([f66b26c](https://github.com/DavideBrex/SpikeFlow/commit/f66b26c6c884bdfd229d0728e28b9f15e9d4aaa7))
+
 ## [1.2.1](https://github.com/DavideBrex/SpikeFlow/compare/v1.2.0...v1.2.1) (2024-06-20)
 
 
