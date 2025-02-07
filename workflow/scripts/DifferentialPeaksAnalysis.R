@@ -181,7 +181,9 @@ if (sum(leftContrast == colData$condition) == 1 && sum(rightContrast == colData$
 
   pcaPLot <- DESeq2::plotPCA(rlog(dds), intgroup = "condition", returnData = F) +
     theme_bw(base_size = 17) +
-    labs(title = "PCA plot", color='Group')
+    labs(title = "PCA plot", color='Group') +
+    ggrepel::geom_text_repel(aes(label=name),show.legend = FALSE )+
+    scale_color_manual(values = c("firebrick", "steelblue3"))
 
   if (peak_type == "Raw"){
     #check if the pca plot already exists

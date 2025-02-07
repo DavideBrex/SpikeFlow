@@ -40,13 +40,49 @@ def sort_bam(bamfile, threads = 1):
 		os.remove(bamfile)
 
 
-def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='EXO_', threads = 1):
+def remove_uncertain_reads(filtered_bam, new_filt_bam, chr_prefix, threads = 1):
+	"""
+	This function removes uncertain reads from a paired end bam file (i.e  when two mates map to different organisms).
+	Activated only if the bam file is paired end.
+	"""
+    # Define the awk script.
+    #if there is not EXO_ in both mate chromosomes we keep the read
+    #also, if there is EXO_ in both mate chromosomes we keep the read
+    #if the mate chromosome is '=' we keep the read (same chromosome)
+	samtools_cmd = "samtools view -h %s" % filtered_bam
+	awk_script = "awk '{count = ($3 ~ /%s/) + ($7 ~ /%s/); if (count == 0 || count == 2 || $7 == \"=\") print $0}'" % (chr_prefix, chr_prefix)
+	saveFile_script = "samtools view -Sb - > %s" % new_filt_bam
+    # Run the command using subprocess
+	try:
+		subprocess.run("%s | %s | %s" % (samtools_cmd, awk_script, saveFile_script), shell=True)
+	except:
+		sys.exit("\tError in removing uncertain and singletons reads!")
+		
+	#count reads that were removed in the previous step
+	try:
+		result=subprocess.run("samtools view -c %s" % new_filt_bam, shell=True, capture_output=True, text=True)
+		reads_left = int(result.stdout.strip())
+	except:
+		sys.exit("\tError in counting uncertain reads!")
+
+	#sort and index the filtered bam file and remove the unfiltered one
+	try:
+		sort_bam(bamfile = new_filt_bam, threads = threads)
+	except:
+		sys.exit("\tError in sorting the filtered (no uncertain reads) bam file!")
+
+	return reads_left
+
+def filter_and_split_bam(bam_file, outfile, q_cut=30, chr_prefix='EXO_', threads = 1):
 
 	low_mapq = 0
 	exo_reads = 0
 	endo_reads = 0
 	total_reads = 0
 	filtered_reads = 0
+	uncertain_reads = 0
+	is_paired_end = False
+
 
 	ENDO_bam=outfile + '_ref.bam'
 	EXO_bam=outfile + '_spike.bam'
@@ -60,8 +96,9 @@ def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='EXO_', threads = 1):
 	else:
 		sys.exit("\tCannot find (or it is empty) the input BAM file \"%s\"!" % bam_file)
 	 
-	#filter out low mapq reads( Skip alignments with MAPQ smaller than q_cut)
+	#filter out low mapq reads( Skip alignments with MAPQ smaller than q_cut) and sort
 	if (q_cut > 0):
+		print("\tFiltering out reads with MAPQ < %d..." % q_cut)
 		filtered_bam = bam_file.replace('.bam','.filt.bam')
 		subprocess.run("samtools view -b -q %d %s > %s" % (q_cut, bam_file ,filtered_bam), shell=True)
 		#sort and index the filtered bam file and remove the unfiltered one
@@ -76,6 +113,7 @@ def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='EXO_', threads = 1):
 	
 	#count reads on the filtered bam file
 	if (q_cut > 0):
+		print("\tCounting reads left after quality filtering in bam file...")
 		if os.path.exists(filtered_bam) and os.path.getsize(filtered_bam) > 0:
 			print("\t\"%s\" exists and non-empty, proceed with read counting." % filtered_bam)
 			result=subprocess.run("samtools view -c %s" % filtered_bam, shell=True, capture_output=True, text=True)
@@ -92,8 +130,43 @@ def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='EXO_', threads = 1):
 	else:
 		low_mapq = 0
 	
+	#Now we add another FILTERING to remove uncertain reads (reads that map to both endogenous and exogenous genomes)
+	#only for paired end samples
+	#check if the bam file is paired end (we check first 1000 to reduce time)
+	cmd = """{ samtools view -H %s ; samtools view %s | head -n1000; } | samtools view -c -f 1""" % (filtered_bam, filtered_bam)
+	try:
+		result=subprocess.run(cmd, shell=True, capture_output=True, text=True)
+	except:
+		sys.exit("\tError in checking if the bam file is paired end!")
+
+	#only if paired end we remove uncertain reads and singleton reads	
+	if (int(result.stdout.strip()) != 0):
+		print("\tPaired end sample detected, checking and removing uncertain reads...")
+		is_paired_end = True
+		if (q_cut > 0):
+			new_filt_bam = filtered_bam.replace('.sorted.bam','.filtPE.bam')
+		else:
+			new_filt_bam = filtered_bam.replace('.bam','.filtPE.bam')
+		reads_after_pe_filtering = remove_uncertain_reads(filtered_bam, new_filt_bam ,chr_prefix, threads)
+		#if no reads are left after filtering we exit
+		if (reads_after_pe_filtering == 0):
+			sys.exit("\tNo reads left after filtering out uncertain reads! Consider checking the chromosome names.")
+		#calculate the number of uncertain reads to save for report table
+		if (q_cut > 0):
+			uncertain_reads = filtered_reads - reads_after_pe_filtering
+		else:
+			uncertain_reads = total_reads - reads_after_pe_filtering
+		print("\tUncertain reads: %d" % uncertain_reads)
+		print("Uncertain reads removed successfully.")
+		#at this point, only if mapq filtering was applied, we remove the old mapq filtered bam file and rename the new one
+		if q_cut > 0:
+			if os.path.exists(filtered_bam):
+				os.remove(filtered_bam)
+				os.remove(filtered_bam + '.bai')
+		filtered_bam = new_filt_bam.replace('.bam','.sorted.bam')
+	else:
+		print("\tSingle end sample detected, skipping uncertain reads removal.")
 	#Now we split the bam file into endogenous and exogenous bam files
- 
 	#First we need to extract the chromosome names
 	#first endogenous (human or mouse usually)
 	try:
@@ -131,7 +204,7 @@ def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='EXO_', threads = 1):
 		sys.exit("\tCannot find (or it is empty) the exogenous BAM file \"%s\"!" % EXO_bam)
 
 	#if qc filtering was applied we remove the filtered bam file
-	if (q_cut > 0):
+	if (q_cut > 0 or is_paired_end):
 		os.remove(filtered_bam)
 		os.remove(filtered_bam + '.bai')
 
@@ -139,6 +212,7 @@ def divided_bam(bam_file, outfile, q_cut=30, chr_prefix='EXO_', threads = 1):
 	readInfo.write("NSampleReads:%s\n" % endo_reads)
 	readInfo.write("NSpikeReads:%s\n" % exo_reads)
 	readInfo.write("LowMapQReads:%s\n" % low_mapq)
+	readInfo.write("UncertainReads:%s\n" % uncertain_reads)
 	readInfo.close()
 
 	for i in ((outfile + '_ref.bam'), (outfile + '_spike.bam')):
@@ -165,7 +239,7 @@ def main():
 		sys.exit("\tCannot find the \"samtools\" command!")
 
 	#split bam into two separate bams (endo and exo) and sort 
-	divided_bam(bam_file = bam_file, outfile = out_prefix, q_cut= map_qual, chr_prefix= chr_prefix, threads = n_thread)
+	filter_and_split_bam(bam_file = bam_file, outfile = out_prefix, q_cut= map_qual, chr_prefix= chr_prefix, threads = n_thread)
 
 if __name__=='__main__':
 	main()
