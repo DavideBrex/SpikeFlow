@@ -22,10 +22,11 @@ for f in snakemake.input["logFile"]:
             list_splitBam_values.append(int(i.split(":")[-1]))
 
         dict_allsamp[idName] = [
-            (list_splitBam_values[0] + list_splitBam_values[1]),
+            (list_splitBam_values[0] + list_splitBam_values[1]+ list_splitBam_values[2] + list_splitBam_values[3]),
             list_splitBam_values[0],
             list_splitBam_values[1],
             list_splitBam_values[2],
+            list_splitBam_values[3],
             ((list_splitBam_values[1] / (list_splitBam_values[0] + list_splitBam_values[1])) * 100),
             norm_factor,
         ]
@@ -39,6 +40,7 @@ if df_info.empty:
         "Tot. Sample Reads",
         "Tot. spikeIn Reads",
         "Tot. low mapQ Reads",
+        "Tot. uncertain Reads",
         "Percentage spikeIn",
         "Normalization factor",
     ])
@@ -48,6 +50,7 @@ else:
         "Tot. Sample Reads",
         "Tot. spikeIn Reads",
         "Tot. low mapQ Reads",
+        "Tot. uncertain Reads",
         "Percentage spikeIn",
         "Normalization factor",
     ]

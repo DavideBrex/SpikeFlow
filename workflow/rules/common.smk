@@ -634,7 +634,8 @@ def get_diffAnalysis_tables(wildcards):
             for contrast in contrasts
         ]
     else:
-        return ""
+        # since empry string ("") gave missing input error, we return a file that is already present (another input of multiqc rule)
+        return "{}results/QC/SplitBam_Reads_mqc.tsv".format(outdir)
 
 
 # --------------------  Rules Functions ---------------#
