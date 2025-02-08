@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/DavideBrex/SpikeFlow/compare/v1.3.0...v1.3.1) (2025-02-08)
+
+
+### Bug Fixes
+
+* added removal of uncertain readd for paired end ([#24](https://github.com/DavideBrex/SpikeFlow/issues/24)) ([f07243b](https://github.com/DavideBrex/SpikeFlow/commit/f07243bd840700e9415d324c58ea9994a1e74f59))
+
 ## [1.3.0](https://github.com/DavideBrex/SpikeFlow/compare/v1.2.1...v1.3.0) (2024-09-09)
 
 
