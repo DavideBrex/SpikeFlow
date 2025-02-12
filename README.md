@@ -5,7 +5,7 @@
 ### A snakemake pipeline for the analysis of ChIP-Rx data 
 
 [![Snakemake](https://img.shields.io/badge/snakemake-≥6.3.0-brightgreen.svg)](https://snakemake.github.io)
-[![GitHub actions status](https://github.com/DavideBrex/SpikeFlow/workflows/Tests/badge.svg?branch=main)](https://github.com/DavideBrex/SpikeFlow/actions)
+[![GitHub actions status](https://github.com/DavideBrex/SpikeFlow/workflows/Tests/badge.svg)](https://github.com/DavideBrex/SpikeFlow/actions/workflows/main.yml)
 [![DOI](https://zenodo.org/badge/665587139.svg)](https://zenodo.org/doi/10.5281/zenodo.10686979)
 
 
