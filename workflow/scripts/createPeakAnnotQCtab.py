@@ -1,5 +1,9 @@
 import pandas as pd
 import os
+import sys
+
+sys.stdout = open(snakemake.log[0], 'w')
+sys.stderr = sys.stdout
 
 
 dict_allsamp = {}
@@ -16,12 +20,11 @@ for f in snakemake.input:
         dict_allsamp[idName] = annotRow.split()
 
 df_info = pd.DataFrame.from_dict(dict_allsamp, orient="index")
-df_col = headerRow.split()
 
 if df_info.empty:
-    df_info = pd.DataFrame(columns=df_col)
+    df_info = pd.DataFrame(columns=[""])
 else:
-    df_info.columns = df_col
+    df_info.columns = headerRow.split()
 
 # save DataFrame to the file
 df_info.to_csv(snakemake.output["tab"], sep="\t", index_label="Sample")
