@@ -41,6 +41,7 @@ rule consensus_peaks:
         min_num_reps=config["diffPeakAnalysis"]["minNumSamples"],
         antibody=lambda w: config["diffPeakAnalysis"]["contrasts"][w.antibody],
         sampleNamesToUse=lambda w: antibody_dict[w.antibody],
+        blacklist=config["resources"]["ref"]["blacklist"],
     log:
         "{}results/logs/peakCallingNorm/mergedPeaks/{{antibody}}_consensusPeaks.log".format(
             outdir

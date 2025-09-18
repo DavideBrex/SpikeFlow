@@ -12,7 +12,7 @@ peak_files = snakemake.input
 output_path = snakemake.output[0]
 antibody = snakemake.params.antibody
 sampleNamesToUse = snakemake.params.sampleNamesToUse
-
+blacklist_path = snakemake.params.blacklist
 # Minimum number of replicates a peak must be present in to be included
 min_num_reps = snakemake.params.min_num_reps
 
@@ -29,8 +29,15 @@ with open(temp_merged_peaks_path, 'w') as temp_file:
     cmd = f"cat {' '.join(peak_files_subset)} | sort -k1,1 -k2,2n | bedtools merge -i stdin -d 150 -c 4,5,6,7,8,9,10 -o collapse,mean,collapse,mean,collapse,collapse,collapse"
     subprocess.run(cmd, shell=True, stdout=temp_file)
 
+# Remove peaks overlapping blacklisted regions
+temp_no_blacklist_path = output_path + ".tmp_no_blacklist.bed"
+cmd = f"bedtools intersect -v -a {temp_merged_peaks_path} -b {blacklist_path} -f 0.1" #keep if peak overlap blacklist less than 10% of its length
+with open(temp_no_blacklist_path, 'w') as temp_file:
+    subprocess.run(cmd, shell=True, stdout=temp_file)
+
+
 # Process the merged peaks
-with open(temp_merged_peaks_path) as mergedPeaks, open(output_path, 'w') as outfile:
+with open(temp_no_blacklist_path) as mergedPeaks, open(output_path, 'w') as outfile:
     for line in mergedPeaks:
         cols = line.strip().split('\t')
         # The peak names are in the 4th column (0-based indexing), split by commas
@@ -43,5 +50,6 @@ with open(temp_merged_peaks_path) as mergedPeaks, open(output_path, 'w') as outf
 
 # Optionally, remove the temporary merged peaks file
 os.remove(temp_merged_peaks_path)
+os.remove(temp_no_blacklist_path)
 
 print("Consensus peaks generation completed.")
