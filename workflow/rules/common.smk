@@ -359,9 +359,7 @@ def perform_checks(input_df):
                     + "Consider to change peak type or disable the differential binding analysis in the config file!"
                 )
             # 10. check that the minNumSamples for consensus peaks is not higher than the number of samples available for each antibody or is not <1
-            if config["diffPeakAnalysis"]["minNumSamples"] > len(
-                subdf.index.unique()
-            ):
+            if config["diffPeakAnalysis"]["minNumSamples"] > len(subdf.index.unique()):
                 print(len(subdf.index.unique()))
                 raise ValueError(
                     "The minNumSamples in config for the consensus peak set is higher than the number of samples available for antibody {}.\nPlease change the minNumSamples value in the config file".format(
@@ -372,7 +370,6 @@ def perform_checks(input_df):
                 raise ValueError(
                     "The minNumSamples in config for the consensus peak set has to be at least 1.\nPlease change the minNumSamples value in the config file"
                 )
-
 
 
 # -------------------- Sample sheet Sanity checks ---------------#
