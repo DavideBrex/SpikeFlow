@@ -37,7 +37,7 @@ idSamples = samples_sheet["sample"].str.cat(
     samples_sheet["replicate"].astype(str), sep="-rep"
 )
 inputSamples = samples_sheet["control"].str.cat(
-    samples_sheet["control_replicate"].astype(str), sep="-rep"
+    samples_sheet["control_replicate"].fillna(0).astype(int).astype(str), sep="-rep"
 )
 
 sample_to_input = dict(zip(idSamples, inputSamples))
