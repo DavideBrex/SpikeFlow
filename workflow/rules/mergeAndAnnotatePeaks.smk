@@ -54,7 +54,7 @@ rule consensus_peaks:
     benchmark:
         "{}results/.benchmarks/{{antibody}}_consensusPeaks.benchmark.txt".format(outdir)
     conda:
-        "../envs/various.yaml"
+        "../envs/qc.yaml"
     script:
         "../scripts/consensusPeaks.py"
 
@@ -97,7 +97,7 @@ rule count_reads_on_peaks:
             outdir
         )
     conda:
-        "../envs/various.yaml"
+        "../envs/qc.yaml"
     script:
         "../scripts/frag_count.py"
 

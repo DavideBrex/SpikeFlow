@@ -15,7 +15,7 @@ rule calculate_norm_factors:
         antibody_dict=antibody_dict,
         outdir=outdir,
     conda:
-        "../envs/various.yaml"
+        "../envs/qc.yaml"
     log:
         "{}results/logs/normFactors/calcuteNormFactors.log".format(outdir),
     script:
