@@ -97,7 +97,7 @@ To install singularity check [its website](https://docs.sylabs.io/guides/3.0/use
 
 To obtain SpikeFlow, you have two options:
 
--  Download the source code as zip file from the latest [version](https://github.com/DavideBrex/SpikeFlow/releases/latest). For example: ```wget https://github.com/DavideBrex/SpikeFlow/archive/refs/tags/v1.3.1.zip``` will download a zip file. Unzip it and move to the Spikeflow-1.3.1 folder.
+-  Download the source code as zip file from the latest [version](https://github.com/DavideBrex/SpikeFlow/releases/latest). For example: ```wget https://github.com/DavideBrex/SpikeFlow/archive/refs/tags/v1.3.2.zip``` will download a zip file. Unzip it and move to the Spikeflow-1.3.2 folder.
 
 -  Clone the repository on your local machine. See [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the instructions.
 

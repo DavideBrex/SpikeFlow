@@ -41,6 +41,7 @@ rule consensus_peaks:
         min_num_reps=config["diffPeakAnalysis"]["minNumSamples"],
         antibody=lambda w: config["diffPeakAnalysis"]["contrasts"][w.antibody],
         sampleNamesToUse=lambda w: antibody_dict[w.antibody],
+        blacklist=config["resources"]["ref"]["blacklist"],
     log:
         "{}results/logs/peakCallingNorm/mergedPeaks/{{antibody}}_consensusPeaks.log".format(
             outdir
@@ -53,7 +54,7 @@ rule consensus_peaks:
     benchmark:
         "{}results/.benchmarks/{{antibody}}_consensusPeaks.benchmark.txt".format(outdir)
     conda:
-        "../envs/various.yaml"
+        "../envs/qc.yaml"
     script:
         "../scripts/consensusPeaks.py"
 
@@ -96,7 +97,7 @@ rule count_reads_on_peaks:
             outdir
         )
     conda:
-        "../envs/various.yaml"
+        "../envs/qc.yaml"
     script:
         "../scripts/frag_count.py"
 

@@ -37,7 +37,7 @@ idSamples = samples_sheet["sample"].str.cat(
     samples_sheet["replicate"].astype(str), sep="-rep"
 )
 inputSamples = samples_sheet["control"].str.cat(
-    samples_sheet["control_replicate"].astype(str), sep="-rep"
+    samples_sheet["control_replicate"].fillna(0).astype(int).astype(str), sep="-rep"
 )
 
 sample_to_input = dict(zip(idSamples, inputSamples))
@@ -357,6 +357,18 @@ def perform_checks(input_df):
                 raise ValueError(
                     "The differential binding analysis can not be performed on very-broad peaks.\n"
                     + "Consider to change peak type or disable the differential binding analysis in the config file!"
+                )
+            # 10. check that the minNumSamples for consensus peaks is not higher than the number of samples available for each antibody or is not <1
+            if config["diffPeakAnalysis"]["minNumSamples"] > len(subdf.index.unique()):
+                print(len(subdf.index.unique()))
+                raise ValueError(
+                    "The minNumSamples in config for the consensus peak set is higher than the number of samples available for antibody {}.\nPlease change the minNumSamples value in the config file".format(
+                        antibodyItem
+                    )
+                )
+            if config["diffPeakAnalysis"]["minNumSamples"] < 1:
+                raise ValueError(
+                    "The minNumSamples in config for the consensus peak set has to be at least 1.\nPlease change the minNumSamples value in the config file"
                 )
 
 

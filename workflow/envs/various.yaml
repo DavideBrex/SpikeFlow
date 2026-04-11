@@ -8,7 +8,6 @@ dependencies:
   - epic2
   - pysam
   - pandas
-  - bedtools
   - fastp
   - macs2
   - deeptoolsintervals
