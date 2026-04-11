@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/DavideBrex/SpikeFlow/compare/v1.3.1...v1.3.2) (2026-04-11)
+
+
+### Bug Fixes
+
+* float problem with control rep ([#29](https://github.com/DavideBrex/SpikeFlow/issues/29)) ([a196303](https://github.com/DavideBrex/SpikeFlow/commit/a196303e5cd406096b3e6f67d18207dc729bd216))
+
 ## [1.3.1](https://github.com/DavideBrex/SpikeFlow/compare/v1.3.0...v1.3.1) (2025-02-08)
 
 
